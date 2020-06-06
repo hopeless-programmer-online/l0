@@ -1,0 +1,20 @@
+# See https://editorconfig.org/
+
+root = true
+
+# For properties see https://github.com/editorconfig/editorconfig/wiki/EditorConfig-Properties
+
+[*]
+indent_style             = space
+indent_size              = 4
+tab_width                = 4
+end_of_line              = crlf
+charset                  = utf-8
+trim_trailing_whitespace = true
+insert_final_newline     = true
+
+# limited support
+max_line_length          = off
+
+[package.json]
+indent_size = 2
