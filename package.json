@@ -1,0 +1,19 @@
+{
+  "name": "l0",
+  "version": "1.0.0",
+  "description": "Small programming language",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hopeless-programmer-online/l0.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/hopeless-programmer-online/l0/issues"
+  },
+  "homepage": "https://github.com/hopeless-programmer-online/l0#readme"
+}
