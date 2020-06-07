@@ -3,8 +3,9 @@ const error = `error`;
 
 module.exports = {
     env           : {
-        es2020 : true,
-        node   : true,
+        es2020           : true,
+        node             : true,
+        [`jest/globals`] : true,
     },
     extends       : [
         `standard`,
@@ -16,6 +17,7 @@ module.exports = {
     },
     plugins       : [
         `@typescript-eslint`,
+        `jest`,
     ],
     rules         : {
         /** @see https://eslint.org/docs/rules/ */
