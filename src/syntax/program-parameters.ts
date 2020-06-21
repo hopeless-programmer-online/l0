@@ -14,7 +14,7 @@ export default class ProgramParameters {
             .filter(parameter => parameter instanceof Explicit)
             .map(parameter => parameter as Explicit)
             .sort((a, b) => a.Index - b.Index)
-            .map(explicit => explicit.Variable.Name)
+            .map(explicit => explicit.Variable.toString())
             .join(`, `);
     }
 }

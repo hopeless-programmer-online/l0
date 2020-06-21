@@ -10,4 +10,8 @@ export default class Reference {
         this.Variable = Variable;
         this.Name = Name;
     }
+
+    public toString() : string {
+        return this.Name;
+    }
 }
