@@ -2,6 +2,7 @@ import Program from "./program";
 import Parameters from "./program-parameters";
 import Commands from "./program-commands";
 import Explicit from "./explicit-program-parameter";
+import Implicit from "./implicit-program-parameter";
 import Variable from "./variable";
 import Execution from "./execution-program-command";
 import Reference from "./reference";
@@ -27,6 +28,11 @@ it(`should stringify`, () => {
                     Name : `z`,
                 }),
                 Index : 2,
+            }),
+            new Implicit({
+                Variable : new Variable({
+                    Name : `w`,
+                }),
             }),
         ),
         Commands : new Commands(
