@@ -1,4 +1,5 @@
 const always = `always`;
+const never = `never`;
 const error = `error`;
 
 module.exports = {
@@ -8,7 +9,7 @@ module.exports = {
         [`jest/globals`] : true,
     },
     extends       : [
-        `standard`,
+        // `standard`,
     ],
     parser        : `@typescript-eslint/parser`,
     parserOptions : {
@@ -57,5 +58,18 @@ module.exports = {
                 mode        : `minimum`,
             },
         ],
+        [`space-before-function-paren`] : [
+            /** @see https://eslint.org/docs/rules/space-before-function-paren */
+            error,
+            never,
+        ],
+        [`new-parens`] : [
+            /** @see https://eslint.org/docs/rules/new-parens */
+            error,
+            never,
+        ],
+        // [`lines-between-class-members`] : [
+        //     /** @see https://eslint.org/docs/rules/lines-between-class-members */
+        // ],
     },
 };
