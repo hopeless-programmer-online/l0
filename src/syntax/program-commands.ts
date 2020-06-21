@@ -14,7 +14,6 @@ export default class ProgramCommands {
     public toString() : string {
         return this
             .Array
-            .map(command => command.toString())
             .join(`\n`);
     }
 }

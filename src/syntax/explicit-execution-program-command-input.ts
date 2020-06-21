@@ -13,6 +13,6 @@ export default class ExecutionProgramCommandInput extends Input {
     }
 
     public toString() : string {
-        return this.Reference.toString();
+        return `${this.Reference}`;
     }
 }

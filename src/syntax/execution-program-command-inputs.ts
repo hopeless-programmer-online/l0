@@ -14,7 +14,6 @@ export default class ExecutionProgramCommandInputs {
             .filter(input => input instanceof Explicit)
             .map(input => input as Explicit)
             .sort((a, b) => a.Index - b.Index)
-            .map(input => input.Reference.toString())
             .join(`, `);
     }
 }

@@ -25,6 +25,6 @@ export default class Program {
             ? `\n${commands}`.replace(/\n/g, `\n\t`)
             : ``;
 
-        return `(${this.Parameters.toString()}) {${content}\n}`;
+        return `(${this.Parameters}) {${content}\n}`;
     }
 }

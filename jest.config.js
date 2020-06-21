@@ -12,7 +12,7 @@ module.exports = {
     // cacheDirectory: "",
 
     // Automatically clear mock calls and instances between every test
-    clearMocks: true,
+    clearMocks : true,
 
     // Indicates whether the coverage information should be collected while executing the test
     // collectCoverage: false,
@@ -21,7 +21,7 @@ module.exports = {
     // collectCoverageFrom: undefined,
 
     // The directory where Jest should output its coverage files
-    coverageDirectory: `coverage`,
+    coverageDirectory : `coverage`,
 
     // An array of regexp pattern strings used to skip coverage collection
     // coveragePathIgnorePatterns: [
@@ -29,12 +29,12 @@ module.exports = {
     // ],
 
     // A list of reporter names that Jest uses when writing coverage reports
-    // coverageReporters: [
+    coverageReporters : [
     //   "json",
-    //   "text",
+        `text`,
     //   "lcov",
     //   "clover"
-    // ],
+    ],
 
     // An object that configures minimum threshold enforcement for coverage results
     // coverageThreshold: undefined,
@@ -112,7 +112,7 @@ module.exports = {
     // rootDir: undefined,
 
     // A list of paths to directories that Jest should use to search for files in
-    roots: [
+    roots : [
         `<rootDir>/lib`,
     ],
 
@@ -129,7 +129,7 @@ module.exports = {
     // snapshotSerializers: [],
 
     // The test environment that will be used for testing
-    testEnvironment: `node`,
+    testEnvironment : `node`,
 
     // Options that will be passed to the testEnvironment
     // testEnvironmentOptions: {},

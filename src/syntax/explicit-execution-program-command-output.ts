@@ -1,9 +1,9 @@
-import Parameter from "./program-parameter";
+import Output from "./execution-program-command-output";
 import Variable from "./variable";
 
 type Index = number;
 
-export default class ExplicitProgramParameter extends Parameter {
+export default class ExecutionProgramCommandOutput extends Output {
     readonly Index : Index;
 
     public constructor({ Variable, Index } : { Variable : Variable, Index : Index }) {
