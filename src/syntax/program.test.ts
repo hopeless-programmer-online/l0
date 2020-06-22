@@ -46,8 +46,8 @@ it(`should stringify`, () => {
             }),
             new Execution({
                 Program : new Reference({
-                    Variable : x.Variable,
-                    Name     : `x`,
+                    Variable : f,
+                    Name     : `f`,
                 }),
             }),
         ),
@@ -57,7 +57,7 @@ it(`should stringify`, () => {
         `(x, y, z) {\n` +
         `\tf () {\n` +
         `\t}\n` +
-        `\tx()\n` +
+        `\tf()\n` +
         `}`,
     );
 });
