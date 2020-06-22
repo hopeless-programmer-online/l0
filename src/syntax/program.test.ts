@@ -5,6 +5,7 @@ import Explicit from "./explicit-program-parameter";
 import Implicit from "./implicit-program-parameter";
 import Variable from "./variable";
 import Execution from "./execution-program-command";
+import Declaration from "./declaration-program-command";
 import Reference from "./reference";
 
 it(`should stringify`, () => {
@@ -13,6 +14,9 @@ it(`should stringify`, () => {
             Name : `x`,
         }),
         Index : 0,
+    });
+    const f = new Variable({
+        Name : `f`,
     });
     const program = new Program({
         Parameters : new Parameters(
@@ -36,6 +40,10 @@ it(`should stringify`, () => {
             }),
         ),
         Commands : new Commands(
+            new Declaration({
+                Variable : f,
+                Program  : new Program,
+            }),
             new Execution({
                 Program : new Reference({
                     Variable : x.Variable,
@@ -47,6 +55,8 @@ it(`should stringify`, () => {
 
     expect(program.toString()).toBe(
         `(x, y, z) {\n` +
+        `\tf () {\n` +
+        `\t}\n` +
         `\tx()\n` +
         `}`,
     );
