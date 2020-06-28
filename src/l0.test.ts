@@ -7,3 +7,6 @@ it(`Should be an object`, () => {
 it(`Should export "syntax"`, () => {
     expect(l0).toHaveProperty(`syntax`);
 });
+it(`Should export "parsing"`, () => {
+    expect(l0).toHaveProperty(`parsing`);
+});
