@@ -1,5 +1,5 @@
 import Program from "./syntax/program";
 
-export default {
+export {
     Program,
 };

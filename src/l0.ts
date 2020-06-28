@@ -1,5 +1,5 @@
-import syntax from "./syntax";
+import * as syntax from "./syntax";
 
-export default {
+export {
     syntax,
 };

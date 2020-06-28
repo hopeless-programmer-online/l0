@@ -19,7 +19,7 @@ it(`should stringify`, () => {
         Name : `f`,
     });
     const program = new Program({
-        Parameters : new Parameters(
+        Parameters : new Parameters(...[
             x,
             new Explicit({
                 Variable : new Variable({
@@ -38,8 +38,8 @@ it(`should stringify`, () => {
                     Name : `w`,
                 }),
             }),
-        ),
-        Commands : new Commands(
+        ]),
+        Commands : new Commands(...[
             new Declaration({
                 Variable : f,
                 Program  : new Program,
@@ -50,7 +50,7 @@ it(`should stringify`, () => {
                     Name     : `f`,
                 }),
             }),
-        ),
+        ]),
     });
 
     expect(program.toString()).toBe(

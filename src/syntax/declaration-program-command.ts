@@ -1,7 +1,9 @@
+import Command from "./program-command";
+
 import Variable from "./variable";
 import Program from "./program";
 
-export default class DeclarationProgramCommand {
+export default class DeclarationProgramCommand extends Command {
     readonly Variable : Variable;
     readonly Program : Program;
 
@@ -12,6 +14,8 @@ export default class DeclarationProgramCommand {
         Variable : Variable,
         Program  : Program,
     }) {
+        super();
+
         this.Variable = Variable;
         this.Program = Program;
     }
