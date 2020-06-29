@@ -26,6 +26,9 @@ module.exports = {
             /** @see https://eslint.org/docs/rules/indent */
             error,
             4,
+            {
+                SwitchCase : 1,
+            },
         ],
         semi   : [
             /** @see https://eslint.org/docs/rules/semi */
