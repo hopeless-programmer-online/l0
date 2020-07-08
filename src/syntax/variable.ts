@@ -1,4 +1,4 @@
-type Name = string;
+import Name from "./name";
 
 export default class Variable {
     readonly Name : Name;
@@ -8,6 +8,6 @@ export default class Variable {
     }
 
     public toString() : string {
-        return this.Name;
+        return this.Name.String;
     }
 }

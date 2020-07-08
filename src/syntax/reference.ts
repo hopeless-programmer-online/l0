@@ -1,6 +1,5 @@
 import Variable from "./variable";
-
-type Name = string;
+import Name from "./name";
 
 export default class Reference {
     readonly Variable : Variable;
@@ -12,6 +11,6 @@ export default class Reference {
     }
 
     public toString() : string {
-        return this.Name;
+        return this.Name.String;
     }
 }

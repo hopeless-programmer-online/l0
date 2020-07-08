@@ -1,3 +1,4 @@
+import Name from "./name";
 import Program from "./program";
 import Parameters from "./program-parameters";
 import Commands from "./program-commands";
@@ -11,31 +12,31 @@ import Reference from "./reference";
 it(`should stringify`, () => {
     const x = new Explicit({
         Variable : new Variable({
-            Name : `x`,
+            Name : new Name({ String : `x` }),
         }),
         Index : 0,
     });
     const f = new Variable({
-        Name : `f`,
+        Name : new Name({ String : `f` }),
     });
     const program = new Program({
         Parameters : new Parameters(...[
             x,
             new Explicit({
                 Variable : new Variable({
-                    Name : `y`,
+                    Name : new Name({ String : `y` }),
                 }),
                 Index : 1,
             }),
             new Explicit({
                 Variable : new Variable({
-                    Name : `z`,
+                    Name : new Name({ String : `z` }),
                 }),
                 Index : 2,
             }),
             new Implicit({
                 Variable : new Variable({
-                    Name : `w`,
+                    Name : new Name({ String : `w` }),
                 }),
             }),
         ]),
@@ -47,7 +48,7 @@ it(`should stringify`, () => {
             new Execution({
                 Program : new Reference({
                     Variable : f,
-                    Name     : `f`,
+                    Name     : new Name({ String : `f` }),
                 }),
             }),
         ]),

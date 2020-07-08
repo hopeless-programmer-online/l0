@@ -1,4 +1,5 @@
 import {
+    Name,
     Variable,
     Program,
     ProgramParameters,
@@ -55,11 +56,11 @@ class Tokens {
                 ++end;
             }
 
-            const name = text
+            const string = text
                 .substring(index, end)
                 .replace(/\s+/g, ` `);
 
-            return new Variable({ Name : name });
+            return new Variable({ Name : new Name({ String : string }) });
         }
 
         while (index < text.length) {
@@ -145,9 +146,9 @@ export default class Parser {
             }
 
             const variables = parseVariables(tokens.Next);
-            const fourth = tokens.Next;
+            const third = tokens.Next;
 
-            if (fourth !== `{`) {
+            if (third !== `{`) {
                 throw new Error; // @todo
             }
 
@@ -161,9 +162,9 @@ export default class Parser {
                     ),
                 ),
             })
-            const fifth = parseCommands(tokens.Next, program.Commands);
+            const fourth = parseCommands(tokens.Next, program.Commands);
 
-            if (fifth !== `}`) {
+            if (fourth !== `}`) {
                 throw new Error; // @todo
             }
 
