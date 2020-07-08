@@ -1,6 +1,7 @@
 import {
     Variable,
     Program,
+    ProgramCommands,
     DeclarationProgramCommand,
 } from "../syntax";
 
@@ -97,54 +98,61 @@ class Tokens {
 
 export default class Parser {
     Parse(text : string) : Program {
-        const program = new Program;
         const tokens = new Tokens(text);
+
+        function parseCommands(first : Token, commands : ProgramCommands) : Token {
+            if (!(first instanceof Variable)) {
+                return first;
+            }
+
+            const second = tokens.Next;
+
+            if (second !== `(`) {
+                throw new Error; // @todo
+            }
+
+            const third = tokens.Next;
+
+            if (third !== `)`) {
+                throw new Error; // @todo
+            }
+
+            const fourth = tokens.Next;
+
+            if (fourth !== `{`) {
+                throw new Error; // @todo
+            }
+
+            const program = new Program;
+            const fifth = parseCommands(tokens.Next, program.Commands);
+
+            if (fifth !== `}`) {
+                throw new Error; // @todo
+            }
+
+            const command = new DeclarationProgramCommand({
+                Variable : first,
+                Program  : program,
+            });
+
+            commands.Array.push(command);
+
+            return tokens.Next;
+        }
+
+        const program = new Program;
         const first = tokens.Next;
 
         if (first === null) {
             return program;
         }
-        if (!(first instanceof Variable)) {
-            throw new Error; // @todo
+
+        const second = parseCommands(first, program.Commands);
+
+        if (second !== null) {
+            throw new Error;
         }
 
-        const second = tokens.Next;
-
-        if (second !== `(`) {
-            throw new Error; // @todo
-        }
-
-        const third = tokens.Next;
-
-        if (third !== `)`) {
-            throw new Error; // @todo
-        }
-
-        const fourth = tokens.Next;
-
-        if (fourth !== `{`) {
-            throw new Error; // @todo
-        }
-
-        const fifth = tokens.Next;
-
-        if (fifth !== `}`) {
-            throw new Error; // @todo
-        }
-
-        const command = new DeclarationProgramCommand({
-            Variable : first,
-            Program  : new Program,
-        });
-
-        program.Commands.Array.push(command);
-
-        const sixth = tokens.Next;
-
-        if (sixth === null) {
-            return program;
-        }
-
-        throw new Error;
+        return program;
     }
 }
