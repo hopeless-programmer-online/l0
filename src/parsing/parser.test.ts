@@ -55,3 +55,39 @@ it(`should parse twice nested declaration`, () => {
         `}`,
     );
 });
+
+it(`should parse single parameter`, () => {
+    const parser = new Parser;
+    const program = parser.Parse(`f(x) {}`);
+
+    expect(program.toString()).toBe(
+        `() {\n` +
+        `\tf (x) {\n` +
+        `\t}\n` +
+        `}`,
+    );
+});
+
+it(`should parse pair of parameters`, () => {
+    const parser = new Parser;
+    const program = parser.Parse(`f(x, y) {}`);
+
+    expect(program.toString()).toBe(
+        `() {\n` +
+        `\tf (x, y) {\n` +
+        `\t}\n` +
+        `}`,
+    );
+});
+
+it(`should parse three parameters`, () => {
+    const parser = new Parser;
+    const program = parser.Parse(`f(x, y, z) {}`);
+
+    expect(program.toString()).toBe(
+        `() {\n` +
+        `\tf (x, y, z) {\n` +
+        `\t}\n` +
+        `}`,
+    );
+});

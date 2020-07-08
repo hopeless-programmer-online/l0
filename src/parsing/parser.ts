@@ -1,6 +1,8 @@
 import {
     Variable,
     Program,
+    ProgramParameters,
+    ExplicitProgramParameter,
     ProgramCommands,
     DeclarationProgramCommand,
 } from "../syntax";
@@ -100,6 +102,37 @@ export default class Parser {
     Parse(text : string) : Program {
         const tokens = new Tokens(text);
 
+        function parseVariables(first : Token) : Array<Variable> {
+            const variables : Array<Variable> = [];
+
+            if (first === `)`) {
+                return variables;
+            }
+            if (!(first instanceof Variable)) {
+                throw new Error; // @todo
+            }
+
+            variables.push(first);
+
+            while (true) {
+                const second = tokens.Next;
+
+                if (second === `)`) {
+                    return variables;
+                }
+                if (second !== `,`) {
+                    throw new Error; // @todo
+                }
+
+                const third = tokens.Next;
+
+                if (!(third instanceof Variable)) {
+                    throw new Error; // @todo
+                }
+
+                variables.push(third);
+            }
+        }
         function parseCommands(first : Token, commands : ProgramCommands) : Token {
             if (!(first instanceof Variable)) {
                 return first;
@@ -111,19 +144,23 @@ export default class Parser {
                 throw new Error; // @todo
             }
 
-            const third = tokens.Next;
-
-            if (third !== `)`) {
-                throw new Error; // @todo
-            }
-
+            const variables = parseVariables(tokens.Next);
             const fourth = tokens.Next;
 
             if (fourth !== `{`) {
                 throw new Error; // @todo
             }
 
-            const program = new Program;
+            const program = new Program({
+                Parameters : new ProgramParameters(
+                    ...variables.map((variable, index) =>
+                        new ExplicitProgramParameter({
+                            Variable : variable,
+                            Index    : index,
+                        }),
+                    ),
+                ),
+            })
             const fifth = parseCommands(tokens.Next, program.Commands);
 
             if (fifth !== `}`) {
