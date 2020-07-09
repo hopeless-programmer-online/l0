@@ -1,6 +1,6 @@
 import Parser from "./parser";
 
-const BIG_NUMBER = 100_000;
+const BIG_NUMBER = 1; // 1_000_000;
 
 it(`should be function`, () => {
     expect(typeof Parser).toBe(`function`);
@@ -169,8 +169,6 @@ it(`should pass ${BIG_NUMBER} declarations`, () => {
         source += `${i}(){}`;
     }
 
-    // console.log(source);
-
     const parser = new Parser;
 
     expect(() => parser.Parse(source)).not.toThrow();
@@ -199,6 +197,35 @@ it(`should parse execution`, () => {
         `() {\n` +
         `\tf () {\n` +
         `\t}\n` +
+        `\tf()\n` +
+        `}`,
+    );
+});
+
+it(`should parse pair of executions`, () => {
+    const parser = new Parser;
+    const program = parser.Parse(`f() {} f() f()`);
+
+    expect(program.toString()).toBe(
+        `() {\n` +
+        `\tf () {\n` +
+        `\t}\n` +
+        `\tf()\n` +
+        `\tf()\n` +
+        `}`,
+    );
+});
+
+it(`should parse three executions`, () => {
+    const parser = new Parser;
+    const program = parser.Parse(`f() {} f() f() f()`);
+
+    expect(program.toString()).toBe(
+        `() {\n` +
+        `\tf () {\n` +
+        `\t}\n` +
+        `\tf()\n` +
+        `\tf()\n` +
         `\tf()\n` +
         `}`,
     );

@@ -139,8 +139,8 @@ export default class Parser {
             public abstract Process() : ParsingState;
         }
         class CommandParsingState extends NonTerminalState {
-            private parent : CommandParsingState | null;
-            private program : Program;
+            readonly Parent : CommandParsingState | null;
+            protected program : Program;
 
             public constructor({
                 Context = new ParsingContext,
@@ -158,7 +158,55 @@ export default class Parser {
                 super({ Context });
 
                 this.program = Program;
-                this.parent = Parent;
+                this.Parent = Parent;
+            }
+
+            public Process() : ParsingState {
+                const first = tokens.Next;
+
+                if (this.Parent === null) {
+                    if (first === null) {
+                        return new TerminalState({ Program : this.program });
+                    }
+                }
+                else {
+                    if (first === `}`) {
+                        return this.Parent;
+                    }
+                }
+                if (!(first instanceof Variable)) {
+                    throw new Error(`Variable expected, got ${JSON.stringify(first)}.`);
+                }
+
+                return new VariableCommandParsingState({
+                    Variable : first,
+                    Previous : this,
+                    Program  : this.program,
+                    Context  : this.context,
+                });
+            }
+        }
+        class VariableCommandParsingState extends NonTerminalState {
+            protected variable : Variable;
+            protected previous : CommandParsingState;
+            protected program : Program;
+
+            public constructor({
+                Variable,
+                Context  = new ParsingContext,
+                Program  = new ProgramClass,
+                Previous,
+            } : {
+                Variable : Variable,
+                Context? : Context,
+                Program? : Program,
+                Previous : CommandParsingState,
+            }) {
+                super({ Context });
+
+                this.program = Program;
+                this.previous = Previous;
+                this.variable = Variable;
             }
 
             public ProcessVariables() : Array<Variable> {
@@ -194,34 +242,18 @@ export default class Parser {
                 }
             }
             public Process() : ParsingState {
-                const first = tokens.Next;
-
-                if (this.parent === null) {
-                    if (first === null) {
-                        return new TerminalState({ Program : this.program });
-                    }
-                }
-                else {
-                    if (first === `}`) {
-                        return this.parent;
-                    }
-                }
-                if (!(first instanceof Variable)) {
-                    throw new Error;
-                }
-
                 const second = tokens.Next;
 
                 if (second !== `(`) {
-                    throw new Error(`"(" expected, ${JSON.stringify(second instanceof Variable ? second.toString() : second)} got.`);
+                    throw new Error(`"(" expected, got ${JSON.stringify(second instanceof Variable ? second.toString() : second)}.`);
                 }
 
                 const variables = this.ProcessVariables();
                 const fourth = tokens.Next;
 
-                if (this.parent === null) {
+                if (this.previous.Parent === null) {
                     if (fourth === null) {
-                        const reference = this.context.Get(first);
+                        const reference = this.context.Get(this.variable);
                         const command = new ExecutionProgramCommand({
                             Program : reference,
                         });
@@ -231,14 +263,27 @@ export default class Parser {
                         return new TerminalState({ Program : this.program });
                     }
                 }
+                if (fourth instanceof Variable) {
+                    const reference = this.context.Get(this.variable);
+                    const command = new ExecutionProgramCommand({
+                        Program : reference,
+                    });
+
+                    this.program.Commands.Array.push(command);
+
+                    this.variable = fourth;
+
+                    return this;
+                }
                 if (fourth !== `{`) {
                     throw new Error; // @todo
                 }
 
-                this.context.Declare(first);
+                this.context.Declare(this.variable);
 
                 const parameters = new ProgramParameters;
 
+                // using "for" instead of "Array.prototype.map" to avoid recursion overflow
                 for (let index = 0; index < variables.length; ++index) {
                     const parameter = new ExplicitProgramParameter({
                         Variable : variables[index],
@@ -252,13 +297,17 @@ export default class Parser {
                     Parameters : parameters,
                 });
                 const command = new DeclarationProgramCommand({
-                    Variable : first,
+                    Variable : this.variable,
                     Program  : program,
                 });
 
                 this.program.Commands.Array.push(command);
 
-                return new CommandParsingState({ Parent : this, Program : command.Program });
+                return new CommandParsingState({
+                    // Context // @todo
+                    Program : program,
+                    Parent  : this.previous,
+                });
             }
         }
 
@@ -323,4 +372,5 @@ class Context {
 }
 
 const ParsingContext = Context;
+const VariableClass = Variable;
 const ProgramClass = Program;
