@@ -1,11 +1,13 @@
 import {
     Name,
     Variable,
+    Reference,
     Program,
     ProgramParameters,
     ExplicitProgramParameter,
     ProgramCommands,
     DeclarationProgramCommand,
+    ExecutionProgramCommand,
 } from "../syntax";
 
 type Token = null | `,` | `:` | `(` | `)` | `{` | `}` | Variable;
@@ -58,7 +60,12 @@ class Tokens {
 
             const string = text
                 .substring(index, end)
-                .replace(/\s+/g, ` `);
+                .replace(/^\s*/, ``)
+                .replace(/\s*$/, ``)
+                .replace(/\s+/g, ` `)
+                ;
+
+            index = end - 1;
 
             return new Variable({ Name : new Name({ String : string }) });
         }
@@ -202,22 +209,33 @@ export default class Parser {
                 if (!(first instanceof Variable)) {
                     throw new Error;
                 }
-                // if (this.context.Has(first)) {
-                //     throw new Error; // @todo
-                // }
 
                 const second = tokens.Next;
 
                 if (second !== `(`) {
-                    throw new Error; // @todo
+                    throw new Error(`"(" expected, ${JSON.stringify(second instanceof Variable ? second.toString() : second)} got.`);
                 }
 
                 const variables = this.ProcessVariables();
                 const fourth = tokens.Next;
 
+                if (this.parent === null) {
+                    if (fourth === null) {
+                        const reference = this.context.Get(first);
+                        const command = new ExecutionProgramCommand({
+                            Program : reference,
+                        });
+
+                        this.program.Commands.Array.push(command);
+
+                        return new TerminalState({ Program : this.program });
+                    }
+                }
                 if (fourth !== `{`) {
                     throw new Error; // @todo
                 }
+
+                this.context.Declare(first);
 
                 const parameters = new ProgramParameters;
 
@@ -260,34 +278,47 @@ export default class Parser {
 
 class Context {
     private parent : Context | null;
-    private declarations : Map<string, Variable> = new Map;
+    private references : Map<string, Reference> = new Map;
 
     public constructor(parent : Context | null = null) {
         this.parent = parent;
     }
 
-    private HasString(string : string) : boolean {
-        if (this.declarations.has(string)) {
-            return true;
-        }
+    private GetByString(string : string) : Reference {
+        let context : Context | null = this;
 
-        return this.parent !== null && this.parent.HasString(string);
+        do {
+            const reference = context.references.get(string);
+
+            if (reference) {
+                return reference;
+            }
+
+            context = context.parent;
+        } while (context);
+
+        throw new Error; // @todo
     }
 
     public Declare(variable : Variable) {
-        const string = variable.Name.String;
-        const { declarations } = this;
+        const name = variable.Name;
+        const reference = new Reference({
+            Variable : variable,
+            Name     : name,
+        });
+        const string = name.String;
+        const { references } = this;
 
-        if (declarations.has(string)) {
-            throw new Error; // @todo
+        if (references.has(string)) {
+            throw new Error(`Variable with name ${JSON.stringify(string)} was already declared in current context.`);
         }
 
-        declarations.set(string, variable);
+        references.set(string, reference);
     }
-    public Has(variable : Variable) : boolean {
+    public Get(variable : Variable) : Reference {
         const string = variable.Name.String;
 
-        return this.HasString(string);
+        return this.GetByString(string);
     }
 }
 

@@ -6,6 +6,30 @@ it(`should be function`, () => {
     expect(typeof Parser).toBe(`function`);
 });
 
+it(`should parse word declaration`, () => {
+    const parser = new Parser;
+    const program = parser.Parse(`function name() {}`);
+
+    expect(program.toString()).toBe(
+        `() {\n` +
+        `\tfunction name () {\n` +
+        `\t}\n` +
+        `}`,
+    );
+});
+
+it(`should parse number declaration`, () => {
+    const parser = new Parser;
+    const program = parser.Parse(`1() {}`);
+
+    expect(program.toString()).toBe(
+        `() {\n` +
+        `\t1 () {\n` +
+        `\t}\n` +
+        `}`,
+    );
+});
+
 it(`should parse empty string`, () => {
     const parser = new Parser;
     const program = parser.Parse(``);
@@ -138,12 +162,14 @@ it(`should pass ${BIG_NUMBER} parameters`, () => {
     expect(() => parser.Parse(source)).not.toThrow();
 });
 
-it(`should pass ${BIG_NUMBER} declaration`, () => {
+it(`should pass ${BIG_NUMBER} declarations`, () => {
     let source = ``;
 
     for (let i = 0; i < BIG_NUMBER; ++i) {
-        source += `f(){}`;
+        source += `${i}(){}`;
     }
+
+    // console.log(source);
 
     const parser = new Parser;
 
@@ -163,4 +189,17 @@ it(`should pass ${BIG_NUMBER} nested declaration`, () => {
     const parser = new Parser;
 
     expect(() => parser.Parse(source)).not.toThrow();
+});
+
+it(`should parse execution`, () => {
+    const parser = new Parser;
+    const program = parser.Parse(`f() {} f()`);
+
+    expect(program.toString()).toBe(
+        `() {\n` +
+        `\tf () {\n` +
+        `\t}\n` +
+        `\tf()\n` +
+        `}`,
+    );
 });
