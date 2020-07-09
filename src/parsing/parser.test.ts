@@ -1,5 +1,7 @@
 import Parser from "./parser";
 
+const BIG_NUMBER = 100_000;
+
 it(`should be function`, () => {
     expect(typeof Parser).toBe(`function`);
 });
@@ -21,6 +23,36 @@ it(`should parse declaration`, () => {
     expect(program.toString()).toBe(
         `() {\n` +
         `\tf () {\n` +
+        `\t}\n` +
+        `}`,
+    );
+});
+
+it(`should parse pair of declarations`, () => {
+    const parser = new Parser;
+    const program = parser.Parse(`f() {} g() {}`);
+
+    expect(program.toString()).toBe(
+        `() {\n` +
+        `\tf () {\n` +
+        `\t}\n` +
+        `\tg () {\n` +
+        `\t}\n` +
+        `}`,
+    );
+});
+
+it(`should parse three declarations`, () => {
+    const parser = new Parser;
+    const program = parser.Parse(`f() {} g() {} h() {}`);
+
+    expect(program.toString()).toBe(
+        `() {\n` +
+        `\tf () {\n` +
+        `\t}\n` +
+        `\tg () {\n` +
+        `\t}\n` +
+        `\th () {\n` +
         `\t}\n` +
         `}`,
     );
@@ -90,4 +122,31 @@ it(`should parse three parameters`, () => {
         `\t}\n` +
         `}`,
     );
+});
+
+it(`should pass ${BIG_NUMBER} declaration`, () => {
+    let source = ``;
+
+    for (let i = 0; i < BIG_NUMBER; ++i) {
+        source += `f(){}`;
+    }
+
+    const parser = new Parser;
+
+    expect(() => parser.Parse(source)).not.toThrow();
+});
+
+it(`should pass ${BIG_NUMBER} nested declaration`, () => {
+    let source = ``;
+
+    for (let i = 0; i < BIG_NUMBER; ++i) {
+        source += `f(){`;
+    }
+    for (let i = 0; i < BIG_NUMBER; ++i) {
+        source += `}`;
+    }
+
+    const parser = new Parser;
+
+    expect(() => parser.Parse(source)).not.toThrow();
 });
