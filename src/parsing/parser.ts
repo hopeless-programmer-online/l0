@@ -5,9 +5,10 @@ import {
     Program,
     ProgramParameters,
     ExplicitProgramParameter,
-    ProgramCommands,
     DeclarationProgramCommand,
     ExecutionProgramCommand,
+    ExecutionProgramCommandInputs,
+    ExplicitExecutionProgramCommandInput,
 } from "../syntax";
 
 type Token = null | `,` | `:` | `(` | `)` | `{` | `}` | Variable;
@@ -254,8 +255,21 @@ export default class Parser {
                 if (this.previous.Parent === null) {
                     if (fourth === null) {
                         const reference = this.context.Get(this.variable);
+                        const inputs = new ExecutionProgramCommandInputs;
+
+                        // using "for" instead of "Array.prototype.map" to avoid recursion overflow
+                        for (let index = 0; index < variables.length; ++index) {
+                            const input = new ExplicitExecutionProgramCommandInput({
+                                Reference : this.context.Get(variables[index]),
+                                Index     : index,
+                            });
+
+                            inputs.Array.push(input);
+                        }
+
                         const command = new ExecutionProgramCommand({
                             Program : reference,
+                            Inputs  : inputs,
                         });
 
                         this.program.Commands.Array.push(command);

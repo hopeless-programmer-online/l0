@@ -7,6 +7,8 @@ import ExplicitProgramParameter from "./syntax/explicit-program-parameter";
 import ProgramCommands from "./syntax/program-commands";
 import DeclarationProgramCommand from "./syntax/declaration-program-command";
 import ExecutionProgramCommand from "./syntax/execution-program-command";
+import ExecutionProgramCommandInputs from "./syntax/execution-program-command-inputs";
+import ExplicitExecutionProgramCommandInput from "./syntax/explicit-execution-program-command-input";
 
 export {
     Name,
@@ -18,4 +20,6 @@ export {
     ProgramCommands,
     DeclarationProgramCommand,
     ExecutionProgramCommand,
+    ExecutionProgramCommandInputs,
+    ExplicitExecutionProgramCommandInput,
 };

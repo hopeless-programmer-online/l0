@@ -272,3 +272,42 @@ it(`should parse three executions inside declaration`, () => {
         `}`,
     );
 });
+
+it(`should parse input`, () => {
+    const parser = new Parser;
+    const program = parser.Parse(`f() {} f(f)`);
+
+    expect(program.toString()).toBe(
+        `() {\n` +
+        `\tf () {\n` +
+        `\t}\n` +
+        `\tf(f)\n` +
+        `}`,
+    );
+});
+
+it(`should parse pair of inputs`, () => {
+    const parser = new Parser;
+    const program = parser.Parse(`f() {} f(f, f)`);
+
+    expect(program.toString()).toBe(
+        `() {\n` +
+        `\tf () {\n` +
+        `\t}\n` +
+        `\tf(f, f)\n` +
+        `}`,
+    );
+});
+
+it(`should parse three inputs`, () => {
+    const parser = new Parser;
+    const program = parser.Parse(`f() {} f(f, f, f)`);
+
+    expect(program.toString()).toBe(
+        `() {\n` +
+        `\tf () {\n` +
+        `\t}\n` +
+        `\tf(f, f, f)\n` +
+        `}`,
+    );
+});
