@@ -124,6 +124,20 @@ it(`should parse three parameters`, () => {
     );
 });
 
+it(`should pass ${BIG_NUMBER} parameters`, () => {
+    let source = `f(x`;
+
+    for (let i = 0; i < BIG_NUMBER - 1; ++i) {
+        source += `,x`;
+    }
+
+    source += `){}`;
+
+    const parser = new Parser;
+
+    expect(() => parser.Parse(source)).not.toThrow();
+});
+
 it(`should pass ${BIG_NUMBER} declaration`, () => {
     let source = ``;
 

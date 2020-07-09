@@ -219,14 +219,23 @@ export default class Parser {
                     throw new Error; // @todo
                 }
 
+                const parameters = new ProgramParameters;
+
+                for (let index = 0; index < variables.length; ++index) {
+                    const parameter = new ExplicitProgramParameter({
+                        Variable : variables[index],
+                        Index    : index,
+                    });
+
+                    parameters.Array.push(parameter);
+                }
+
+                const program = new Program({
+                    Parameters : parameters,
+                });
                 const command = new DeclarationProgramCommand({
                     Variable : first,
-                    Program  : new Program({
-                        Parameters : new ProgramParameters(...variables.map((variable, index) => new ExplicitProgramParameter({
-                            Variable : variable,
-                            Index    : index,
-                        }))),
-                    }),
+                    Program  : program,
                 });
 
                 this.program.Commands.Array.push(command);
