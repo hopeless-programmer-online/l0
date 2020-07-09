@@ -263,6 +263,18 @@ export default class Parser {
                         return new TerminalState({ Program : this.program });
                     }
                 }
+                else {
+                    if (fourth === `}`) {
+                        const reference = this.context.Get(this.variable);
+                        const command = new ExecutionProgramCommand({
+                            Program : reference,
+                        });
+
+                        this.program.Commands.Array.push(command);
+
+                        return this.previous.Parent;
+                    }
+                }
                 if (fourth instanceof Variable) {
                     const reference = this.context.Get(this.variable);
                     const command = new ExecutionProgramCommand({
@@ -304,7 +316,7 @@ export default class Parser {
                 this.program.Commands.Array.push(command);
 
                 return new CommandParsingState({
-                    // Context // @todo
+                    Context : new Context(this.context),
                     Program : program,
                     Parent  : this.previous,
                 });

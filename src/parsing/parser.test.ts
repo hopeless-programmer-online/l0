@@ -230,3 +230,45 @@ it(`should parse three executions`, () => {
         `}`,
     );
 });
+
+it(`should parse execution inside declaration`, () => {
+    const parser = new Parser;
+    const program = parser.Parse(`f() { f() }`);
+
+    expect(program.toString()).toBe(
+        `() {\n` +
+        `\tf () {\n` +
+        `\t\tf()\n` +
+        `\t}\n` +
+        `}`,
+    );
+});
+
+it(`should parse pair of executions inside declaration`, () => {
+    const parser = new Parser;
+    const program = parser.Parse(`f() { f() f() }`);
+
+    expect(program.toString()).toBe(
+        `() {\n` +
+        `\tf () {\n` +
+        `\t\tf()\n` +
+        `\t\tf()\n` +
+        `\t}\n` +
+        `}`,
+    );
+});
+
+it(`should parse three executions inside declaration`, () => {
+    const parser = new Parser;
+    const program = parser.Parse(`f() { f() f() f() }`);
+
+    expect(program.toString()).toBe(
+        `() {\n` +
+        `\tf () {\n` +
+        `\t\tf()\n` +
+        `\t\tf()\n` +
+        `\t\tf()\n` +
+        `\t}\n` +
+        `}`,
+    );
+});
