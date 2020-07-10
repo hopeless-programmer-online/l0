@@ -372,6 +372,10 @@ export default class Parser {
 
                 this.previous.Context.Declare(this.variable);
 
+                for (const variable of variables) {
+                    this.previous.Context.Declare(variable);
+                }
+
                 const parameters = new ProgramParameters;
 
                 // using "for" instead of "Array.prototype.map" to avoid recursion overflow
@@ -424,6 +428,21 @@ class Context {
         this.parent = parent;
     }
 
+    private TryGetByString(string : string) : Reference | null {
+        let context : Context | null = this;
+
+        do {
+            const reference = context.references.get(string);
+
+            if (reference) {
+                return reference;
+            }
+
+            context = context.parent;
+        } while (context);
+
+        return null;
+    }
     private GetByString(string : string) : Reference {
         let context : Context | null = this;
 
@@ -439,6 +458,30 @@ class Context {
 
         throw new Error(`Variable with name ${JSON.stringify(string)} does not exists.`);
     }
+    private Displace(string : string, reference : Reference) {
+        const { references } = this;
+
+        // @todo: optimize O(n^2) performance
+        while (true) {
+            const existing = this.TryGetByString(string);
+
+            if (!existing) {
+                break;
+            }
+
+            references.set(string, reference);
+
+            string = `../${string}`;
+            reference = new Reference({
+                Variable : existing.Variable,
+                Name     : new Name({
+                    String : string,
+                }),
+            });
+        }
+
+        references.set(string, reference);
+    }
 
     public Declare(variable : Variable) {
         const name = variable.Name;
@@ -446,14 +489,8 @@ class Context {
             Variable : variable,
             Name     : name,
         });
-        const string = name.String;
-        const { references } = this;
 
-        if (references.has(string)) {
-            throw new Error(`Variable with name ${JSON.stringify(string)} was already declared.`);
-        }
-
-        references.set(string, reference);
+        this.Displace(name.String, reference);
     }
     public Get(variable : Variable) : Reference {
         const string = variable.Name.String;
@@ -463,5 +500,4 @@ class Context {
 }
 
 const ParsingContext = Context;
-const VariableClass = Variable;
 const ProgramClass = Program;

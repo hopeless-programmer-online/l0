@@ -1,8 +1,8 @@
 import Parser from "./parser";
 
-const BIG_NUMBER = 1; // 1_000_000;
+const BIG_NUMBER = 1000; // 1_000_000;
 
-/*it(`should be function`, () => {
+it(`should be function`, () => {
     expect(typeof Parser).toBe(`function`);
 });
 
@@ -377,7 +377,7 @@ it(`should parse ${BIG_NUMBER} outputs`, () => {
     const parser = new Parser;
 
     expect(() => parser.Parse(source)).not.toThrow();
-});*/
+});
 
 it(`should access output`, () => {
     const parser = new Parser;
@@ -393,6 +393,19 @@ it(`should access output`, () => {
     );
 });
 
-/*it(`should throw on not existing variable`, () => {
+it(`should access parameter`, () => {
+    const parser = new Parser;
+    const program = parser.Parse(`f(x) { x() }`);
+
+    expect(program.toString()).toBe(
+        `() {\n` +
+        `\tf (x) {\n` +
+        `\t\tx()\n` +
+        `\t}\n` +
+        `}`,
+    );
+});
+
+it(`should throw on not existing variable`, () => {
     expect(() => (new Parser).Parse(`f()`)).toThrowError();
-});*/
+});
