@@ -1,6 +1,6 @@
 import Parser from "./parser";
 
-const BIG_NUMBER = 1; // 1_000_000;
+const BIG_NUMBER = 1_000_000;
 
 it(`should be function`, () => {
     expect(typeof Parser).toBe(`function`);
@@ -148,7 +148,7 @@ it(`should parse three parameters`, () => {
     );
 });
 
-it(`should pass ${BIG_NUMBER} parameters`, () => {
+it(`should parse ${BIG_NUMBER} parameters`, () => {
     let source = `f(x`;
 
     for (let i = 0; i < BIG_NUMBER - 1; ++i) {
@@ -162,7 +162,7 @@ it(`should pass ${BIG_NUMBER} parameters`, () => {
     expect(() => parser.Parse(source)).not.toThrow();
 });
 
-it(`should pass ${BIG_NUMBER} declarations`, () => {
+it(`should parse ${BIG_NUMBER} declarations`, () => {
     let source = ``;
 
     for (let i = 0; i < BIG_NUMBER; ++i) {
@@ -174,7 +174,7 @@ it(`should pass ${BIG_NUMBER} declarations`, () => {
     expect(() => parser.Parse(source)).not.toThrow();
 });
 
-it(`should pass ${BIG_NUMBER} nested declaration`, () => {
+it(`should parse ${BIG_NUMBER} nested declaration`, () => {
     let source = ``;
 
     for (let i = 0; i < BIG_NUMBER; ++i) {
@@ -310,4 +310,35 @@ it(`should parse three inputs`, () => {
         `\tf(f, f, f)\n` +
         `}`,
     );
+});
+
+it(`should parse output`, () => {
+    const parser = new Parser;
+    const program = parser.Parse(`f() {} u : f()`);
+
+    expect(program.toString()).toBe(
+        `() {\n` +
+        `\tf () {\n` +
+        `\t}\n` +
+        `\tu : f()\n` +
+        `}`,
+    );
+});
+
+it(`should parse ${BIG_NUMBER} inputs`, () => {
+    let source = `f(){}f(f`;
+
+    for (let i = 1; i < BIG_NUMBER; ++i) {
+        source += `,f`;
+    }
+
+    source += `)`;
+
+    const parser = new Parser;
+
+    expect(() => parser.Parse(source)).not.toThrow();
+});
+
+it(`should throw on not existing variable`, () => {
+    expect(() => (new Parser).Parse(`f()`)).toThrowError();
 });

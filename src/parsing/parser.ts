@@ -9,6 +9,8 @@ import {
     ExecutionProgramCommand,
     ExecutionProgramCommandInputs,
     ExplicitExecutionProgramCommandInput,
+    ExecutionProgramCommandOutputs,
+    ExplicitExecutionProgramCommandOutput,
 } from "../syntax";
 
 type Token = null | `,` | `:` | `(` | `)` | `{` | `}` | Variable;
@@ -123,23 +125,10 @@ export default class Parser {
             }
         }
         abstract class NonTerminalState extends ParsingState {
-            protected context : Context;
-
-            public constructor({
-                Context = new ParsingContext,
-            } : {
-                Context : Context,
-            } = {
-                Context : new ParsingContext,
-            }) {
-                super();
-
-                this.context = Context;
-            }
-
             public abstract Process() : ParsingState;
         }
         class CommandParsingState extends NonTerminalState {
+            protected context : Context;
             readonly Parent : CommandParsingState | null;
             protected program : Program;
 
@@ -156,10 +145,18 @@ export default class Parser {
                 Program : new ProgramClass,
                 Parent  : null,
             }) {
-                super({ Context });
+                super();
 
+                this.context = Context;
                 this.program = Program;
                 this.Parent = Parent;
+            }
+
+            public get Context() : Context {
+                return this.context;
+            }
+            public get Program() : Program {
+                return this.program;
             }
 
             public Process() : ParsingState {
@@ -182,35 +179,27 @@ export default class Parser {
                 return new VariableCommandParsingState({
                     Variable : first,
                     Previous : this,
-                    Program  : this.program,
-                    Context  : this.context,
                 });
             }
         }
         class VariableCommandParsingState extends NonTerminalState {
             protected variable : Variable;
             protected previous : CommandParsingState;
-            protected program : Program;
 
             public constructor({
                 Variable,
-                Context  = new ParsingContext,
-                Program  = new ProgramClass,
                 Previous,
             } : {
                 Variable : Variable,
-                Context? : Context,
-                Program? : Program,
                 Previous : CommandParsingState,
             }) {
-                super({ Context });
+                super();
 
-                this.program = Program;
                 this.previous = Previous;
                 this.variable = Variable;
             }
 
-            public ProcessVariables() : Array<Variable> {
+            private ProcessVariables() : Array<Variable> {
                 const variables : Array<Variable> = [];
                 const first = tokens.Next;
 
@@ -242,9 +231,68 @@ export default class Parser {
                     variables.push(second);
                 }
             }
+            private ConvertOutputs(variables : Array<Variable>) : ExecutionProgramCommandOutputs {
+                const outputs = new ExecutionProgramCommandOutputs;
+
+                // using "for" instead of "Array.prototype.map" to avoid recursion overflow
+                for (let index = 0; index < variables.length; ++index) {
+                    const input = new ExplicitExecutionProgramCommandOutput({
+                        Variable : variables[index],
+                        Index    : index,
+                    });
+
+                    outputs.Array.push(input);
+                }
+
+                return outputs;
+            }
+            private ConvertInputs(variables : Array<Variable>) : ExecutionProgramCommandInputs {
+                const inputs = new ExecutionProgramCommandInputs;
+
+                // using "for" instead of "Array.prototype.map" to avoid recursion overflow
+                for (let index = 0; index < variables.length; ++index) {
+                    const input = new ExplicitExecutionProgramCommandInput({
+                        Reference : this.previous.Context.Get(variables[index]),
+                        Index     : index,
+                    });
+
+                    inputs.Array.push(input);
+                }
+
+                return inputs;
+            }
+            private ProcessExecution(outputs : ExecutionProgramCommandOutputs) : ParsingState {
+                const first = tokens.Next;
+
+                if (!(first instanceof Variable)) {
+                    throw new Error; // @todo
+                }
+
+                const second = tokens.Next;
+
+                if (second !== `(`) {
+                    throw new Error; // @todo
+                }
+
+                const variables = this.ProcessVariables();
+                const program = this.previous.Context.Get(first);
+                const execution = new ExecutionProgramCommand({
+                    Outputs : outputs,
+                    Program : program,
+                    Inputs  : this.ConvertInputs(variables),
+                });
+
+                this.previous.Program.Commands.Array.push(execution);
+
+                return this.previous;
+            }
+
             public Process() : ParsingState {
                 const second = tokens.Next;
 
+                if (second === `:`) {
+                    return this.ProcessExecution(this.ConvertOutputs([ this.variable ]));
+                }
                 if (second !== `(`) {
                     throw new Error(`"(" expected, got ${JSON.stringify(second instanceof Variable ? second.toString() : second)}.`);
                 }
@@ -254,48 +302,38 @@ export default class Parser {
 
                 if (this.previous.Parent === null) {
                     if (fourth === null) {
-                        const reference = this.context.Get(this.variable);
-                        const inputs = new ExecutionProgramCommandInputs;
-
-                        // using "for" instead of "Array.prototype.map" to avoid recursion overflow
-                        for (let index = 0; index < variables.length; ++index) {
-                            const input = new ExplicitExecutionProgramCommandInput({
-                                Reference : this.context.Get(variables[index]),
-                                Index     : index,
-                            });
-
-                            inputs.Array.push(input);
-                        }
-
+                        const reference = this.previous.Context.Get(this.variable);
                         const command = new ExecutionProgramCommand({
                             Program : reference,
-                            Inputs  : inputs,
+                            Inputs  : this.ConvertInputs(variables),
                         });
 
-                        this.program.Commands.Array.push(command);
+                        this.previous.Program.Commands.Array.push(command);
 
-                        return new TerminalState({ Program : this.program });
+                        return new TerminalState({ Program : this.previous.Program });
                     }
                 }
                 else {
                     if (fourth === `}`) {
-                        const reference = this.context.Get(this.variable);
+                        const reference = this.previous.Context.Get(this.variable);
                         const command = new ExecutionProgramCommand({
                             Program : reference,
+                            Inputs  : this.ConvertInputs(variables),
                         });
 
-                        this.program.Commands.Array.push(command);
+                        this.previous.Program.Commands.Array.push(command);
 
                         return this.previous.Parent;
                     }
                 }
                 if (fourth instanceof Variable) {
-                    const reference = this.context.Get(this.variable);
+                    const reference = this.previous.Context.Get(this.variable);
                     const command = new ExecutionProgramCommand({
                         Program : reference,
+                        Inputs  : this.ConvertInputs(variables),
                     });
 
-                    this.program.Commands.Array.push(command);
+                    this.previous.Program.Commands.Array.push(command);
 
                     this.variable = fourth;
 
@@ -305,7 +343,7 @@ export default class Parser {
                     throw new Error; // @todo
                 }
 
-                this.context.Declare(this.variable);
+                this.previous.Context.Declare(this.variable);
 
                 const parameters = new ProgramParameters;
 
@@ -327,10 +365,10 @@ export default class Parser {
                     Program  : program,
                 });
 
-                this.program.Commands.Array.push(command);
+                this.previous.Program.Commands.Array.push(command);
 
                 return new CommandParsingState({
-                    Context : new Context(this.context),
+                    Context : new Context(this.previous.Context),
                     Program : program,
                     Parent  : this.previous,
                 });
@@ -372,7 +410,7 @@ class Context {
             context = context.parent;
         } while (context);
 
-        throw new Error; // @todo
+        throw new Error(`Variable with name ${JSON.stringify(string)} does not exists.`);
     }
 
     public Declare(variable : Variable) {
@@ -385,7 +423,7 @@ class Context {
         const { references } = this;
 
         if (references.has(string)) {
-            throw new Error(`Variable with name ${JSON.stringify(string)} was already declared in current context.`);
+            throw new Error(`Variable with name ${JSON.stringify(string)} was already declared.`);
         }
 
         references.set(string, reference);
