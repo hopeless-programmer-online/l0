@@ -1,7 +1,8 @@
 import Parser from "./parser";
 import * as syntax from "../syntax";
 
-const BIG_NUMBER = 1; // 1000; // 1_000_000;
+// @todo: revert to 1kk, when the O(n^2) issue will be fixed
+const BIG_NUMBER = 1000; // 1_000_000;
 
 it(`should be function`, () => {
     expect(typeof Parser).toBe(`function`);
