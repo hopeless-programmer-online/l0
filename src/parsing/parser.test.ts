@@ -1,6 +1,7 @@
 import Parser from "./parser";
+import * as syntax from "../syntax";
 
-const BIG_NUMBER = 1000; // 1_000_000;
+const BIG_NUMBER = 1; // 1000; // 1_000_000;
 
 it(`should be function`, () => {
     expect(typeof Parser).toBe(`function`);
@@ -404,6 +405,25 @@ it(`should access parameter`, () => {
         `\t}\n` +
         `}`,
     );
+});
+
+it(`should access overlapped declarations`, () => {
+    const parser = new Parser;
+    const program = parser.Parse(`f(){}f(){}../f()`);
+
+    const declaration = program.Commands.Array[0];
+
+    if (!(declaration instanceof syntax.DeclarationProgramCommand)) {
+        throw new Error; // @todo
+    }
+
+    const execution = program.Commands.Array[2];
+
+    if (!(execution instanceof syntax.ExecutionProgramCommand)) {
+        throw new Error; // @todo
+    }
+
+    expect(execution.Program.Variable).toBe(declaration.Variable);
 });
 
 it(`should throw on not existing variable`, () => {
