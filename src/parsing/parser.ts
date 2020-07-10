@@ -274,15 +274,18 @@ export default class Parser {
                     throw new Error; // @todo
                 }
 
-                const variables = this.ProcessVariables();
                 const program = this.previous.Context.Get(first);
                 const execution = new ExecutionProgramCommand({
                     Outputs : outputs,
                     Program : program,
-                    Inputs  : this.ConvertInputs(variables),
+                    Inputs  : this.ConvertInputs(this.ProcessVariables()),
                 });
 
                 this.previous.Program.Commands.Array.push(execution);
+
+                for (const output of outputs.Array) {
+                    this.previous.Context.Declare(output.Variable);
+                }
 
                 return this.previous;
             }
@@ -292,6 +295,30 @@ export default class Parser {
 
                 if (second === `:`) {
                     return this.ProcessExecution(this.ConvertOutputs([ this.variable ]));
+                }
+                if (second === `,`) {
+                    const variables : Array<Variable> = [ this.variable ];
+
+                    while (true) {
+                        const third = tokens.Next;
+
+                        if (!(third instanceof Variable)) {
+                            throw new Error; // @todo
+                        }
+
+                        variables.push(third);
+
+                        const fourth = tokens.Next;
+
+                        if (fourth === `:`) {
+                            break;
+                        }
+                        if (fourth !== `,`) {
+                            throw new Error; // @todo
+                        }
+                    }
+
+                    return this.ProcessExecution(this.ConvertOutputs(variables));
                 }
                 if (second !== `(`) {
                     throw new Error(`"(" expected, got ${JSON.stringify(second instanceof Variable ? second.toString() : second)}.`);
