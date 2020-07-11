@@ -5,6 +5,7 @@ import {
     Program,
     ProgramParameters,
     ExplicitProgramParameter,
+    ImplicitProgramParameter,
     DeclarationProgramCommand,
     ExecutionProgramCommand,
     ExecutionProgramCommandInputs,
@@ -372,11 +373,15 @@ export default class Parser {
 
                 this.previous.Context.Declare(this.variable);
 
-                for (const variable of variables) {
-                    this.previous.Context.Declare(variable);
-                }
-
                 const parameters = new ProgramParameters;
+
+                parameters.Array.push(new ImplicitProgramParameter({
+                    Variable : new Variable({
+                        Name : new Name({
+                            String : `return`,
+                        }),
+                    }),
+                }));
 
                 // using "for" instead of "Array.prototype.map" to avoid recursion overflow
                 for (let index = 0; index < variables.length; ++index) {
@@ -386,6 +391,10 @@ export default class Parser {
                     });
 
                     parameters.Array.push(parameter);
+                }
+
+                for (const parameter of parameters.Array) {
+                    this.previous.Context.Declare(parameter.Variable);
                 }
 
                 const program = new Program({

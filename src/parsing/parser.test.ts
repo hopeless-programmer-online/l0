@@ -427,6 +427,74 @@ it(`should access overlapped declarations`, () => {
     expect(execution.Program.Variable).toBe(declaration.Variable);
 });
 
+it(`should access return`, () => {
+    const parser = new Parser;
+    const program = parser.Parse(`f() { return() }`);
+
+    expect(program.toString()).toBe(
+        `() {\n` +
+        `\tf () {\n` +
+        `\t\treturn()\n` +
+        `\t}\n` +
+        `}`,
+    );
+});
+
+it(`should access ../return`, () => {
+    const parser = new Parser;
+    const program = parser.Parse(`f() { g() { ../return() } }`);
+
+    expect(program.toString()).toBe(
+        `() {\n` +
+        `\tf () {\n` +
+        `\t\tg () {\n` +
+        `\t\t\t../return()\n` +
+        `\t\t}\n` +
+        `\t}\n` +
+        `}`,
+    );
+});
+
+it(`should parse smoke test`, () => {
+    const parser = new Parser;
+    const program = parser.Parse(`
+        program (1, -, *, >, ?) {
+            ! (n) {
+                then () {
+                    n - 1 : -(n, 1)
+                    n - 1! : !(n - 1)
+                    n * n - 1! : *(n, n - 1)
+
+                    ../return(n * n - 1!)
+                }
+
+                n > 1 : >(n, 1)
+
+                ?(n > 1, then)
+                return(1)
+            }
+        }
+    `);
+
+    expect(program.toString()).toBe(
+        `() {\n` +
+        `\tprogram (1, -, *, >, ?) {\n` +
+        `\t\t! (n) {\n` +
+        `\t\t\tthen () {\n` +
+        `\t\t\t\tn - 1 : -(n, 1)\n` +
+        `\t\t\t\tn - 1! : !(n - 1)\n` +
+        `\t\t\t\tn * n - 1! : *(n, n - 1)\n` +
+        `\t\t\t\t../return(n * n - 1!)\n` +
+        `\t\t\t}\n` +
+        `\t\t\tn > 1 : >(n, 1)\n` +
+        `\t\t\t?(n > 1, then)\n` +
+        `\t\t\treturn(1)\n` +
+        `\t\t}\n` +
+        `\t}\n` +
+        `}` +
+    ``);
+});
+
 it(`should throw on not existing variable`, () => {
     expect(() => (new Parser).Parse(`f()`)).toThrowError();
 });

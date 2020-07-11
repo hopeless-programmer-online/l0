@@ -4,6 +4,7 @@ import Reference from "./syntax/reference";
 import Program from "./syntax/program";
 import ProgramParameters from "./syntax/program-parameters";
 import ExplicitProgramParameter from "./syntax/explicit-program-parameter";
+import ImplicitProgramParameter from "./syntax/implicit-program-parameter";
 import ProgramCommands from "./syntax/program-commands";
 import DeclarationProgramCommand from "./syntax/declaration-program-command";
 import ExecutionProgramCommand from "./syntax/execution-program-command";
@@ -19,6 +20,7 @@ export {
     Program,
     ProgramParameters,
     ExplicitProgramParameter,
+    ImplicitProgramParameter,
     ProgramCommands,
     DeclarationProgramCommand,
     ExecutionProgramCommand,
