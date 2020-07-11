@@ -1,3 +1,3 @@
 # l0
 
-Small programming language
+Small programming language.
