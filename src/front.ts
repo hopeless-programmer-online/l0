@@ -6,6 +6,8 @@ import ImplicitParameter from "./front/implicit-parameter";
 import Commands from "./front/commands";
 import Command from "./front/command";
 import Execution from "./front/execution";
+import Inputs from "./front/inputs";
+import Input from "./front/input";
 
 export {
     Program,
@@ -16,4 +18,6 @@ export {
     Commands,
     Command,
     Execution,
+    Inputs,
+    Input,
 };
