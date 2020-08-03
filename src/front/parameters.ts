@@ -2,10 +2,12 @@ import Program from "./program";
 import Parameter from "./parameter";
 import Explicit from "./explicit-parameter";
 import Name from "./name";
+import Scope from "./scope";
 
 export default class Parameters {
-    readonly program : Program;
+    private program : Program;
     private set : Set<Parameter> = new Set;
+    readonly Scope = new Scope;
 
     public constructor({ Program } : { Program : Program }) {
         this.program = Program;
@@ -26,5 +28,6 @@ export default class Parameters {
         });
 
         this.set.add(parameter);
+        this.Scope.AddParameter(parameter);
     }
 }
