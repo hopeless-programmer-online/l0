@@ -1,5 +1,6 @@
 import Scope from "./scope";
 import Program from "./program";
+import OutputReference from "./output-reference";
 
 it(``, () => {
     const global = new Scope;
@@ -11,6 +12,11 @@ it(``, () => {
     const global_super = program.Parameters.AddDynamic(`super`);
     const global_program = program.Parameters.AddDynamic(`program`);
     const global_main = program.Parameters.AddExplicit(`main`);
+
+    expect(`${program}`).toBe(
+        `(main) {\n` +
+        `}` +
+    ``);
 
     const global_super_reference = program.Scope.GetParameter(global_super);
 
@@ -37,6 +43,12 @@ it(`Should overlap parameters`, () => {
     // [super, program](main)
     const x1 = program.Parameters.AddExplicit(`x`);
     const x2 = program.Parameters.AddExplicit(`x`);
+
+    expect(`${program}`).toBe(
+        `(x, x) {\n` +
+        `}` +
+    ``);
+
     const x1_reference = program.Scope.GetParameter(x1);
 
     expect(x1_reference.Parameter).toBe(x1);
@@ -46,6 +58,35 @@ it(`Should overlap parameters`, () => {
 
     expect(x2_reference.Parameter).toBe(x2);
     expect(x2_reference.Name.String).toBe(`x`);
+});
+
+it(``, () => {
+    const global = new Scope;
+    const program = new Program({
+        Parent : global,
+    });
+
+    // [super]()
+    const global_super = program.Parameters.AddDynamic(`super`);
+
+    // u, v : super(super)
+    const super_execution = program.Commands.AddExecution();
+
+    super_execution.SetTarget(`super`);
+    super_execution.Inputs.Add(`super`);
+    const u = super_execution.Outputs.AddExplicit(`u`);
+    super_execution.Outputs.AddExplicit(`v`);
+
+    expect(`${program}`).toBe(
+        `() {\n` +
+        `\tu, v : super(super)\n` +
+        `}` +
+    ``);
+
+    const u_reference = super_execution.Scope.GetName(`u`);
+
+    expect(u_reference).toBeInstanceOf(OutputReference);
+    expect((u_reference as OutputReference).Output).toBe(u);
 });
 
 

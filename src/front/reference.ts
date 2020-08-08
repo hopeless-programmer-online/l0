@@ -8,4 +8,8 @@ export default abstract class Reference {
     }
 
     public abstract Copy(name : Name) : Reference;
+
+    public toString() {
+        return `${this.Name}`;
+    }
 }

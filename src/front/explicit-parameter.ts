@@ -13,4 +13,8 @@ export default class ExplicitParameter extends Parameter {
 
         this.Index = Index;
     }
+
+    public toString() : string {
+        return this.Name.toString();
+    }
 }

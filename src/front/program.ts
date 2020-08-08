@@ -16,4 +16,8 @@ export default class Program {
     public get Scope() : Scope {
         return this.Parameters.Scope;
     }
+
+    public toString() : string {
+        return `${this.Parameters} ${this.Commands}`;
+    }
 }

@@ -4,4 +4,8 @@ export default class Name {
     public constructor({ String } : { String : string }) {
         this.String = String;
     }
+
+    public toString() : string {
+        return this.String;
+    }
 }

@@ -71,4 +71,8 @@ export default class Parameters {
 
         return parameter;
     }
+
+    public toString() : string {
+        return `(${this.Explicit.join(`, `)})`;
+    }
 }
