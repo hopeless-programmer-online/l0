@@ -28,7 +28,7 @@ export default class Parameters {
         return this.array
             .filter(parameter => parameter instanceof Explicit)
             .map(parameter => parameter as Explicit)
-            .sort((a, b) => b.Index - a.Index);
+            .sort((a, b) => a.Index - b.Index);
     }
 
     public AddStatic(string : string) : Static {

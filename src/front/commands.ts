@@ -2,6 +2,8 @@ import Command from "./command";
 import Program from "./program";
 import Execution from "./execution";
 import Scope from "./scope";
+import Declaration from "./declaration";
+import Name from "./name";
 
 /**
  * IMPORTANT: do not add new command before finalizing previous command's scope
@@ -28,6 +30,19 @@ export default class Commands {
         const command = new Execution({
             Commands : this,
             Parent   : this.Scope,
+        });
+
+        this.array.push(command);
+
+        return command;
+    }
+    public AddDeclaration(string : string) : Declaration {
+        const scope = this.Scope;
+        const command = new Declaration({
+            Commands : this,
+            Parent   : scope,
+            Name     : new Name({ String : string }),
+            Program  : new Program({ Parent : scope }),
         });
 
         this.array.push(command);
