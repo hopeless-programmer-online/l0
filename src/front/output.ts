@@ -1,23 +1,25 @@
 import Outputs from "./outputs";
-import Scope from "./scope";
 import Name from "./name";
-import OutputReference from "./output-reference";
+import Scope from "./scope";
+import Reference from "./reference";
+
+type Parent = Outputs | Output;
 
 export default abstract class Output {
-    readonly Outputs : Outputs;
-    readonly Name : Name;
+    readonly Parent : Parent;
     readonly Scope : Scope;
+    readonly Name : Name;
 
-    public constructor({ Outputs, Name, Parent } : { Outputs : Outputs, Name : Name, Parent : Scope }) {
-        this.Outputs = Outputs;
-        this.Name = Name;
+    public constructor({ Name, Parent } : { Name : Name, Parent : Parent }) {
+        this.Parent = Parent;
         this.Scope = new Scope({
-            Parent,
-            Reference : new OutputReference({
-                Output : this,
+            Parent    : Parent.Scope,
+            Reference : new Reference({
                 Name,
+                Target : this,
             }),
         });
+        this.Name = Name;
     }
 
     public toString() : string {

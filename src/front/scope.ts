@@ -1,7 +1,5 @@
-import Name from "./name";
-import Parameter from "./parameter";
 import Reference from "./reference";
-import ParameterReference from "./parameter-reference";
+import Name from "./name";
 
 type References = Map<string, Reference>;
 
@@ -15,7 +13,8 @@ export default class Scope {
     }
 
     public get References() : References {
-        const references : References = new Map;
+        // eslint-disable-next-line new-parens
+        const map = new Map<string, Reference>();
 
         let scope : Scope | null = this;
 
@@ -25,49 +24,36 @@ export default class Scope {
             if (reference) {
                 let string = reference.Name.String;
 
-                while (references.has(string)) {
+                while (map.has(string)) {
                     string = `../${string}`;
                 }
 
-                references.set(string, reference.Copy(new Name({
-                    String : string,
-                })));
+                map.set(string, new Reference({
+                    Name   : new Name({ String : string }),
+                    Target : reference.Target,
+                }));
             }
 
             scope = scope.Parent;
         }
 
-        return references;
+        return map;
     }
 
-    public GetName(string : string) : Reference {
-        const reference = this.References.get(string);
+    public Get(string : string) : Reference {
+        const references = this.References;
+        const reference = references.get(string);
 
         if (!reference) {
-            throw new Error(`Reference with name ${JSON.stringify(string)} does not exists in ${this}.`);
+            throw new Error(`Name ${JSON.stringify(string)} does not exists in ${this}`);
         }
 
         return reference;
-    }
-    public GetParameter(parameter : Parameter) : ParameterReference {
-        for (const reference of this.References.values()) {
-            if (reference instanceof ParameterReference && reference.Parameter === parameter) {
-                return reference;
-            }
-        }
-
-        throw new Error; // @todo
     }
 
     public toString() : string {
         const references = this.References;
 
-        if (references.size === 0) {
-            return `{}`;
-        }
-
-        const keys = Array.from(references.keys());
-
-        return `{ ${keys.join(`, `)} }`;
+        return `[${[ ...references.keys() ].map(x => JSON.stringify(x)).join(`,`)}]`;
     }
 }

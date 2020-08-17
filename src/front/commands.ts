@@ -1,61 +1,52 @@
-import Command from "./command";
 import Program from "./program";
-import Execution from "./execution";
-import Scope from "./scope";
 import Declaration from "./declaration";
+import Command from "./command";
 import Name from "./name";
+import Scope from "./scope";
+import Execution from "./execution";
 
-/**
- * IMPORTANT: do not add new command before finalizing previous command's scope
- */
 export default class Commands {
-    readonly program : Program;
-    private array : Array<Command> = [];
+    readonly Program : Program;
+    readonly Array : Array<Command> = [];
 
     public constructor({ Program } : { Program : Program }) {
-        this.program = Program;
+        this.Program = Program;
     }
 
     public get Scope() : Scope {
-        const { array } = this;
+        const array = this.Array;
+        const { length } = array;
 
-        if (array.length <= 0) {
-            return this.program.Scope;
+        if (length <= 0) {
+            return this.Program.Parameters.Scope;
         }
 
-        return array[array.length - 1].Scope;
+        return array[length - 1].Scope;
     }
 
-    public AddExecution() : Execution {
-        const command = new Execution({
-            Commands : this,
-            Parent   : this.Scope,
-        });
+    public Declare(string : string) : Declaration {
+        const name = new Name({ String : string });
+        const parent = this.Array[this.Array.length - 1] || this;
+        const command = new Declaration({ Name : name, Parent : parent });
 
-        this.array.push(command);
+        this.Array.push(command);
 
         return command;
     }
-    public AddDeclaration(string : string) : Declaration {
-        const scope = this.Scope;
-        const command = new Declaration({
-            Commands : this,
-            Parent   : scope,
-            Name     : new Name({ String : string }),
-            Program  : new Program({ Parent : scope }),
-        });
+    public Execute(string : string) : Execution {
+        const parent = this.Array[this.Array.length - 1] || this;
+        const target = parent.Scope.Get(string);
+        const command = new Execution({ Target : target, Parent : parent });
 
-        this.array.push(command);
+        this.Array.push(command);
 
         return command;
     }
 
     public toString() : string {
         return `{${
-            this
-                .array
-                .map(command => `\n${command}`)
-                .join(``)
+            this.Array
+                .map(command => `\n${command}`).join(``)
                 .replace(/\n/g, `\n\t`)
         }\n}`;
     }

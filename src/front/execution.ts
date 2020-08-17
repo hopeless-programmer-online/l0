@@ -1,43 +1,30 @@
-import Commands from "./commands";
 import Command from "./command";
-import Inputs from "./inputs";
+import Commands from "./commands";
 import Scope from "./scope";
 import Reference from "./reference";
 import Outputs from "./outputs";
+import Inputs from "./inputs";
+import Input from "./input";
+
+type Parent = Commands | Command;
 
 export default class Execution extends Command {
-    private target : Reference | null = null;
-    readonly Parent : Scope;
-    readonly Outputs = new Outputs({ Execution : this });
+    readonly Scope : Scope;
+    readonly Target : Reference;
+    readonly Outputs : Outputs;
     readonly Inputs = new Inputs({ Execution : this });
 
-    public constructor({ Commands, Parent } : { Commands : Commands, Parent : Scope }) {
-        super({ Commands });
+    public constructor({ Target, Parent } : { Target : Reference, Parent : Parent }) {
+        super({ Parent });
 
-        this.Parent = Parent;
-    }
-
-    public get Target() : Reference {
-        if (!this.target) {
-            throw new Error; // @todo
-        }
-
-        return this.target;
-    }
-    public get Scope() : Scope {
-        return this.Outputs.Scope;
-    }
-
-    public SetTarget(string : string) {
-        if (this.target) {
-            throw new Error; // @todo
-        }
-
-        this.target = this.Scope.GetName(string);
+        this.Scope = new Scope({
+            Parent : Parent.Scope,
+        });
+        this.Target = Target;
+        this.Outputs = new Outputs({ Execution : this });
     }
 
     public toString() : string {
-        const outputs = this.Outputs;
-        return `${outputs.IsEmpty ? `` : `${outputs} : `}${this.Target}${this.Inputs}`;
+        return `${this.Outputs}${this.Target}${this.Inputs}`;
     }
 }

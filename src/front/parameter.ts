@@ -1,22 +1,25 @@
 import Parameters from "./parameters";
 import Name from "./name";
 import Scope from "./scope";
-import ParameterReference from "./parameter-reference";
+import Reference from "./reference";
+
+type Parent = Parameters | Parameter;
 
 export default abstract class Parameter {
-    readonly Parameters : Parameters;
-    readonly Name : Name;
+    readonly Parent : Parent;
     readonly Scope : Scope;
+    readonly Name : Name;
 
-    public constructor({ Parameters, Name, Parent } : { Parameters : Parameters, Name : Name, Parent : Scope }) {
-        this.Parameters = Parameters;
-        this.Name = Name;
+    public constructor({ Name, Parent } : { Name : Name, Parent : Parent }) {
+        this.Parent = Parent;
         this.Scope = new Scope({
-            Parent,
-            Reference : new ParameterReference({
-                Parameter : this,
-                Name,
-            }),
+            Parent    : Parent.Scope,
+            Reference : new Reference({ Name, Target : this }),
         });
+        this.Name = Name;
+    }
+
+    public toString() : string {
+        return `${this.Name}`;
     }
 }

@@ -1,17 +1,18 @@
-import Inputs from "./inputs";
 import Reference from "./reference";
 
 type Index = number;
 
 export default class Input {
-    readonly Inputs : Inputs;
-    readonly Reference : Reference;
     readonly Index : Index;
+    readonly Reference : Reference;
 
-    public constructor({ Inputs, Reference, Index } : { Inputs : Inputs, Reference : Reference, Index : Index }) {
-        this.Inputs = Inputs;
-        this.Reference = Reference;
+    public constructor({ Reference, Index } : { Reference : Reference, Index : Index }) {
+        if (!Number.isInteger(Index) || Index < 0) {
+            throw new Error; // @todo
+        }
+
         this.Index = Index;
+        this.Reference = Reference;
     }
 
     public toString() : string {

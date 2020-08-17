@@ -3,18 +3,19 @@ import Parameter from "./parameter";
 import Name from "./name";
 import Scope from "./scope";
 
+type Parent = Parameters | Parameter;
 type Index = number;
 
 export default class ExplicitParameter extends Parameter {
     readonly Index : Index;
 
-    public constructor({ Parameters, Name, Index, Parent } : { Parameters : Parameters, Name : Name, Index : Index, Parent : Scope }) {
-        super({ Parameters, Name, Parent });
+    public constructor({ Name, Index, Parent } : { Name : Name, Index : Index, Parent : Parent }) {
+        if (!Number.isInteger(Index) || Index < 0) {
+            throw new Error; // @todo
+        }
+
+        super({ Name, Parent });
 
         this.Index = Index;
-    }
-
-    public toString() : string {
-        return this.Name.toString();
     }
 }

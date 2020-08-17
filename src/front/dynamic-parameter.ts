@@ -1,4 +1,4 @@
 import Implicit from "./implicit-parameter";
 
-export default class DynamicParameter extends Implicit {
+export default abstract class DynamicParameter extends Implicit {
 }

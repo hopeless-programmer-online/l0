@@ -1,73 +1,77 @@
 import Program from "./program";
 import Parameter from "./parameter";
-import Static from "./static-parameter";
-import Dynamic from "./dynamic-parameter";
 import Explicit from "./explicit-parameter";
 import Name from "./name";
+import Super from "./super-parameter";
+import Declaration from "./declaration";
+import StaticParameter from "./static-parameter";
+import Command from "./command";
+import Commands from "./commands";
 import Scope from "./scope";
 
-/**
- * IMPORTANT: do not add parameters after referencing existed once's.
- */
 export default class Parameters {
-    private program : Program;
-    private array : Array<Parameter> = [];
-    readonly Parent : Scope;
-    private scope : Scope;
+    private isFinalized = false;
+    readonly Program : Program;
+    readonly Array : Array<Parameter> = [];
 
-    public constructor({ Program, Parent } : { Program : Program, Parent : Scope }) {
-        this.program = Program;
-        this.Parent = Parent;
-        this.scope = Parent;
+    public constructor({ Program } : { Program : Program }) {
+        this.Program = Program;
+
+        let parent : Parameters | Parameter = this;
+
+        if (Program.Parent) {
+            const references = Program.Parent.Scope.References.values();
+
+            for (const reference of references) {
+                const parameter : StaticParameter = new StaticParameter({
+                    Reference : reference,
+                    Parent    : parent,
+                });
+
+                this.Array.push(parameter);
+
+                parent = parameter;
+            }
+        }
+
+        const parameter = new Super({ Parent : parent });
+
+        this.Array.push(parameter);
     }
 
     public get Scope() : Scope {
-        return this.scope;
+        const array = this.Array;
+        const { length } = array;
+
+        if (length <= 0) {
+            return this.Program.Scope;
+        }
+
+        return array[length - 1].Scope;
     }
     public get Explicit() : Array<Explicit> {
-        return this.array
+        return this
+            .Array
             .filter(parameter => parameter instanceof Explicit)
-            .map(parameter => parameter as Explicit)
-            .sort((a, b) => a.Index - b.Index);
+            .map(parameter => parameter as Explicit); // @todo
     }
 
-    public AddStatic(string : string) : Static {
-        const scope = this.Scope;
-        const reference = scope.GetName(string);
-        const parameter = new Static({
-            Parent     : scope,
-            Parameters : this,
-            Name       : new Name({ String : string }),
-            Reference  : reference,
-        });
+    public Finalize() {
+        if (this.isFinalized) {
+            throw new Error; // @todo
+        }
 
-        this.array.push(parameter);
-        this.scope = parameter.Scope;
-
-        return parameter;
+        this.isFinalized = true;
     }
-    public AddDynamic(string : string) : Dynamic {
-        const parameter = new Dynamic({
-            Parent     : this.Scope,
-            Parameters : this,
-            Name       : new Name({ String : string }),
-        });
+    public Add(string : string) : Explicit {
+        if (this.isFinalized) {
+            throw new Error; // @todo
+        }
 
-        this.array.push(parameter);
-        this.scope = parameter.Scope;
+        const name = new Name({ String : string });
+        const parameter = new Explicit({ Name : name, Index : this.Explicit.length, Parent : this });
 
-        return parameter;
-    }
-    public AddExplicit(string : string) : Explicit {
-        const parameter = new Explicit({
-            Parent     : this.Scope,
-            Parameters : this,
-            Name       : new Name({ String : string }),
-            Index      : this.Explicit.length,
-        });
-
-        this.array.push(parameter);
-        this.scope = parameter.Scope;
+        this.Array.push(parameter);
 
         return parameter;
     }

@@ -1,54 +1,57 @@
-import Execution from "./execution";
 import Output from "./output";
+import Execution from "./execution";
 import Scope from "./scope";
 import Explicit from "./explicit-output";
 import Name from "./name";
+import Sub from "./sub-output";
 
 export default class Outputs {
-    private execution : Execution;
-    private array : Array<Output> = [];
+    readonly Execution : Execution;
+    readonly Array : Array<Output> = [];
 
-    public constructor({ Execution } : { Execution : Execution }) {
-        this.execution = Execution;
+    public constructor({ Execution } : { Execution : Execution}) {
+        this.Execution = Execution;
+
+        const parameter = new Sub({ Parent : this });
+
+        this.Array.push(parameter);
     }
 
-    public get IsEmpty() : boolean {
-        return this.array.length <= 0;
-    }
     public get Scope() : Scope {
-        const { array } = this;
+        const array = this.Array;
+        const { length } = array;
 
-        if (array.length <= 0) {
-            return this.execution.Parent;
+        if (length <= 0) {
+            return this.Execution.Scope;
         }
 
-        return array[array.length - 1].Scope;
+        return array[length - 1].Scope;
     }
     public get Explicit() : Array<Explicit> {
-        return this.array
+        return this
+            .Array
             .filter(parameter => parameter instanceof Explicit)
-            .map(parameter => parameter as Explicit)
-            .sort((a, b) => b.Index - a.Index);
+            .map(parameter => parameter as Explicit); // @todo
     }
 
-    public AddExplicit(string : string) : Explicit {
-        const parameter = new Explicit({
-            Parent  : this.Scope,
-            Outputs : this,
-            Name    : new Name({ String : string }),
-            Index      : this.Explicit.length,
-        });
+    public Add(string : string) : Explicit {
+        // if (this.isFinalized) {
+        //     throw new Error; // @todo
+        // }
 
-        this.array.push(parameter);
+        const name = new Name({ String : string });
+        const output = new Explicit({ Name : name, Index : this.Explicit.length, Parent : this });
 
-        return parameter;
+        this.Array.push(output);
+
+        return output;
     }
 
     public toString() : string {
-        if (this.IsEmpty) {
-            return ``;
-        }
+        const array = this.Explicit;
 
-        return this.array.join(`, `);
+        if (array.length <= 0) return ``;
+
+        return `${array.join(`, `)} : `;
     }
 }

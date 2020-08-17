@@ -1,27 +1,26 @@
 import Command from "./command";
-import Scope from "./scope";
+import Program from "./program";
 import Commands from "./commands";
 import Name from "./name";
-import DeclarationReference from "./declaration-reference";
-import { Program } from "../front";
+import Scope from "./scope";
+import Reference from "./reference";
+
+type Parent = Commands | Command;
 
 export default class Declaration extends Command {
-    readonly Scope : Scope;
     readonly Name : Name;
+    readonly Scope : Scope;
     readonly Program : Program;
 
-    public constructor({ Commands, Parent, Name, Program } : { Commands : Commands, Parent : Scope, Name : Name, Program : Program }) {
-        super({ Commands });
+    public constructor({ Name, Parent } : { Name : Name, Parent : Parent }) {
+        super({ Parent });
 
-        this.Scope = new Scope({
-            Parent,
-            Reference : new DeclarationReference({
-                Declaration : this,
-                Name,
-            }),
-        });
         this.Name = Name;
-        this.Program = Program;
+        this.Scope = new Scope({
+            Parent    : Parent.Scope,
+            Reference : new Reference({ Name, Target : this }),
+        });
+        this.Program = new Program({ Parent : this });
     }
 
     public toString() : string {

@@ -1,14 +1,14 @@
 import Commands from "./commands";
 import Scope from "./scope";
 
-export default abstract class Command {
-    readonly Commands : Commands;
+type Parent = Commands | Command;
 
-    public constructor({ Commands } : { Commands : Commands }) {
-        this.Commands = Commands;
+export default abstract class Command {
+    readonly Parent : Parent;
+
+    public constructor({ Parent } : { Parent : Parent }) {
+        this.Parent = Parent;
     }
 
     public abstract get Scope() : Scope;
-
-    public abstract toString() : string;
 }

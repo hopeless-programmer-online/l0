@@ -1,135 +1,105 @@
-import Scope from "./scope";
 import Program from "./program";
-import OutputReference from "./output-reference";
+import SuperParameter from "./super-parameter";
+import ExplicitParameter from "./explicit-parameter";
+import StaticParameter from "./static-parameter";
+import SubOutput from "./sub-output";
+import ExplicitOutput from "./explicit-output";
+import Declaration from "./declaration";
+
+/*it(``, () => {
+    const program = new Program;
+
+    const f = program.Commands.Declare(`f`);
+    const x = f.Program.Parameters.Add(`x`);
+    const y = f.Program.Parameters.Add(`y`);
+    const z = f.Program.Parameters.Add(`z`);
+
+    const fc = program.Commands.Execute(`f`);
+
+    fc.Outputs.Add(`u`);
+    fc.Outputs.Add(`v`);
+    fc.Outputs.Add(`w`);
+});*/
 
 it(``, () => {
-    const global = new Scope;
-    const program = new Program({
-        Parent : global,
-    });
+    // [super](x, y, z) { f(u, v, w) { i, j, k : f() } a, b, c : f() }
+    const program = new Program;
 
-    // [super, program](main)
-    const global_super = program.Parameters.AddDynamic(`super`);
-    const global_program = program.Parameters.AddDynamic(`program`);
-    const global_main = program.Parameters.AddExplicit(`main`);
+    program.Parameters.Add(`x`);
+    program.Parameters.Add(`y`);
+    program.Parameters.Add(`z`);
 
-    expect(`${program}`).toBe(
-        `(main) {\n` +
-        `}` +
-    ``);
+    const f = program.Commands.Declare(`f`);
 
-    const global_super_reference = program.Scope.GetParameter(global_super);
+    f.Program.Parameters.Add(`u`);
+    f.Program.Parameters.Add(`v`);
+    f.Program.Parameters.Add(`w`);
 
-    expect(global_super_reference.Parameter).toBe(global_super);
-    expect(global_super_reference.Name.String).toBe(`super`);
+    const ffc = f.Program.Commands.Execute(`f`);
 
-    const global_program_reference = program.Scope.GetParameter(global_program);
+    ffc.Outputs.Add(`i`);
+    ffc.Outputs.Add(`j`);
+    ffc.Outputs.Add(`k`);
 
-    expect(global_program_reference.Parameter).toBe(global_program);
-    expect(global_program_reference.Name.String).toBe(`program`);
+    const fc = program.Commands.Execute(`f`);
 
-    const global_main_reference = program.Scope.GetParameter(global_main);
-
-    expect(global_main_reference.Parameter).toBe(global_main);
-    expect(global_main_reference.Name.String).toBe(`main`);
-});
-
-it(`Should overlap parameters`, () => {
-    const global = new Scope;
-    const program = new Program({
-        Parent : global,
-    });
-
-    // [super, program](main)
-    const x1 = program.Parameters.AddExplicit(`x`);
-    const x2 = program.Parameters.AddExplicit(`x`);
+    fc.Outputs.Add(`a`);
+    fc.Outputs.Add(`b`);
+    fc.Outputs.Add(`c`);
 
     expect(`${program}`).toBe(
-        `(x, x) {\n` +
-        `}` +
-    ``);
-
-    const x1_reference = program.Scope.GetParameter(x1);
-
-    expect(x1_reference.Parameter).toBe(x1);
-    expect(x1_reference.Name.String).toBe(`../x`);
-
-    const x2_reference = program.Scope.GetParameter(x2);
-
-    expect(x2_reference.Parameter).toBe(x2);
-    expect(x2_reference.Name.String).toBe(`x`);
-});
-
-it(``, () => {
-    const global = new Scope;
-    const program = new Program({
-        Parent : global,
-    });
-
-    // [super]()
-    const global_super = program.Parameters.AddDynamic(`super`);
-
-    // u, v : super(super)
-    const super_execution = program.Commands.AddExecution();
-
-    super_execution.SetTarget(`super`);
-    super_execution.Inputs.Add(`super`);
-
-    const u = super_execution.Outputs.AddExplicit(`u`);
-    const v = super_execution.Outputs.AddExplicit(`v`);
-
-    const u_reference = super_execution.Scope.GetName(`u`);
-
-    expect(u_reference).toBeInstanceOf(OutputReference);
-    expect((u_reference as OutputReference).Output).toBe(u);
-
-    // v(v)
-    const v_execution = program.Commands.AddExecution();
-
-    v_execution.SetTarget(`v`);
-    v_execution.Inputs.Add(`v`);
-
-    const v2 = v_execution.Outputs.AddExplicit(`v`);
-    const v2_reference = program.Commands.Scope.GetName(`v`);
-
-    expect(v2_reference).toBeInstanceOf(OutputReference);
-    expect((v2_reference as OutputReference).Output).toBe(v2);
-
-    const v_reference = program.Commands.Scope.GetName(`../v`);
-
-    expect(v_reference).toBeInstanceOf(OutputReference);
-    expect((v_reference as OutputReference).Output).toBe(v);
-
-    expect(`${program}`).toBe(
-        `() {\n` +
-        `\tu, v : super(super)\n` +
-        `\tv : v(v)\n` +
-        `}` +
-    ``);
-});
-
-it(``, () => {
-    const global = new Scope;
-    const main = new Program({
-        Parent : global,
-    });
-
-    const f_declaration = main.Commands.AddDeclaration(`f`);
-    const f = f_declaration.Program;
-
-    f.Parameters.AddExplicit(`x`);
-    f.Parameters.AddExplicit(`y`);
-    f.Parameters.AddExplicit(`z`);
-
-    const f_execution = main.Commands.AddExecution();
-
-    f_execution.SetTarget(`f`);
-
-    expect(`${main}`).toBe(
-        `() {\n` +
-        `\tf (x, y, z) {\n` +
+        `(x, y, z) {\n` +
+        `\tf (u, v, w) {\n` +
+        `\t\ti, j, k : f()\n` +
         `\t}\n` +
-        `\tf()\n` +
+        `\ta, b, c : f()\n` +
         `}` +
     ``);
+
+    const s = program.Parameters.Scope;
+
+    expect(s.Get(`super`).Target).toBeInstanceOf(SuperParameter);
+    expect(s.Get(`x`).Target).toBeInstanceOf(ExplicitParameter);
+    expect(s.Get(`y`).Target).toBeInstanceOf(ExplicitParameter);
+    expect(s.Get(`z`).Target).toBeInstanceOf(ExplicitParameter);
+
+    const fs = f.Program.Parameters.Scope;
+
+    expect(fs.Get(`f`).Target).toBeInstanceOf(StaticParameter);
+    expect(fs.Get(`../super`).Target).toBeInstanceOf(StaticParameter);
+    expect(fs.Get(`x`).Target).toBeInstanceOf(StaticParameter);
+    expect(fs.Get(`y`).Target).toBeInstanceOf(StaticParameter);
+    expect(fs.Get(`z`).Target).toBeInstanceOf(StaticParameter);
+    expect(fs.Get(`super`).Target).toBeInstanceOf(SuperParameter);
+    expect(fs.Get(`u`).Target).toBeInstanceOf(ExplicitParameter);
+    expect(fs.Get(`v`).Target).toBeInstanceOf(ExplicitParameter);
+    expect(fs.Get(`w`).Target).toBeInstanceOf(ExplicitParameter);
+
+    const ffcs = ffc.Outputs.Scope;
+
+    expect(ffcs.Get(`f`).Target).toBeInstanceOf(StaticParameter);
+    expect(ffcs.Get(`../super`).Target).toBeInstanceOf(StaticParameter);
+    expect(ffcs.Get(`x`).Target).toBeInstanceOf(StaticParameter);
+    expect(ffcs.Get(`y`).Target).toBeInstanceOf(StaticParameter);
+    expect(ffcs.Get(`z`).Target).toBeInstanceOf(StaticParameter);
+    expect(ffcs.Get(`super`).Target).toBeInstanceOf(SuperParameter);
+    expect(ffcs.Get(`u`).Target).toBeInstanceOf(ExplicitParameter);
+    expect(ffcs.Get(`v`).Target).toBeInstanceOf(ExplicitParameter);
+    expect(ffcs.Get(`w`).Target).toBeInstanceOf(ExplicitParameter);
+    expect(ffcs.Get(`sub`).Target).toBeInstanceOf(SubOutput);
+    expect(ffcs.Get(`i`).Target).toBeInstanceOf(ExplicitOutput);
+    expect(ffcs.Get(`j`).Target).toBeInstanceOf(ExplicitOutput);
+    expect(ffcs.Get(`k`).Target).toBeInstanceOf(ExplicitOutput);
+
+    const fcs = fc.Outputs.Scope;
+
+    expect(fcs.Get(`x`).Target).toBeInstanceOf(ExplicitParameter);
+    expect(fcs.Get(`y`).Target).toBeInstanceOf(ExplicitParameter);
+    expect(fcs.Get(`z`).Target).toBeInstanceOf(ExplicitParameter);
+    expect(fcs.Get(`super`).Target).toBeInstanceOf(SuperParameter);
+    expect(fcs.Get(`f`).Target).toBeInstanceOf(Declaration);
+    expect(fcs.Get(`sub`).Target).toBeInstanceOf(SubOutput);
+    expect(fcs.Get(`a`).Target).toBeInstanceOf(ExplicitOutput);
+    expect(fcs.Get(`b`).Target).toBeInstanceOf(ExplicitOutput);
+    expect(fcs.Get(`c`).Target).toBeInstanceOf(ExplicitOutput);
 });

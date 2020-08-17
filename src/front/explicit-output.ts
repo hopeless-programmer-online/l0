@@ -1,15 +1,19 @@
 import Output from "./output";
 import Outputs from "./outputs";
 import Name from "./name";
-import Scope from "./scope";
 
+type Parent = Outputs | Output;
 type Index = number;
 
 export default class ExplicitOutput extends Output {
     readonly Index : Index;
 
-    public constructor({ Outputs, Name, Index, Parent } : { Outputs : Outputs, Name : Name, Index : Index, Parent : Scope }) {
-        super({ Outputs, Name, Parent });
+    public constructor({ Name, Index, Parent } : { Name : Name, Index : Index, Parent : Parent }) {
+        if (!Number.isInteger(Index) || Index < 0) {
+            throw new Error; // @todo
+        }
+
+        super({ Name, Parent });
 
         this.Index = Index;
     }
