@@ -8,9 +8,13 @@ import Sub from "./sub-output";
 export default class Outputs {
     readonly Execution : Execution;
     readonly Array : Array<Output> = [];
+    private scope : Scope;
 
-    public constructor({ Execution } : { Execution : Execution}) {
+    public constructor({ Execution } : { Execution : Execution }) {
         this.Execution = Execution;
+        this.scope = new Scope({
+            Parent : Execution.Parent.Scope,
+        });
 
         const parameter = new Sub({ Parent : this });
 
@@ -22,7 +26,7 @@ export default class Outputs {
         const { length } = array;
 
         if (length <= 0) {
-            return this.Execution.Scope;
+            return this.scope;
         }
 
         return array[length - 1].Scope;
@@ -40,7 +44,8 @@ export default class Outputs {
         // }
 
         const name = new Name({ String : string });
-        const output = new Explicit({ Name : name, Index : this.Explicit.length, Parent : this });
+        const parent = this.Array[this.Array.length - 1];
+        const output = new Explicit({ Name : name, Index : this.Explicit.length, Parent : parent });
 
         this.Array.push(output);
 

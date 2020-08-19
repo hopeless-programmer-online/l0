@@ -9,7 +9,7 @@ import Input from "./input";
 type Parent = Commands | Command;
 
 export default class Execution extends Command {
-    readonly Scope : Scope;
+    // readonly Scope : Scope;
     readonly Target : Reference;
     readonly Outputs : Outputs;
     readonly Inputs = new Inputs({ Execution : this });
@@ -17,11 +17,15 @@ export default class Execution extends Command {
     public constructor({ Target, Parent } : { Target : Reference, Parent : Parent }) {
         super({ Parent });
 
-        this.Scope = new Scope({
-            Parent : Parent.Scope,
-        });
+        // this.Scope = new Scope({
+        //     Parent : Parent.Scope,
+        // });
         this.Target = Target;
         this.Outputs = new Outputs({ Execution : this });
+    }
+
+    public get Scope() : Scope {
+        return this.Outputs.Scope;
     }
 
     public toString() : string {

@@ -4,7 +4,7 @@ import Explicit from "./explicit-parameter";
 import Name from "./name";
 import Super from "./super-parameter";
 import Declaration from "./declaration";
-import StaticParameter from "./static-parameter";
+import Static from "./static-parameter";
 import Command from "./command";
 import Commands from "./commands";
 import Scope from "./scope";
@@ -23,7 +23,7 @@ export default class Parameters {
             const references = Program.Parent.Scope.References.values();
 
             for (const reference of references) {
-                const parameter : StaticParameter = new StaticParameter({
+                const parameter : Static = new Static({
                     Reference : reference,
                     Parent    : parent,
                 });

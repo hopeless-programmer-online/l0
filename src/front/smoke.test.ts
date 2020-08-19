@@ -47,12 +47,15 @@ it(``, () => {
     fc.Outputs.Add(`b`);
     fc.Outputs.Add(`c`);
 
+    program.Commands.Execute(`a`);
+
     expect(`${program}`).toBe(
         `(x, y, z) {\n` +
         `\tf (u, v, w) {\n` +
         `\t\ti, j, k : f()\n` +
         `\t}\n` +
         `\ta, b, c : f()\n` +
+        `\ta()\n` +
         `}` +
     ``);
 
