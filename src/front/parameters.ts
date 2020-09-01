@@ -8,6 +8,7 @@ import Static from "./static-parameter";
 import Command from "./command";
 import Commands from "./commands";
 import Scope from "./scope";
+import Dynamic from "./dynamic-parameter";
 
 export default class Parameters {
     private isFinalized = false;
@@ -48,6 +49,18 @@ export default class Parameters {
         }
 
         return array[length - 1].Scope;
+    }
+    public get Static() : Array<Static> {
+        return this
+            .Array
+            .filter(parameter => parameter instanceof Static)
+            .map(parameter => parameter as Static); // @todo
+    }
+    public get Dynamic() : Array<Dynamic> {
+        return this
+            .Array
+            .filter(parameter => parameter instanceof Dynamic)
+            .map(parameter => parameter as Dynamic); // @todo
     }
     public get Explicit() : Array<Explicit> {
         return this

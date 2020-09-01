@@ -1,7 +1,7 @@
-import Declaration from "./declaration";
 import Parameter from "./parameter";
 import Name from "./name";
 import Output from "./output";
+import Declaration from "./declaration";
 
 type Target = Declaration | Parameter | Output;
 
