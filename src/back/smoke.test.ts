@@ -15,19 +15,25 @@ it(``, () => {
         Buffer : [ instruction ],
     });
 
-    for (let i = 0; i < 10; ++i) {
-        console.log(util.inspect(machine.Buffer, { depth : null }));
-        // console.log(`buffer: `, machine.Buffer);
-        machine.Step();
-    }
+    // while (!machine.Done) {
+    //     console.log(util.inspect(machine.Buffer, { depth : null }));
+    //     // console.log(`buffer: `, machine.Buffer);
+    //     machine.Step();
+    // }
+    // for (let i = 0; i < 10; ++i) {
+    //     console.log(util.inspect(machine.Buffer, { depth : null }));
+    //     machine.Step();
+    // }
 
-    // machine.Step();
-    // machine.Step();
+    machine.Step(); // bootstrap main
+    machine.Step(); // pass control to the first instruction
+    machine.Step(); // pass control to the super
+    machine.Step(); // execute super - reach terminator
 
-    // expect(machine.Done).toBe(true);
+    expect(machine.Done).toBe(true);
 });
 
-/*it(``, () => {
+it(``, () => {
     // () {
     //   f() {
     //   }
@@ -39,9 +45,31 @@ it(``, () => {
     const instruction = Instruction.From(program);
 
     // console.log(instruction);
+
+    const machine = new Machine({
+        Buffer : [ instruction ],
+    });
+
+    // for (let i = 0; i < 10; ++i) {
+    //     console.log(util.inspect(machine.Buffer, { depth : null }));
+    //     machine.Step();
+    // }
+    // while (!machine.Done) {
+    //     console.log(util.inspect(machine.Buffer, { depth : null }));
+    //     // console.log(`buffer: `, machine.Buffer);
+    //     machine.Step();
+    // }
+
+    machine.Step(); // bootstrap main
+    machine.Step(); // pass control to the first instruction (declaration)
+    machine.Step(); // put program at the back of the buffer
+    machine.Step(); // pass control to the super
+    machine.Step(); // execute super - reach terminator
+
+    expect(machine.Done).toBe(true);
 });
 
-it(``, () => {
+/*it(``, () => {
     // () {
     //   f() {
     //   }

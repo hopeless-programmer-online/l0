@@ -1,7 +1,11 @@
 export default abstract class Instruction {
     private static FromCommands(commands : Array<Command>, state : State) : Instruction {
         if (commands.length === 0) {
+            // console.log(util.inspect(state, { depth : 1 }));
+
             const index = state.findIndex(something => something instanceof SuperParameter);
+
+            // console.log(index);
 
             if (index === -1) throw new Error;
 
@@ -23,7 +27,10 @@ export default abstract class Instruction {
                     // next command
                     new StaticSource({ Value : next }),
                     // existed
-                    ...Array.from(state.keys()).map(index => new DynamicSource({ Index : index })),
+                    /**
+                     * No need to copy the first cell - current instruction. So we can start from the seconds cell (+1).
+                     */
+                    ...Array.from(state.slice(1).keys()).map(index => new DynamicSource({ Index : index + 1 })),
                     // declared
                     instruction,
                 ],
@@ -72,7 +79,11 @@ export default abstract class Instruction {
     }
     private static FromProgram(program : Program, state : State) : InstructionSource {
         const parameters = program.Parameters;
-        const first = Instruction.FromCommands(program.Commands.Array, parameters.Array);
+        const first = Instruction.FromCommands(program.Commands.Array, [
+            null, // current instruction
+            // ...(program.Parent ? [] : [ null ]),
+            ...parameters.Array,
+        ]);
 
         return new InstructionSource({
             Sources : [
@@ -96,7 +107,16 @@ export default abstract class Instruction {
                 }),
                 // move dynamic parameters
                 ...Array.from(parameters.Dynamic.keys()).map(index =>
+                    /**
+                     * At the moment when the control is passed into the program, the very first value
+                     * inside the buffer will be the current instruction. So, we need to add 1 to the
+                     * source index to gather values starting from the second cell.
+                     */
                     () => new DynamicSource({ Index : index + 1 }),
+                ),
+                // move explicit parameters
+                ...Array.from(parameters.Explicit.keys()).map(index =>
+                    () => new DynamicSource({ Index : index + parameters.Dynamic.length + 1 }),
                 ),
             ],
         });
@@ -112,6 +132,7 @@ export default abstract class Instruction {
     }
 }
 
+import util from "util";
 import Program from "../front/program";
 import Parameter from "../front/parameter";
 import Declaration from "../front/declaration";
@@ -126,4 +147,4 @@ import Execution from "../front/execution";
 import SelfSource from "./self-source";
 import TerminalInstruction from "./terminal-instruction";
 
-type State = Array<Declaration | Parameter | Output>;
+type State = Array<Declaration | Parameter | Output | null>;
