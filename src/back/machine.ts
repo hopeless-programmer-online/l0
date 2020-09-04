@@ -50,7 +50,7 @@ export default class Machine {
         //     return null;
         // }
         else {
-            throw new Error;
+            throw new Error(`${typeof source}${(source && source.constructor && ` ${source.constructor.name}`) || ``} ${source} is not a source.`);
         }
     }
 
@@ -63,7 +63,7 @@ export default class Machine {
 
         // console.log(instruction);
 
-        if (!(instruction instanceof Instruction)) throw new Error;
+        if (!(instruction instanceof Instruction)) throw new Error(`${typeof instruction}${(instruction && instruction.constructor && ` ${instruction.constructor.name}`) || ``} ${instruction} is not an instruction.`);
         if (instruction instanceof TerminalInstruction) {
             this.done = true;
 

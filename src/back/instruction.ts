@@ -12,6 +12,8 @@ export default abstract class Instruction {
             return new ShuffleInstruction({
                 Sources : [
                     new DynamicSource({ Index : index }),
+                    // super as sub @todo: rework?
+                    new DynamicSource({ Index : index }),
                 ],
             });
         }
@@ -51,10 +53,10 @@ export default abstract class Instruction {
                     new InstructionSource({
                         Sources : [
                             // next command
-                            () => next,
+                            () => new StaticSource({ Value : next }),
                             // restore saved context
-                            ...Array.from(state.keys()).map(index =>
-                                (buffer : Array<any>) => new StaticSource({ Value : buffer[index] }),
+                            ...Array.from(state.slice(1).keys()).map(index =>
+                                (buffer : Array<any>) => new StaticSource({ Value : buffer[index + 1] }),
                             ),
                             // move outputs
                             ...Array.from(command.Outputs.Array.keys()).map(index =>
