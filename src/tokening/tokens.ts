@@ -73,6 +73,10 @@ export default class Tokens {
         }
     }
 
+    public get Array() {
+        return this.array;
+    }
+
     public * [Symbol.iterator]() {
         return yield * this.array;
     }
