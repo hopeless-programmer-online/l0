@@ -10,7 +10,8 @@
     "build-only": "tsc",
     "build": "npm run clean && npm run build-only",
     "test-only": "jest",
-    "test": "npm run build && npm run test-only"
+    "test": "npm run build && npm run test-only",
+    "prepare": "npm run build"
   },
   "repository": {
     "type": "git",
