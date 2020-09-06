@@ -6,6 +6,7 @@ import OpeningRoundBraceToken from "../tokening/opening-round-brace-token";
 import ClosingRoundBraceToken from "../tokening/closing-round-brace-token";
 import OpeningFigureBraceToken from "../tokening/opening-figure-brace-token";
 import ClosingFigureBraceToken from "../tokening/closing-figure-brace-token";
+import CommaToken from "../tokening/comma-token";
 
 export default class Parser {
     private tokens : Array<Token> = []; // @todo?
@@ -41,15 +42,36 @@ export default class Parser {
 
             if (!(second instanceof OpeningRoundBraceToken)) throw new Error; // @todo
 
+            const names : Array<NameToken> = [];
+
             const third = this.Next;
 
-            if (!(third instanceof ClosingRoundBraceToken)) throw new Error; // @todo
+            if (third instanceof NameToken) {
+                names.push(third);
+
+                while (true) {
+                    const fourth = this.Next;
+
+                    if (fourth instanceof CommaToken) {
+                        const fifth = this.Next;
+
+                        if (!(fifth instanceof NameToken)) throw new Error;
+
+                        names.push(fifth);
+                    }
+                    else if (fourth instanceof ClosingRoundBraceToken) break;
+                    else throw new Error;
+                }
+            }
+            else if (!(third instanceof ClosingRoundBraceToken)) throw new Error;
 
             const fourth = this.Next;
 
             if (!(fourth instanceof OpeningFigureBraceToken)) throw new Error; // @todo
 
             const declaration = program.Commands.Declare(first.String);
+
+            for (const name of names) declaration.Program.Parameters.Add(name.String);
 
             ++this.level;
 
