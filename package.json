@@ -1,6 +1,6 @@
 {
   "name": "l0",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "description": "Small programming language",
   "exports": {
     ".": "./lib/l0"
@@ -16,9 +16,17 @@
     "type": "git",
     "url": "git+https://github.com/hopeless-programmer-online/l0.git"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "l0",
+    "programming language",
+    "continuation passing"
+  ],
+  "author": {
+    "name": "Hopeless Programmer",
+    "email": "me@hopeless-programmer.online",
+    "url": "https://hopeless-programmer.online"
+  },
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/hopeless-programmer-online/l0/issues"
   },
