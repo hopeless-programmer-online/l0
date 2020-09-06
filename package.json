@@ -6,7 +6,7 @@
     ".": "./lib/l0"
   },
   "files": [
-    "lib/*"
+    "lib"
   ],
   "scripts": {
     "clean": "rimraf lib",
