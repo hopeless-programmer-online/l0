@@ -19,40 +19,42 @@ export default class Parser {
     }
 
     private ParseCommands(program : Program) {
-        const first = this.Next;
+        while (true) {
+            const first = this.Next;
 
-        if (this.level > 0) {
-            if (first instanceof ClosingFigureBraceToken) {
-                --this.level;
+            if (this.level > 0) {
+                if (first instanceof ClosingFigureBraceToken) {
+                    --this.level;
 
-                return;
+                    return;
+                }
             }
-        }
-        else {
-            if (first === undefined) {
-                return;
+            else {
+                if (first === undefined) {
+                    return;
+                }
             }
+
+            if (!(first instanceof NameToken)) throw new Error; // @todo
+
+            const second = this.Next;
+
+            if (!(second instanceof OpeningRoundBraceToken)) throw new Error; // @todo
+
+            const third = this.Next;
+
+            if (!(third instanceof ClosingRoundBraceToken)) throw new Error; // @todo
+
+            const fourth = this.Next;
+
+            if (!(fourth instanceof OpeningFigureBraceToken)) throw new Error; // @todo
+
+            const declaration = program.Commands.Declare(first.String);
+
+            ++this.level;
+
+            this.ParseCommands(declaration.Program);
         }
-
-        if (!(first instanceof NameToken)) throw new Error; // @todo
-
-        const second = this.Next;
-
-        if (!(second instanceof OpeningRoundBraceToken)) throw new Error; // @todo
-
-        const third = this.Next;
-
-        if (!(third instanceof ClosingRoundBraceToken)) throw new Error; // @todo
-
-        const fourth = this.Next;
-
-        if (!(fourth instanceof OpeningFigureBraceToken)) throw new Error; // @todo
-
-        const declaration = program.Commands.Declare(first.String);
-
-        ++this.level;
-
-        this.ParseCommands(declaration.Program);
     }
 
     public Parse(tokens : Tokens) {
