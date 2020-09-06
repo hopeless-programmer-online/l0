@@ -19,6 +19,61 @@ export default class Parser {
         return this.tokens[this.position - 1];
     }
 
+    private ParseFirstName(program : Program, name : NameToken) {
+        const second = this.Next;
+
+        if (!(second instanceof OpeningRoundBraceToken)) throw new Error; // @todo
+
+        const names : Array<NameToken> = [];
+
+        const third = this.Next;
+
+        if (third instanceof NameToken) {
+            names.push(third);
+
+            while (true) {
+                const fourth = this.Next;
+
+                if (fourth instanceof CommaToken) {
+                    const fifth = this.Next;
+
+                    if (!(fifth instanceof NameToken)) throw new Error;
+
+                    names.push(fifth);
+                }
+                else if (fourth instanceof ClosingRoundBraceToken) break;
+                else throw new Error;
+            }
+        }
+        else if (!(third instanceof ClosingRoundBraceToken)) throw new Error;
+
+        const fourth = this.Next;
+
+        if (
+            (fourth instanceof NameToken)
+            ||
+            (this.level === 0 && fourth === undefined)
+            ||
+            (this.level > 0 && fourth instanceof ClosingFigureBraceToken)
+        ) {
+            const execution = program.Commands.Execute(name.String);
+
+            for (const name of names) execution.Inputs.Add(name.String);
+
+            if (fourth instanceof NameToken) this.ParseFirstName(program, fourth);
+
+            return;
+        }
+        else if (!(fourth instanceof OpeningFigureBraceToken)) throw new Error; // @todo
+
+        const declaration = program.Commands.Declare(name.String);
+
+        for (const name of names) declaration.Program.Parameters.Add(name.String);
+
+        ++this.level;
+
+        this.ParseCommands(declaration.Program);
+    }
     private ParseCommands(program : Program) {
         while (true) {
             const first = this.Next;
@@ -30,52 +85,11 @@ export default class Parser {
                     return;
                 }
             }
-            else {
-                if (first === undefined) {
-                    return;
-                }
-            }
+            else if (first === undefined) return;
 
             if (!(first instanceof NameToken)) throw new Error; // @todo
 
-            const second = this.Next;
-
-            if (!(second instanceof OpeningRoundBraceToken)) throw new Error; // @todo
-
-            const names : Array<NameToken> = [];
-
-            const third = this.Next;
-
-            if (third instanceof NameToken) {
-                names.push(third);
-
-                while (true) {
-                    const fourth = this.Next;
-
-                    if (fourth instanceof CommaToken) {
-                        const fifth = this.Next;
-
-                        if (!(fifth instanceof NameToken)) throw new Error;
-
-                        names.push(fifth);
-                    }
-                    else if (fourth instanceof ClosingRoundBraceToken) break;
-                    else throw new Error;
-                }
-            }
-            else if (!(third instanceof ClosingRoundBraceToken)) throw new Error;
-
-            const fourth = this.Next;
-
-            if (!(fourth instanceof OpeningFigureBraceToken)) throw new Error; // @todo
-
-            const declaration = program.Commands.Declare(first.String);
-
-            for (const name of names) declaration.Program.Parameters.Add(name.String);
-
-            ++this.level;
-
-            this.ParseCommands(declaration.Program);
+            this.ParseFirstName(program, first);
         }
     }
 
