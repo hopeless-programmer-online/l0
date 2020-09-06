@@ -7,6 +7,7 @@ import ClosingRoundBraceToken from "../tokening/closing-round-brace-token";
 import OpeningFigureBraceToken from "../tokening/opening-figure-brace-token";
 import ClosingFigureBraceToken from "../tokening/closing-figure-brace-token";
 import CommaToken from "../tokening/comma-token";
+import ColonToken from "../tokening/colon-token";
 
 export default class Parser {
     private tokens : Array<Token> = []; // @todo?
@@ -19,10 +20,85 @@ export default class Parser {
         return this.tokens[this.position - 1];
     }
 
+    private ParseExecution(program : Program, name : NameToken, outputs : Array<NameToken>) {
+        const names : Array<NameToken> = [];
+
+        const third = this.Next;
+
+        if (third instanceof NameToken) {
+            names.push(third);
+
+            while (true) {
+                const fourth = this.Next;
+
+                if (fourth instanceof CommaToken) {
+                    const fifth = this.Next;
+
+                    if (!(fifth instanceof NameToken)) throw new Error; // @todo
+
+                    names.push(fifth);
+                }
+                else if (fourth instanceof ClosingRoundBraceToken) break;
+                else throw new Error;
+            }
+        }
+        else if (!(third instanceof ClosingRoundBraceToken)) throw new Error; // @todo
+
+        const execution = program.Commands.Execute(name.String);
+
+        for (const name of names) execution.Inputs.Add(name.String);
+        for (const name of outputs) execution.Outputs.Add(name.String);
+    }
     private ParseFirstName(program : Program, name : NameToken) {
         const second = this.Next;
 
-        if (!(second instanceof OpeningRoundBraceToken)) throw new Error; // @todo
+        if (second instanceof ColonToken) {
+            const third = this.Next;
+
+            if (!(third instanceof NameToken)) throw new Error; // @todo
+
+            const fourth = this.Next;
+
+            if (!(fourth instanceof OpeningRoundBraceToken)) throw new Error; // @todo
+
+            this.ParseExecution(program, third, [ name ]);
+
+            return;
+        }
+        else if (second instanceof CommaToken) {
+            const second = this.Next;
+
+            if (!(second instanceof NameToken)) throw new Error; // @todo
+
+            const names = [ name, second ];
+
+            while (true) {
+                const fourth = this.Next;
+
+                if (fourth instanceof CommaToken) {
+                    const fifth = this.Next;
+
+                    if (!(fifth instanceof NameToken)) throw new Error; // @todo
+
+                    names.push(fifth);
+                }
+                else if (fourth instanceof ColonToken) break;
+                else throw new Error;
+            }
+
+            const third = this.Next;
+
+            if (!(third instanceof NameToken)) throw new Error; // @todo
+
+            const fourth = this.Next;
+
+            if (!(fourth instanceof OpeningRoundBraceToken)) throw new Error; // @todo
+
+            this.ParseExecution(program, third, names);
+
+            return;
+        }
+        else if (!(second instanceof OpeningRoundBraceToken)) throw new Error; // @todo
 
         const names : Array<NameToken> = [];
 
@@ -37,7 +113,7 @@ export default class Parser {
                 if (fourth instanceof CommaToken) {
                     const fifth = this.Next;
 
-                    if (!(fifth instanceof NameToken)) throw new Error;
+                    if (!(fifth instanceof NameToken)) throw new Error; // @todo
 
                     names.push(fifth);
                 }
@@ -45,7 +121,7 @@ export default class Parser {
                 else throw new Error;
             }
         }
-        else if (!(third instanceof ClosingRoundBraceToken)) throw new Error;
+        else if (!(third instanceof ClosingRoundBraceToken)) throw new Error; // @todo
 
         const fourth = this.Next;
 

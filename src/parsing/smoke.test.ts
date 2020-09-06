@@ -24,6 +24,18 @@ it(``, () => {
         `f(f)\n` +
         `f(f, f)\n` +
         `f(f, f, f)\n` +
+        `u : f()\n` +
+        `u : f(f)\n` +
+        `u : f(f, f)\n` +
+        `u : f(f, f, f)\n` +
+        `u, u : f()\n` +
+        `u, u : f(f)\n` +
+        `u, u : f(f, f)\n` +
+        `u, u : f(f, f, f)\n` +
+        `u, u, u : f()\n` +
+        `u, u, u : f(f)\n` +
+        `u, u, u : f(f, f)\n` +
+        `u, u, u : f(f, f, f)\n` +
     ``)).toBe(
         `() {\n` +
         `\tf () {\n` +
@@ -38,6 +50,18 @@ it(``, () => {
         `\tf(f)\n` +
         `\tf(f, f)\n` +
         `\tf(f, f, f)\n` +
+        `\tu : f()\n` +
+        `\tu : f(f)\n` +
+        `\tu : f(f, f)\n` +
+        `\tu : f(f, f, f)\n` +
+        `\tu, u : f()\n` +
+        `\tu, u : f(f)\n` +
+        `\tu, u : f(f, f)\n` +
+        `\tu, u : f(f, f, f)\n` +
+        `\tu, u, u : f()\n` +
+        `\tu, u, u : f(f)\n` +
+        `\tu, u, u : f(f, f)\n` +
+        `\tu, u, u : f(f, f, f)\n` +
         `}` +
     ``);
 });
