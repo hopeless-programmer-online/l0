@@ -1,10 +1,13 @@
 {
   "name": "l0",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Small programming language",
   "exports": {
     ".": "./lib/l0"
   },
+  "files": [
+    "lib/*"
+  ],
   "scripts": {
     "clean": "rimraf lib",
     "build-only": "tsc",
