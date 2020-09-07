@@ -6,6 +6,7 @@ import StaticSource from "./static-source";
 import DynamicSource from "./dynamic-source";
 import InstructionSource from "./instruction-source";
 import SelfSource from "./self-source";
+import ExternalInstruction from "./external-instruction";
 
 type Buffer = Array<any>;
 
@@ -66,6 +67,11 @@ export default class Machine {
         if (!(instruction instanceof Instruction)) throw new Error(`${typeof instruction}${(instruction && instruction.constructor && ` ${instruction.constructor.name}`) || ``} ${instruction} is not an instruction.`);
         if (instruction instanceof TerminalInstruction) {
             this.done = true;
+
+            return;
+        }
+        if (instruction instanceof ExternalInstruction) {
+            this.buffer = instruction.Callback(this.buffer);
 
             return;
         }

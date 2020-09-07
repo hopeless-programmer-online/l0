@@ -1,11 +1,11 @@
 import Tokens from "../tokening/tokens";
 import Parser from "./parser";
 
-function parse(text : string) {
+function parse(text : string, globals : Array<string> = []) {
     const tokens = new Tokens(text);
     const parser = new Parser;
 
-    const program = parser.Parse(tokens);
+    const program = parser.Parse(tokens, globals);
 
     return `${program}`;
 }
@@ -62,6 +62,16 @@ it(``, () => {
         `\tu, u, u : f(f)\n` +
         `\tu, u, u : f(f, f)\n` +
         `\tu, u, u : f(f, f, f)\n` +
+        `}` +
+    ``);
+});
+
+it(``, () => {
+    expect(parse(
+        `print()\n` +
+    ``, [ `print` ])).toBe(
+        `(print) {\n` +
+        `\tprint()\n` +
         `}` +
     ``);
 });

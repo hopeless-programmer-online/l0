@@ -124,11 +124,12 @@ export default abstract class Instruction {
         });
     }
 
-    public static From(program : Program) {
+    public static From(program : Program, globals : Array<any> = []) {
         return new ShuffleInstruction({
             Sources : [
                 Instruction.FromProgram(program, []),
                 new StaticSource({ Value : new TerminalInstruction }),
+                ...globals.map(value => new StaticSource({ Value : value })),
             ],
         });
     }

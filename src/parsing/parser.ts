@@ -169,12 +169,14 @@ export default class Parser {
         }
     }
 
-    public Parse(tokens : Tokens) {
+    public Parse(tokens : Tokens, globals : Array<string> = []) {
         this.tokens = tokens.Array;
         this.position = 0;
         this.level = 0;
 
         const root = new Program;
+
+        for (const string of globals) root.Parameters.Add(string);
 
         this.ParseCommands(root);
 
