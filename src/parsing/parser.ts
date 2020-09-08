@@ -15,9 +15,15 @@ export default class Parser {
     private level = 0;
 
     private get Next() { // @todo: rename?
+        const { position } = this;
+
         ++this.position;
 
-        return this.tokens[this.position - 1];
+        const token = this.tokens[position];
+
+        // console.log(token);
+
+        return token;
     }
 
     private ParseExecution(program : Program, name : NameToken, outputs : Array<NameToken>) {
@@ -125,18 +131,28 @@ export default class Parser {
 
         const fourth = this.Next;
 
-        if (
-            (fourth instanceof NameToken)
-            ||
-            (this.level === 0 && fourth === undefined)
-            ||
-            (this.level > 0 && fourth instanceof ClosingFigureBraceToken)
-        ) {
+        if (fourth instanceof NameToken) {
             const execution = program.Commands.Execute(name.String);
 
             for (const name of names) execution.Inputs.Add(name.String);
 
-            if (fourth instanceof NameToken) this.ParseFirstName(program, fourth);
+            this.ParseFirstName(program, fourth);
+
+            return;
+        }
+        else if (this.level === 0 && fourth === undefined) {
+            const execution = program.Commands.Execute(name.String);
+
+            for (const name of names) execution.Inputs.Add(name.String);
+
+            return;
+        }
+        else if (this.level > 0 && fourth instanceof ClosingFigureBraceToken) {
+            const execution = program.Commands.Execute(name.String);
+
+            for (const name of names) execution.Inputs.Add(name.String);
+
+            --this.level;
 
             return;
         }
@@ -163,7 +179,9 @@ export default class Parser {
             }
             else if (first === undefined) return;
 
-            if (!(first instanceof NameToken)) throw new Error; // @todo
+            // console.log(this.level);
+
+            if (!(first instanceof NameToken)) throw new Error(`Expected name at the beginning of the command, got ${first}.`);
 
             this.ParseFirstName(program, first);
         }
