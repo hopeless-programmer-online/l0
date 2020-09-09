@@ -55,7 +55,7 @@ export default class Parser {
         for (const name of names) execution.Inputs.Add(name.String);
         for (const name of outputs) execution.Outputs.Add(name.String);
     }
-    private ParseFirstName(program : Program, name : NameToken) {
+    private ParseFirstName(program : Program, name : NameToken) : boolean {
         const second = this.Next;
 
         if (second instanceof ColonToken) {
@@ -69,7 +69,7 @@ export default class Parser {
 
             this.ParseExecution(program, third, [ name ]);
 
-            return;
+            return false;
         }
         else if (second instanceof CommaToken) {
             const second = this.Next;
@@ -102,7 +102,7 @@ export default class Parser {
 
             this.ParseExecution(program, third, names);
 
-            return;
+            return false;
         }
         else if (!(second instanceof OpeningRoundBraceToken)) throw new Error; // @todo
 
@@ -136,16 +136,14 @@ export default class Parser {
 
             for (const name of names) execution.Inputs.Add(name.String);
 
-            this.ParseFirstName(program, fourth);
-
-            return;
+            return this.ParseFirstName(program, fourth);
         }
         else if (this.level === 0 && fourth === undefined) {
             const execution = program.Commands.Execute(name.String);
 
             for (const name of names) execution.Inputs.Add(name.String);
 
-            return;
+            return true;
         }
         else if (this.level > 0 && fourth instanceof ClosingFigureBraceToken) {
             const execution = program.Commands.Execute(name.String);
@@ -154,7 +152,7 @@ export default class Parser {
 
             --this.level;
 
-            return;
+            return true;
         }
         else if (!(fourth instanceof OpeningFigureBraceToken)) throw new Error; // @todo
 
@@ -165,6 +163,8 @@ export default class Parser {
         ++this.level;
 
         this.ParseCommands(declaration.Program);
+
+        return false;
     }
     private ParseCommands(program : Program) {
         while (true) {
@@ -179,11 +179,9 @@ export default class Parser {
             }
             else if (first === undefined) return;
 
-            // console.log(this.level);
-
             if (!(first instanceof NameToken)) throw new Error(`Expected name at the beginning of the command, got ${first}.`);
 
-            this.ParseFirstName(program, first);
+            if (this.ParseFirstName(program, first)) break;
         }
     }
 
