@@ -25,7 +25,7 @@ export default class Scope {
                 let string = reference.Name.String;
 
                 while (map.has(string)) {
-                    string = `../${string}`;
+                    string = `/${string}`;
                 }
 
                 map.set(string, new Reference({

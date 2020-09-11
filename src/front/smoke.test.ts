@@ -69,7 +69,7 @@ it(``, () => {
     const fs = f.Program.Parameters.Scope;
 
     expect(fs.Get(`f`).Target).toBeInstanceOf(StaticParameter);
-    expect(fs.Get(`../super`).Target).toBeInstanceOf(StaticParameter);
+    expect(fs.Get(`/super`).Target).toBeInstanceOf(StaticParameter);
     expect(fs.Get(`x`).Target).toBeInstanceOf(StaticParameter);
     expect(fs.Get(`y`).Target).toBeInstanceOf(StaticParameter);
     expect(fs.Get(`z`).Target).toBeInstanceOf(StaticParameter);
@@ -81,7 +81,7 @@ it(``, () => {
     const ffcs = ffc.Outputs.Scope;
 
     expect(ffcs.Get(`f`).Target).toBeInstanceOf(StaticParameter);
-    expect(ffcs.Get(`../super`).Target).toBeInstanceOf(StaticParameter);
+    expect(ffcs.Get(`/super`).Target).toBeInstanceOf(StaticParameter);
     expect(ffcs.Get(`x`).Target).toBeInstanceOf(StaticParameter);
     expect(ffcs.Get(`y`).Target).toBeInstanceOf(StaticParameter);
     expect(ffcs.Get(`z`).Target).toBeInstanceOf(StaticParameter);
