@@ -84,3 +84,24 @@ it(``, () => {
     // )
     expect(tokens[9]).toBeInstanceOf(ClosingRoundBraceToken);
 });
+
+it(``, () => {
+    const tokens = [ ...Tokens.FromString(`lol kek`) ];
+
+    expect(tokens[0]).toBeInstanceOf(NameToken);
+
+    const name = tokens[0] as NameToken;
+    const words = name.Words;
+
+    expect(words).toHaveLength(2);
+    expect(words[0]).toBeInstanceOf(PlainWord);
+
+    const word0 = words[0] as PlainWord;
+
+    expect(word0.Text).toBe(`lol`);
+    expect(words[1]).toBeInstanceOf(PlainWord);
+
+    const word1 = words[1] as PlainWord;
+
+    expect(word1.Text).toBe(`kek`);
+});
