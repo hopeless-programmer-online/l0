@@ -1,11 +1,14 @@
 import Token from "./token";
+import Word from "./word";
+
+type Words = Array<Word>;
 
 export default class NameToken extends Token {
-    readonly String : string;
+    readonly Words : Words;
 
-    public constructor({ String } : { String : string }) {
+    public constructor({ Words } : { Words : Words }) {
         super();
 
-        this.String = String;
+        this.Words = Words;
     }
 }

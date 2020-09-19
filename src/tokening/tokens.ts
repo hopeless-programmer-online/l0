@@ -6,71 +6,191 @@ import OpeningFigureBraceToken from "./opening-figure-brace-token";
 import ClosingFigureBraceToken from "./closing-figure-brace-token";
 import ColonToken from "./colon-token";
 import CommaToken from "./comma-token";
+import Word from "./word";
+import PlainWord from "./plain-word";
 
 export default class Tokens {
-    private array : Array<Token> = [];
+    public static FromString(text : string) {
+        const array : Array<Token> = [];
 
-    public constructor(text : string) {
         let position = 0;
 
-        while (position < text.length) {
-            const character = text[position];
+        function processLetter() {
+            // @todo: assert that text[position] is letter
+            const words : Array<Word> = [];
 
-            switch (character) {
-                case `(`:  {
-                    ++position;
+            let begin = position;
 
-                    this.array.push(new OpeningRoundBraceToken);
-                } break;
-                case `)`:  {
-                    ++position;
+            function push() {
+                const wordText = text.substring(begin, position);
+                const word = new PlainWord({ Text : wordText });
 
-                    this.array.push(new ClosingRoundBraceToken);
-                } break;
-                case `[`:  throw new Error; // @todo
-                case `]`:  throw new Error; // @todo
-                case `{`: {
-                    ++position;
+                words.push(word);
+            }
+            function end() {
+                const token = new NameToken({ Words : words });
 
-                    this.array.push(new OpeningFigureBraceToken);
-                } break;
-                case `}`: {
-                    ++position;
+                array.push(token);
+            }
 
-                    this.array.push(new ClosingFigureBraceToken);
-                } break;
-                case `.`:  throw new Error; // @todo
-                case `:`: {
-                    ++position;
+            main : while (true) {
+                ++position;
 
-                    this.array.push(new ColonToken);
-                } break;
-                case `,`: {
-                    ++position;
+                if (position >= text.length) {
+                    push();
+                    end();
 
-                    this.array.push(new CommaToken);
-                } break;
-                case `;`:  throw new Error; // @todo
-                case `'`:  throw new Error; // @todo
-                case `"`:  throw new Error; // @todo
-                case `\``: throw new Error; // @todo
-                // skip whitespace
-                case ` `:
-                case `\n`:
-                case `\r`:
-                case `\t`: {
-                    ++position;
-                } break;
-                // regular name
-                default : {
-                    const { name, end } = this.ScanName(text, position);
+                    state = null;
 
-                    position = end;
+                    return;
+                }
 
-                    this.array.push(name);
-                } break;
+                const character = text[position];
+
+                switch(character) {
+                    case `(`:
+                    case `)`:
+                    case `{`:
+                    case `}`:
+                    case `:`:
+                    case `,`: {
+                        push();
+                        end();
+
+                        state = process;
+
+                        return;
+                    } break;
+                    case ` `:
+                    case `\n`:
+                    case `\r`:
+                    case `\t`: {
+                        push();
+
+                        while (true) {
+                            ++position;
+
+                            if (position >= text.length) {
+                                end();
+
+                                state = null;
+
+                                return;
+                            }
+
+                            const character = text[position];
+
+                            switch (character) {
+                                case `(`:
+                                case `)`:
+                                case `{`:
+                                case `}`:
+                                case `:`:
+                                case `,`: {
+                                    end();
+
+                                    state = process;
+
+                                    return;
+                                } break;
+                                case ` `:
+                                case `\n`:
+                                case `\r`:
+                                case `\t`: {
+                                    // do nothing
+                                } break;
+                                default: {
+                                    begin = position;
+
+                                    continue main;
+                                } break;
+                            }
+                        }
+                    } break;
+                    case `'`:
+                    case `"`:
+                    case `\``:
+                    case `[`:
+                    case `]`:
+                    case `.`:
+                    case `;`: {
+                        throw new Error; // @todo
+                    } break;
+                    default: {
+                        // do nothing
+                    } break;
+                }
             }
         }
+        function process() {
+            while (true) {
+                if (position >= text.length) {
+                    state = null;
+
+                    return;
+                }
+
+                const character = text[position];
+
+                switch (character) {
+                    case `(`:  {
+                        array.push(new OpeningRoundBraceToken);
+                    } break;
+                    case `)`:  {
+                        array.push(new ClosingRoundBraceToken);
+                    } break;
+                    case `{`: {
+                        array.push(new OpeningFigureBraceToken);
+                    } break;
+                    case `}`: {
+                        array.push(new ClosingFigureBraceToken);
+                    } break;
+                    case `:`: {
+                        array.push(new ColonToken);
+                    } break;
+                    case `,`: {
+                        array.push(new CommaToken);
+                    } break;
+                    // skip whitespace
+                    case ` `:
+                    case `\n`:
+                    case `\r`:
+                    case `\t`: {
+                        // do nothing
+                    } break;
+                    // reserved
+                    case `[`:
+                    case `]`:
+                    case `.`:
+                    case `;`:
+                    case `'`:
+                    case `"`:
+                    case `\``: {
+                        throw new Error; // @todo
+                    } break;
+                    // plain word
+                    default : {
+                        return processLetter();
+                    } break;
+                }
+
+                ++position;
+            }
+        }
+
+        let state : null | (() => void) = process;
+
+        while (state) state();
+
+        if (position < text.length) throw new Error; // @todo
+
+        return new Tokens({ Array : array });
+    }
+
+    private array : Array<Token>;
+
+    public constructor({ Array } : { Array : Array<Token> }) {
+        this.array = Array;
     }
 
     public get Array() {
@@ -78,50 +198,6 @@ export default class Tokens {
     }
 
     public * [Symbol.iterator]() {
-        return yield * this.array;
-    }
-
-    private ScanName(text : string, position : number) {
-        let end = position + 1;
-
-        traverse: while (end < text.length) {
-            const character = text[end];
-
-            switch (character) {
-                case `(`:
-                case `)`:
-                case `[`:
-                case `]`:
-                case `{`:
-                case `}`:
-                case `.`:
-                case `:`:
-                case `,`:
-                case `;`: {
-                    break traverse;
-                } break;
-                case `'`:  throw new Error; // @todo
-                case `"`:  throw new Error; // @todo
-                case `\``: throw new Error; // @todo
-                // skip whitespace
-                case ` `:
-                case `\n`:
-                case `\r`:
-                case `\t`:
-                // regular name
-                default : {
-                    ++end;
-                } break;
-            }
-        }
-
-        const string = text
-            .substring(position, end)
-            .replace(/\s+/g, ` `)
-            .replace(/^\s*/g, ``)
-            .replace(/\s*$/g, ``);
-        const name = new NameToken({ String : string });
-
-        return { name, end };
+        return yield * this.Array;
     }
 }
