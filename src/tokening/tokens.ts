@@ -8,6 +8,7 @@ import ColonToken from "./colon-token";
 import CommaToken from "./comma-token";
 import Word from "./word";
 import PlainWord from "./plain-word";
+import QuotedWord from "./quoted-word";
 
 export default class Tokens {
     public static FromString(text : string) {
@@ -15,9 +16,8 @@ export default class Tokens {
 
         let position = 0;
 
-        function processLetter() {
+        function processLetter(words : Array<Word> = []) {
             // @todo: assert that text[position] is letter
-            const words : Array<Word> = [];
 
             let begin = position;
 
@@ -122,6 +122,101 @@ export default class Tokens {
                 }
             }
         }
+        function processQuote(words : Array<Word> = []) {
+            let begin = position;
+
+            main : while (true) {
+                ++position;
+
+                if (position >= text.length) throw new Error; // @todo
+
+                const character = text[position];
+
+                switch(character) {
+                    case `\\`: {
+                        ++position;
+
+                        if (position >= text.length) throw new Error; // @todo
+
+                        const character = text[position];
+
+                        switch(character) {
+                            case `n`:
+                            case `r`:
+                            case `t`:
+                            case `'`:
+                            case `"`:
+                            case `\\`: {
+                                // do nothing
+                            } break;
+                            default: {
+                                throw new Error; // @todo
+                            } break;
+                        }
+                    } break;
+                    case `"`: {
+                        const wordText = text.substring(begin, position + 1);
+                        const word = new QuotedWord({ Text : wordText });
+
+                        words.push(word);
+
+                        break main;
+                    } break;
+                    default: {
+                        // do nothing
+                    } break;
+                }
+            }
+
+            while (true) {
+                ++position;
+
+                if (position >= text.length) {
+                    const token = new NameToken({ Words : words });
+
+                    array.push(token);
+
+                    state = null;
+
+                    return;
+                }
+
+                const character = text[position];
+
+                switch(character) {
+                    // skip spaces
+                    case ` `:
+                    case `\n`:
+                    case `\r`:
+                    case `\t`: {
+                        // do nothing
+                    } break;
+                    case `"`: {
+                        processQuote(words);
+
+                        return;
+                    } break;
+                    // reserved
+                    case `[`:
+                    case `]`:
+                    case `.`:
+                    case `;`:
+                    case `'`:
+                    case `\``: {
+                        throw new Error; // @todo
+                    } break;
+                    default: {
+                        const token = new NameToken({ Words : words });
+
+                        array.push(token);
+
+                        state = process;
+
+                        return;
+                    } break;
+                }
+            }
+        }
         function process() {
             while (true) {
                 if (position >= text.length) {
@@ -151,6 +246,11 @@ export default class Tokens {
                     case `,`: {
                         array.push(new CommaToken);
                     } break;
+                    case `"`: {
+                        processQuote();
+
+                        return;
+                    } break;
                     // skip whitespace
                     case ` `:
                     case `\n`:
@@ -164,7 +264,6 @@ export default class Tokens {
                     case `.`:
                     case `;`:
                     case `'`:
-                    case `"`:
                     case `\``: {
                         throw new Error; // @todo
                     } break;

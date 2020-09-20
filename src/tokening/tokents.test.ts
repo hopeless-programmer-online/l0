@@ -5,6 +5,7 @@ import ColonToken from "./colon-token";
 import OpeningRoundBraceToken from "./opening-round-brace-token";
 import ClosingRoundBraceToken from "./closing-round-brace-token";
 import PlainWord from "./plain-word";
+import QuotedWord from "./quoted-word";
 
 it(``, () => {
     const tokens = [ ...Tokens.FromString(`u, v : f(x, y)`) ];
@@ -104,4 +105,41 @@ it(``, () => {
     const word1 = words[1] as PlainWord;
 
     expect(word1.Text).toBe(`kek`);
+});
+
+it(``, () => {
+    const tokens = [ ...Tokens.FromString(`"lol"`) ];
+
+    expect(tokens[0]).toBeInstanceOf(NameToken);
+
+    const name = tokens[0] as NameToken;
+    const words = name.Words;
+
+    expect(words).toHaveLength(1);
+    expect(words[0]).toBeInstanceOf(QuotedWord);
+
+    const word0 = words[0] as QuotedWord;
+
+    expect(word0.Text).toBe(`"lol"`);
+});
+
+it(``, () => {
+    const tokens = [ ...Tokens.FromString(`"lol""kek"`) ];
+
+    expect(tokens[0]).toBeInstanceOf(NameToken);
+
+    const name = tokens[0] as NameToken;
+    const words = name.Words;
+
+    expect(words).toHaveLength(2);
+    expect(words[0]).toBeInstanceOf(QuotedWord);
+
+    const word0 = words[0] as QuotedWord;
+
+    expect(word0.Text).toBe(`"lol"`);
+    expect(words[1]).toBeInstanceOf(QuotedWord);
+
+    const word1 = words[1] as QuotedWord;
+
+    expect(word1.Text).toBe(`"kek"`);
 });
