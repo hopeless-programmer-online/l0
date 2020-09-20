@@ -1,7 +1,7 @@
 import Reference from "./reference";
-import Name from "./name";
-
-type References = Map<string, Reference>;
+import NameToken from "../tokening/name-token";
+import References from "./references";
+import PlainWord from "../tokening/plain-word";
 
 export default class Scope {
     readonly Parent : Scope | null;
@@ -14,46 +14,69 @@ export default class Scope {
 
     public get References() : References {
         // eslint-disable-next-line new-parens
-        const map = new Map<string, Reference>();
+        const references = new References;
 
         let scope : Scope | null = this;
 
-        while (scope) {
+        do {
             const reference = scope.Reference;
 
             if (reference) {
-                let string = reference.Name.String;
+                let name = reference.Name;
 
-                while (map.has(string)) {
-                    string = `/${string}`;
+                while (references.Has(name)) {
+                    const words = name.Words;
+
+                    if (words.length <= 0) throw new Error; // @todo
+
+                    const first = words[0];
+
+                    if (first instanceof PlainWord) {
+                        name = new NameToken({
+                            Words : [
+                                new PlainWord({ Text : `/${first.Text}` }),
+                                ...words.slice(1),
+                            ],
+                        });
+                    }
+                    else throw new Error; // @todo
                 }
 
-                map.set(string, new Reference({
-                    Name   : new Name({ String : string }),
+                references.Add(name, new Reference({
+                    Name   : name,
                     Target : reference.Target,
                 }));
             }
+            // const reference = scope.Reference;
+
+            // if (reference) {
+            //     let string = reference.Name.String;
+
+            //     while (map.has(string)) {
+            //         string = `/${string}`;
+            //     }
+
+            //     map.set(string, new Reference({
+            //         Name   : new Name({ String : string }),
+            //         Target : reference.Target,
+            //     }));
+            // }
 
             scope = scope.Parent;
-        }
+        } while (scope);
 
-        return map;
+        return references;
     }
 
-    public Get(string : string) : Reference {
-        const references = this.References;
-        const reference = references.get(string);
+    public Get(name : NameToken | string) : Reference {
+        if (typeof name === `string`) name = NameToken.Plain(name);
 
-        if (!reference) {
-            throw new Error(`Name ${JSON.stringify(string)} does not exists in ${this}`);
-        }
-
-        return reference;
+        return this.References.Get(name);
     }
 
     public toString() : string {
         const references = this.References;
 
-        return `[${[ ...references.keys() ].map(x => JSON.stringify(x)).join(`,`)}]`;
+        return `[${[ ...references.Keys ].map(x => JSON.stringify(x)).join(`,`)}]`;
     }
 }

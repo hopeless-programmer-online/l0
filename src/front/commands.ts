@@ -1,7 +1,7 @@
 import Program from "./program";
 import Declaration from "./declaration";
 import Command from "./command";
-import Name from "./name";
+import Name from "../tokening/name-token";
 import Scope from "./scope";
 import Execution from "./execution";
 
@@ -24,8 +24,9 @@ export default class Commands {
         return array[length - 1].Scope;
     }
 
-    public Declare(string : string) : Declaration {
-        const name = new Name({ String : string });
+    public Declare(name : Name | string) : Declaration {
+        if (typeof name === `string`) name = Name.Plain(name);
+
         const parent = this.Array[this.Array.length - 1] || this;
         const command = new Declaration({ Name : name, Parent : parent });
 
@@ -33,9 +34,11 @@ export default class Commands {
 
         return command;
     }
-    public Execute(string : string) : Execution {
+    public Execute(name : Name | string) : Execution {
+        if (typeof name === `string`) name = Name.Plain(name);
+
         const parent = this.Array[this.Array.length - 1] || this;
-        const target = parent.Scope.Get(string);
+        const target = parent.Scope.Get(name);
         const command = new Execution({ Target : target, Parent : parent });
 
         this.Array.push(command);

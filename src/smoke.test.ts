@@ -1,73 +1,73 @@
-import util from "util";
+// import util from "util";
 import Tokens from "./tokening/tokens";
-import Parser from "./parsing/parser";
-import Machine from "./back/machine";
-import ExternalInstruction from "./back/external-instruction";
-import Instruction from "./back/instruction";
+// import Parser from "./parsing/parser";
+// import Machine from "./back/machine";
+// import ExternalInstruction from "./back/external-instruction";
+// import Instruction from "./back/instruction";
 
 it(``, () => {
-    const tokens = new Tokens(`test()`);
-    const parser = new Parser;
-    const program = parser.Parse(tokens, [ `test` ]);
+    const tokens = Tokens.FromString(`test()`);
+//     const parser = new Parser;
+//     const program = parser.Parse(tokens, [ `test` ]);
 
-    // console.log(program);
+//     // console.log(program);
 
-    let counter = 0;
+//     let counter = 0;
 
-    function test(array : Array<any>) : Array<any> {
-        ++counter;
+//     function test(array : Array<any>) : Array<any> {
+//         ++counter;
 
-        return [ array[1] ];
-    }
+//         return [ array[1] ];
+//     }
 
-    const instruction = Instruction.From(program, [
-        new ExternalInstruction({ Callback : test }),
-    ]);
+//     const instruction = Instruction.From(program, [
+//         new ExternalInstruction({ Callback : test }),
+//     ]);
 
-    // console.log(instruction);
+//     // console.log(instruction);
 
-    const machine = new Machine({ Buffer : [ instruction ] });
+//     const machine = new Machine({ Buffer : [ instruction ] });
 
-    while(!machine.Done) machine.Step();
+//     while(!machine.Done) machine.Step();
 
-    expect(counter).toBe(1);
+//     expect(counter).toBe(1);
 });
 
-it(``, () => {
-    const tokens = new Tokens(`f(){test()}f()`);
+// it(``, () => {
+//     const tokens = new Tokens(`f(){test()}f()`);
 
-    // console.log(tokens);
+//     // console.log(tokens);
 
-    const parser = new Parser;
-    const program = parser.Parse(tokens, [ `test` ]);
+//     const parser = new Parser;
+//     const program = parser.Parse(tokens, [ `test` ]);
 
-    // console.log(util.inspect(program.Commands.Array, { depth : 5 }));
+//     // console.log(util.inspect(program.Commands.Array, { depth : 5 }));
 
-    expect(program.Commands.Array.length).toBe(2);
+//     expect(program.Commands.Array.length).toBe(2);
 
-    let counter = 0;
+//     let counter = 0;
 
-    function test(array : Array<any>) : Array<any> {
-        ++counter;
+//     function test(array : Array<any>) : Array<any> {
+//         ++counter;
 
-        return [ array[1] ];
-    }
+//         return [ array[1] ];
+//     }
 
-    const instruction = Instruction.From(program, [
-        new ExternalInstruction({ Callback : test }),
-    ]);
+//     const instruction = Instruction.From(program, [
+//         new ExternalInstruction({ Callback : test }),
+//     ]);
 
-    // console.log(instruction);
+//     // console.log(instruction);
 
-    const machine = new Machine({ Buffer : [ instruction ] });
+//     const machine = new Machine({ Buffer : [ instruction ] });
 
-    // while (!machine.Done) {
-    //     console.log(util.inspect(machine.Buffer, { depth : null }));
-    //     // console.log(`buffer: `, machine.Buffer);
-    //     machine.Step();
-    // }
+//     // while (!machine.Done) {
+//     //     console.log(util.inspect(machine.Buffer, { depth : null }));
+//     //     // console.log(`buffer: `, machine.Buffer);
+//     //     machine.Step();
+//     // }
 
-    while(!machine.Done) machine.Step();
+//     while(!machine.Done) machine.Step();
 
-    expect(counter).toBe(1);
-});
+//     expect(counter).toBe(1);
+// });

@@ -1,7 +1,6 @@
 import Parameters from "./parameters";
 import Parameter from "./parameter";
-import Name from "./name";
-import Scope from "./scope";
+import Name from "../tokening/name-token";
 
 type Parent = Parameters | Parameter;
 type Index = number;

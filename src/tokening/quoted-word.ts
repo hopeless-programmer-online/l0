@@ -8,4 +8,12 @@ export default class QuotedWord extends Word {
 
         this.Text = Text;
     }
+
+    public IsEqual(other : Word) : boolean {
+        return other instanceof QuotedWord && this.Text === other.Text;
+    }
+
+    public toString() {
+        return this.Text;
+    }
 }

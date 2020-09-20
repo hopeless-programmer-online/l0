@@ -1,6 +1,6 @@
 import Output from "./output";
 import Outputs from "./outputs";
-import Name from "./name";
+import Name from "../tokening/name-token";
 
 type Parent = Outputs | Output;
 type Index = number;

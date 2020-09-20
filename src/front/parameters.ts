@@ -1,12 +1,9 @@
 import Program from "./program";
 import Parameter from "./parameter";
 import Explicit from "./explicit-parameter";
-import Name from "./name";
+import Name from "../tokening/name-token";
 import Super from "./super-parameter";
-import Declaration from "./declaration";
 import Static from "./static-parameter";
-import Command from "./command";
-import Commands from "./commands";
 import Scope from "./scope";
 import Dynamic from "./dynamic-parameter";
 
@@ -21,7 +18,7 @@ export default class Parameters {
         let parent : Parameters | Parameter = this;
 
         if (Program.Parent) {
-            const references = Program.Parent.Scope.References.values();
+            const references = Program.Parent.Scope.References.Values;
 
             for (const reference of references) {
                 const parameter : Static = new Static({
@@ -76,12 +73,10 @@ export default class Parameters {
 
         this.isFinalized = true;
     }
-    public Add(string : string) : Explicit {
-        if (this.isFinalized) {
-            throw new Error; // @todo
-        }
+    public Add(name : Name | string) : Explicit {
+        if (typeof name === `string`) name = Name.Plain(name);
+        if (this.isFinalized) throw new Error; // @todo
 
-        const name = new Name({ String : string });
         const parameter = new Explicit({ Name : name, Index : this.Explicit.length, Parent : this });
 
         this.Array.push(parameter);

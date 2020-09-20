@@ -8,4 +8,12 @@ export default class PlainWord extends Word {
 
         this.Text = Text;
     }
+
+    public IsEqual(other : Word) : boolean {
+        return other instanceof PlainWord && this.Text === other.Text;
+    }
+
+    public toString() {
+        return this.Text;
+    }
 }

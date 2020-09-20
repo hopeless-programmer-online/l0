@@ -50,10 +50,10 @@ export default class Parser {
         }
         else if (!(third instanceof ClosingRoundBraceToken)) throw new Error; // @todo
 
-        const execution = program.Commands.Execute(name.String);
+        const execution = program.Commands.Execute(name);
 
-        for (const name of names) execution.Inputs.Add(name.String);
-        for (const name of outputs) execution.Outputs.Add(name.String);
+        for (const name of names) execution.Inputs.Add(name);
+        for (const name of outputs) execution.Outputs.Add(name);
     }
     private ParseFirstName(program : Program, name : NameToken) : boolean {
         const second = this.Next;
@@ -132,23 +132,23 @@ export default class Parser {
         const fourth = this.Next;
 
         if (fourth instanceof NameToken) {
-            const execution = program.Commands.Execute(name.String);
+            const execution = program.Commands.Execute(name);
 
-            for (const name of names) execution.Inputs.Add(name.String);
+            for (const name of names) execution.Inputs.Add(name);
 
             return this.ParseFirstName(program, fourth);
         }
         else if (this.level === 0 && fourth === undefined) {
-            const execution = program.Commands.Execute(name.String);
+            const execution = program.Commands.Execute(name);
 
-            for (const name of names) execution.Inputs.Add(name.String);
+            for (const name of names) execution.Inputs.Add(name);
 
             return true;
         }
         else if (this.level > 0 && fourth instanceof ClosingFigureBraceToken) {
-            const execution = program.Commands.Execute(name.String);
+            const execution = program.Commands.Execute(name);
 
-            for (const name of names) execution.Inputs.Add(name.String);
+            for (const name of names) execution.Inputs.Add(name);
 
             --this.level;
 
@@ -156,9 +156,9 @@ export default class Parser {
         }
         else if (!(fourth instanceof OpeningFigureBraceToken)) throw new Error; // @todo
 
-        const declaration = program.Commands.Declare(name.String);
+        const declaration = program.Commands.Declare(name);
 
-        for (const name of names) declaration.Program.Parameters.Add(name.String);
+        for (const name of names) declaration.Program.Parameters.Add(name);
 
         ++this.level;
 

@@ -1,4 +1,5 @@
 import Input from "./input";
+import Name from "../tokening/name-token";
 import Execution from "./execution";
 
 export default class Inputs {
@@ -9,8 +10,8 @@ export default class Inputs {
         this.Execution = Execution;
     }
 
-    public Add(string : string) {
-        const reference = this.Execution.Parent.Scope.Get(string);
+    public Add(name : Name | string) {
+        const reference = this.Execution.Parent.Scope.Get(name);
         const output = new Input({ Reference : reference, Index : this.Array.length });
 
         this.Array.push(output);

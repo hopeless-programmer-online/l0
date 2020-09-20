@@ -1,5 +1,5 @@
 import Parameters from "./parameters";
-import Name from "./name";
+import Name from "../tokening/name-token";
 import Scope from "./scope";
 import Reference from "./reference";
 
