@@ -2,7 +2,8 @@ import Output from "./output";
 import Execution from "./execution";
 import Scope from "./scope";
 import Explicit from "./explicit-output";
-import Name from "../tokening/name-token";
+import Name from "../tokening/name";
+import NameToken from "../tokening/name-token";
 import Sub from "./sub-output";
 
 export default class Outputs {
@@ -38,8 +39,9 @@ export default class Outputs {
             .map(parameter => parameter as Explicit); // @todo
     }
 
-    public Add(name : Name | string) : Explicit {
+    public Add(name : NameToken | Name | string) : Explicit {
         if (typeof name === `string`) name = Name.Plain(name);
+        if (name instanceof NameToken) name = name.Name;
         // if (this.isFinalized) {
         //     throw new Error; // @todo
         // }

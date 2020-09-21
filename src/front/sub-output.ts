@@ -1,5 +1,5 @@
 import Implicit from "./implicit-output";
-import Name from "../tokening/name-token";
+import Name from "../tokening/name";
 import Outputs from "./outputs";
 import Output from "./output";
 

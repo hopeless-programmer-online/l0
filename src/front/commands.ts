@@ -1,7 +1,8 @@
 import Program from "./program";
 import Declaration from "./declaration";
 import Command from "./command";
-import Name from "../tokening/name-token";
+import Name from "../tokening/name";
+import NameToken from "../tokening/name-token";
 import Scope from "./scope";
 import Execution from "./execution";
 
@@ -24,8 +25,9 @@ export default class Commands {
         return array[length - 1].Scope;
     }
 
-    public Declare(name : Name | string) : Declaration {
+    public Declare(name : NameToken | Name | string) : Declaration {
         if (typeof name === `string`) name = Name.Plain(name);
+        if (name instanceof NameToken) name = name.Name;
 
         const parent = this.Array[this.Array.length - 1] || this;
         const command = new Declaration({ Name : name, Parent : parent });
@@ -34,8 +36,9 @@ export default class Commands {
 
         return command;
     }
-    public Execute(name : Name | string) : Execution {
+    public Execute(name : NameToken | Name | string) : Execution {
         if (typeof name === `string`) name = Name.Plain(name);
+        if (name instanceof NameToken) name = name.Name;
 
         const parent = this.Array[this.Array.length - 1] || this;
         const target = parent.Scope.Get(name);

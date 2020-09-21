@@ -1,5 +1,5 @@
 import Outputs from "./outputs";
-import Name from "../tokening/name-token";
+import Name from "../tokening/name";
 import Scope from "./scope";
 import Reference from "./reference";
 

@@ -1,6 +1,6 @@
 import Parameters from "./parameters";
 import Parameter from "./parameter";
-import Name from "../tokening/name-token";
+import Name from "../tokening/name";
 
 type Parent = Parameters | Parameter;
 type Index = number;

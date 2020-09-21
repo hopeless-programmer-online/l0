@@ -1,5 +1,5 @@
 import Parameter from "./parameter";
-import Name from "../tokening/name-token";
+import Name from "../tokening/name";
 import Output from "./output";
 import Declaration from "./declaration";
 

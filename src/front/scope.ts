@@ -1,4 +1,5 @@
 import Reference from "./reference";
+import Name from "../tokening/name";
 import NameToken from "../tokening/name-token";
 import References from "./references";
 import PlainWord from "../tokening/plain-word";
@@ -32,7 +33,7 @@ export default class Scope {
                     const first = words[0];
 
                     if (first instanceof PlainWord) {
-                        name = new NameToken({
+                        name = new Name({
                             Words : [
                                 new PlainWord({ Text : `/${first.Text}` }),
                                 ...words.slice(1),
@@ -68,8 +69,9 @@ export default class Scope {
         return references;
     }
 
-    public Get(name : NameToken | string) : Reference {
-        if (typeof name === `string`) name = NameToken.Plain(name);
+    public Get(name : NameToken | Name | string) : Reference {
+        if (name instanceof NameToken) name = name.Name;
+        if (typeof name === `string`) name = Name.Plain(name);
 
         return this.References.Get(name);
     }

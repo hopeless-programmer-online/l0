@@ -1,38 +1,17 @@
 import Token from "./token";
 
 export default class NameToken extends Token {
-    public static Plain(text : string) {
-        return new NameToken({
-            Words : [
-                new PlainWord({ Text : text }),
-            ],
-        });
-    }
+    readonly Name : Name;
 
-    readonly Words : Words;
-
-    public constructor({ Words } : { Words : Words }) {
+    public constructor({ Name } : { Name : Name }) {
         super();
 
-        this.Words = Words;
-    }
-
-    public IsEqual(other : NameToken) {
-        if (this.Words.length !== other.Words.length) return false;
-
-        for (const i of this.Words.keys()) {
-            if (!this.Words[i].IsEqual(other.Words[i])) return false;
-        }
-
-        return true;
+        this.Name = Name;
     }
 
     public toString() {
-        return this.Words.join(` `);
+        return this.Name.toString();
     }
 }
 
-import PlainWord from "./plain-word";
-import Word from "./word";
-
-type Words = Array<Word>;
+import Name from "./name";

@@ -1,7 +1,7 @@
 import Command from "./command";
 import Program from "./program";
 import Commands from "./commands";
-import Name from "../tokening/name-token";
+import Name from "../tokening/name";
 import Scope from "./scope";
 import Reference from "./reference";
 

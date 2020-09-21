@@ -15,10 +15,10 @@ it(``, () => {
 
     const u = tokens[0] as NameToken;
 
-    expect(u.Words).toHaveLength(1);
-    expect(u.Words[0]).toBeInstanceOf(PlainWord);
+    expect(u.Name.Words).toHaveLength(1);
+    expect(u.Name.Words[0]).toBeInstanceOf(PlainWord);
 
-    const u0 = u.Words[0] as PlainWord;
+    const u0 = u.Name.Words[0] as PlainWord;
 
     expect(u0.Text).toBe(`u`);
 
@@ -30,10 +30,10 @@ it(``, () => {
 
     const v = tokens[2] as NameToken;
 
-    expect(v.Words).toHaveLength(1);
-    expect(v.Words[0]).toBeInstanceOf(PlainWord);
+    expect(v.Name.Words).toHaveLength(1);
+    expect(v.Name.Words[0]).toBeInstanceOf(PlainWord);
 
-    const v0 = v.Words[0] as PlainWord;
+    const v0 = v.Name.Words[0] as PlainWord;
 
     expect(v0.Text).toBe(`v`);
 
@@ -45,10 +45,10 @@ it(``, () => {
 
     const f = tokens[4] as NameToken;
 
-    expect(f.Words).toHaveLength(1);
-    expect(f.Words[0]).toBeInstanceOf(PlainWord);
+    expect(f.Name.Words).toHaveLength(1);
+    expect(f.Name.Words[0]).toBeInstanceOf(PlainWord);
 
-    const f0 = f.Words[0] as PlainWord;
+    const f0 = f.Name.Words[0] as PlainWord;
 
     expect(f0.Text).toBe(`f`);
 
@@ -60,10 +60,10 @@ it(``, () => {
 
     const x = tokens[6] as NameToken;
 
-    expect(x.Words).toHaveLength(1);
-    expect(x.Words[0]).toBeInstanceOf(PlainWord);
+    expect(x.Name.Words).toHaveLength(1);
+    expect(x.Name.Words[0]).toBeInstanceOf(PlainWord);
 
-    const x0 = x.Words[0] as PlainWord;
+    const x0 = x.Name.Words[0] as PlainWord;
 
     expect(x0.Text).toBe(`x`);
 
@@ -75,10 +75,10 @@ it(``, () => {
 
     const y = tokens[8] as NameToken;
 
-    expect(y.Words).toHaveLength(1);
-    expect(y.Words[0]).toBeInstanceOf(PlainWord);
+    expect(y.Name.Words).toHaveLength(1);
+    expect(y.Name.Words[0]).toBeInstanceOf(PlainWord);
 
-    const y0 = y.Words[0] as PlainWord;
+    const y0 = y.Name.Words[0] as PlainWord;
 
     expect(y0.Text).toBe(`y`);
 
@@ -92,7 +92,7 @@ it(``, () => {
     expect(tokens[0]).toBeInstanceOf(NameToken);
 
     const name = tokens[0] as NameToken;
-    const words = name.Words;
+    const words = name.Name.Words;
 
     expect(words).toHaveLength(2);
     expect(words[0]).toBeInstanceOf(PlainWord);
@@ -113,7 +113,7 @@ it(``, () => {
     expect(tokens[0]).toBeInstanceOf(NameToken);
 
     const name = tokens[0] as NameToken;
-    const words = name.Words;
+    const words = name.Name.Words;
 
     expect(words).toHaveLength(1);
     expect(words[0]).toBeInstanceOf(QuotedWord);
@@ -129,7 +129,7 @@ it(``, () => {
     expect(tokens[0]).toBeInstanceOf(NameToken);
 
     const name = tokens[0] as NameToken;
-    const words = name.Words;
+    const words = name.Name.Words;
 
     expect(words).toHaveLength(2);
     expect(words[0]).toBeInstanceOf(QuotedWord);

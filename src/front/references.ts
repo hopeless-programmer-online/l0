@@ -1,4 +1,4 @@
-import NameToken from "../tokening/name-token";
+import NameToken from "../tokening/name";
 import Reference from "./reference";
 
 export default class References {

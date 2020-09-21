@@ -1,4 +1,5 @@
 import Token from "./token";
+import Name from "./name";
 import NameToken from "./name-token";
 import OpeningRoundBraceToken from "./opening-round-brace-token";
 import ClosingRoundBraceToken from "./closing-round-brace-token";
@@ -28,7 +29,8 @@ export default class Tokens {
                 words.push(word);
             }
             function end() {
-                const token = new NameToken({ Words : words });
+                const name = new Name({ Words : words });
+                const token = new NameToken({ Name : name });
 
                 array.push(token);
             }
@@ -172,7 +174,8 @@ export default class Tokens {
                 ++position;
 
                 if (position >= text.length) {
-                    const token = new NameToken({ Words : words });
+                    const name = new Name({ Words : words });
+                    const token = new NameToken({ Name : name });
 
                     array.push(token);
 
@@ -206,7 +209,8 @@ export default class Tokens {
                         throw new Error; // @todo
                     } break;
                     default: {
-                        const token = new NameToken({ Words : words });
+                        const name = new Name({ Words : words });
+                        const token = new NameToken({ Name : name });
 
                         array.push(token);
 
