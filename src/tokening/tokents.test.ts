@@ -27,6 +27,11 @@ it(``, () => {
     // ,
     expect(tokens[1]).toBeInstanceOf(CommaToken);
 
+    const token1 = tokens[1] as CommaToken;
+
+    expect(token1.Begin.Offset).toBe(1);
+    expect(token1.End.Offset).toBe(2);
+
     // v
     expect(tokens[2]).toBeInstanceOf(NameToken);
 
@@ -38,6 +43,8 @@ it(``, () => {
     const v0 = v.Name.Words[0] as PlainWord;
 
     expect(v0.Text).toBe(`v`);
+    expect(v0.Begin.Offset).toBe(3);
+    expect(v0.End.Offset).toBe(4);
 
     // :
     expect(tokens[3]).toBeInstanceOf(ColonToken);
@@ -102,11 +109,15 @@ it(``, () => {
     const word0 = words[0] as PlainWord;
 
     expect(word0.Text).toBe(`lol`);
+    expect(word0.Begin.Offset).toBe(0);
+    expect(word0.End.Offset).toBe(3);
     expect(words[1]).toBeInstanceOf(PlainWord);
 
     const word1 = words[1] as PlainWord;
 
     expect(word1.Text).toBe(`kek`);
+    expect(word1.Begin.Offset).toBe(4);
+    expect(word1.End.Offset).toBe(7);
 });
 
 it(``, () => {

@@ -29,8 +29,7 @@ export default class Tokens {
         function processLetter(words : Array<Word> = []) {
             // @todo: assert that text[offset] is letter
 
-            const wordBegin = position();
-
+            let wordBegin = position();
             let begin = offset;
 
             function push() {
@@ -119,6 +118,7 @@ export default class Tokens {
                                 } break;
                                 default: {
                                     begin = offset;
+                                    wordBegin = position();
 
                                     continue main;
                                 } break;
