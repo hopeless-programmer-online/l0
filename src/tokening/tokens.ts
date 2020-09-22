@@ -10,21 +10,37 @@ import CommaToken from "./comma-token";
 import Word from "./word";
 import PlainWord from "./plain-word";
 import QuotedWord from "./quoted-word";
+import Position from "./position";
 
 export default class Tokens {
     public static FromString(text : string) {
         const array : Array<Token> = [];
 
-        let position = 0;
+        let offset = 0;
+
+        function position() {
+            return new Position({
+                Offset : offset,
+                Line   : 0, // @todo
+                Column : 0, // @todo
+            });
+        }
 
         function processLetter(words : Array<Word> = []) {
-            // @todo: assert that text[position] is letter
+            // @todo: assert that text[offset] is letter
 
-            let begin = position;
+            const wordBegin = position();
+
+            let begin = offset;
 
             function push() {
-                const wordText = text.substring(begin, position);
-                const word = new PlainWord({ Text : wordText });
+                const wordText = text.substring(begin, offset);
+                const wordEnd = position();
+                const word = new PlainWord({
+                    Text  : wordText,
+                    Begin : wordBegin,
+                    End   : wordEnd,
+                });
 
                 words.push(word);
             }
@@ -36,9 +52,9 @@ export default class Tokens {
             }
 
             main : while (true) {
-                ++position;
+                ++offset;
 
-                if (position >= text.length) {
+                if (offset >= text.length) {
                     push();
                     end();
 
@@ -47,7 +63,7 @@ export default class Tokens {
                     return;
                 }
 
-                const character = text[position];
+                const character = text[offset];
 
                 switch(character) {
                     case `(`:
@@ -70,9 +86,9 @@ export default class Tokens {
                         push();
 
                         while (true) {
-                            ++position;
+                            ++offset;
 
-                            if (position >= text.length) {
+                            if (offset >= text.length) {
                                 end();
 
                                 state = null;
@@ -80,7 +96,7 @@ export default class Tokens {
                                 return;
                             }
 
-                            const character = text[position];
+                            const character = text[offset];
 
                             switch (character) {
                                 case `(`:
@@ -102,7 +118,7 @@ export default class Tokens {
                                     // do nothing
                                 } break;
                                 default: {
-                                    begin = position;
+                                    begin = offset;
 
                                     continue main;
                                 } break;
@@ -125,22 +141,24 @@ export default class Tokens {
             }
         }
         function processQuote(words : Array<Word> = []) {
-            let begin = position;
+            const wordBegin = position();
+
+            let begin = offset;
 
             main : while (true) {
-                ++position;
+                ++offset;
 
-                if (position >= text.length) throw new Error; // @todo
+                if (offset >= text.length) throw new Error; // @todo
 
-                const character = text[position];
+                const character = text[offset];
 
                 switch(character) {
                     case `\\`: {
-                        ++position;
+                        ++offset;
 
-                        if (position >= text.length) throw new Error; // @todo
+                        if (offset >= text.length) throw new Error; // @todo
 
-                        const character = text[position];
+                        const character = text[offset];
 
                         switch(character) {
                             case `n`:
@@ -157,10 +175,19 @@ export default class Tokens {
                         }
                     } break;
                     case `"`: {
-                        const wordText = text.substring(begin, position + 1);
-                        const word = new QuotedWord({ Text : wordText });
+                        ++offset;
+
+                        const wordText = text.substring(begin, offset);
+                        const wordEnd  = position();
+                        const word = new QuotedWord({
+                            Text  : wordText,
+                            Begin : wordBegin,
+                            End   : wordEnd,
+                        });
 
                         words.push(word);
+
+                        --offset;
 
                         break main;
                     } break;
@@ -171,9 +198,9 @@ export default class Tokens {
             }
 
             while (true) {
-                ++position;
+                ++offset;
 
-                if (position >= text.length) {
+                if (offset >= text.length) {
                     const name = new Name({ Words : words });
                     const token = new NameToken({ Name : name });
 
@@ -184,7 +211,7 @@ export default class Tokens {
                     return;
                 }
 
-                const character = text[position];
+                const character = text[offset];
 
                 switch(character) {
                     // skip spaces
@@ -223,32 +250,98 @@ export default class Tokens {
         }
         function process() {
             while (true) {
-                if (position >= text.length) {
+                if (offset >= text.length) {
                     state = null;
 
                     return;
                 }
 
-                const character = text[position];
+                const character = text[offset];
 
                 switch (character) {
                     case `(`:  {
-                        array.push(new OpeningRoundBraceToken);
+                        const tokenBegin = position();
+
+                        ++offset;
+
+                        const tokenEnd = position();
+
+                        array.push(new OpeningRoundBraceToken({
+                            Begin : tokenBegin,
+                            End   : tokenEnd,
+                        }));
+
+                        continue;
                     } break;
                     case `)`:  {
-                        array.push(new ClosingRoundBraceToken);
+                        const tokenBegin = position();
+
+                        ++offset;
+
+                        const tokenEnd = position();
+
+                        array.push(new ClosingRoundBraceToken({
+                            Begin : tokenBegin,
+                            End   : tokenEnd,
+                        }));
+
+                        continue;
                     } break;
                     case `{`: {
-                        array.push(new OpeningFigureBraceToken);
+                        const tokenBegin = position();
+
+                        ++offset;
+
+                        const tokenEnd = position();
+
+                        array.push(new OpeningFigureBraceToken({
+                            Begin : tokenBegin,
+                            End   : tokenEnd,
+                        }));
+
+                        continue;
                     } break;
                     case `}`: {
-                        array.push(new ClosingFigureBraceToken);
+                        const tokenBegin = position();
+
+                        ++offset;
+
+                        const tokenEnd = position();
+
+                        array.push(new ClosingFigureBraceToken({
+                            Begin : tokenBegin,
+                            End   : tokenEnd,
+                        }));
+
+                        continue;
                     } break;
                     case `:`: {
-                        array.push(new ColonToken);
+                        const tokenBegin = position();
+
+                        ++offset;
+
+                        const tokenEnd = position();
+
+                        array.push(new ColonToken({
+                            Begin : tokenBegin,
+                            End   : tokenEnd,
+                        }));
+
+                        continue;
                     } break;
                     case `,`: {
-                        array.push(new CommaToken);
+                        const tokenBegin = position();
+
+                        ++offset;
+
+                        const tokenEnd = position();
+
+                        array.push(new CommaToken({
+                            Begin : tokenBegin,
+                            End   : tokenEnd,
+                        }));
+
+                        continue;
                     } break;
                     case `"`: {
                         processQuote();
@@ -277,7 +370,7 @@ export default class Tokens {
                     } break;
                 }
 
-                ++position;
+                ++offset;
             }
         }
 
@@ -285,7 +378,7 @@ export default class Tokens {
 
         while (state) state();
 
-        if (position < text.length) throw new Error; // @todo
+        if (offset < text.length) throw new Error; // @todo
 
         return new Tokens({ Array : array });
     }

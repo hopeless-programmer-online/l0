@@ -21,6 +21,8 @@ it(``, () => {
     const u0 = u.Name.Words[0] as PlainWord;
 
     expect(u0.Text).toBe(`u`);
+    expect(u0.Begin.Offset).toBe(0);
+    expect(u0.End.Offset).toBe(1);
 
     // ,
     expect(tokens[1]).toBeInstanceOf(CommaToken);

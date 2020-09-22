@@ -1,6 +1,20 @@
 export default class Name {
     public static Plain(text : string) {
-        return new Name({ Words : [ new PlainWord({ Text : text }) ] });
+        const position = new Position({
+            Offset : 0,
+            Line   : 0,
+            Column : 0,
+        });
+
+        return new Name({
+            Words : [
+                new PlainWord({
+                    Text  : text,
+                    Begin : position,
+                    End   : position,
+                }),
+            ],
+        });
     }
 
     readonly Words : Words;
@@ -25,6 +39,7 @@ export default class Name {
 }
 
 import PlainWord from "./plain-word";
+import Position from "./position";
 import Word from "./word";
 
 type Words = Array<Word>;

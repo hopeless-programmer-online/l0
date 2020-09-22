@@ -3,6 +3,7 @@ import Name from "../tokening/name";
 import NameToken from "../tokening/name-token";
 import References from "./references";
 import PlainWord from "../tokening/plain-word";
+import Position from "../tokening/position";
 
 export default class Scope {
     readonly Parent : Scope | null;
@@ -33,9 +34,19 @@ export default class Scope {
                     const first = words[0];
 
                     if (first instanceof PlainWord) {
+                        const position = new Position({
+                            Offset : 0,
+                            Line   : 0,
+                            Column : 0,
+                        });
+
                         name = new Name({
                             Words : [
-                                new PlainWord({ Text : `/${first.Text}` }),
+                                new PlainWord({
+                                    Text  : `/${first.Text}`,
+                                    Begin : position,
+                                    End   : position,
+                                }),
                                 ...words.slice(1),
                             ],
                         });
