@@ -6,7 +6,7 @@ import PlainWord from "../tokening/plain-word";
 import Position from "../tokening/position";
 
 export default class Scope {
-    readonly Parent : Scope | null;
+    public Parent : Scope | null;
     readonly Reference : Reference | null;
 
     public constructor({ Reference = null, Parent = null } : { Reference? : Reference | null, Parent? : Scope | null } = { Reference : null, Parent : null }) {
@@ -94,8 +94,6 @@ export default class Scope {
     }
 
     public toString() : string {
-        const references = this.References;
-
-        return `[${[ ...references.Keys ].map(x => JSON.stringify(x)).join(`,`)}]`;
+        return this.References.toString();
     }
 }

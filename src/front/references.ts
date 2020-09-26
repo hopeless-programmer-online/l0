@@ -37,4 +37,8 @@ export default class References {
 
         return null;
     }
+
+    public toString() : string {
+        return `[${[ ...this.map.keys() ].map(x => x.toString()).join(`,`)}]`;
+    }
 }

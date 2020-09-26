@@ -135,3 +135,13 @@ it(``, () => {
         `}` +
     ``);
 });
+
+it(``, () => {
+    expect(parse(
+        `print(true)` +
+    ``)).toBe(
+        `(print, true) {\n` +
+        `\tprint(true)\n` +
+        `}` +
+    ``);
+});

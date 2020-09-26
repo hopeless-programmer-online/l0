@@ -12,6 +12,7 @@ export default class Parameters {
     private isFinalized = false;
     readonly Program : Program;
     readonly Array : Array<Parameter> = [];
+    readonly scope : Scope;
 
     public constructor({ Program } : { Program : Program }) {
         this.Program = Program;
@@ -36,17 +37,12 @@ export default class Parameters {
         const parameter = new Super({ Parent : parent });
 
         this.Array.push(parameter);
+
+        this.scope = new Scope({ Parent : parameter.Scope });
     }
 
     public get Scope() : Scope {
-        const array = this.Array;
-        const { length } = array;
-
-        if (length <= 0) {
-            return this.Program.Scope;
-        }
-
-        return array[length - 1].Scope;
+        return this.scope;
     }
     public get Static() : Array<Static> {
         return this
@@ -79,9 +75,13 @@ export default class Parameters {
         if (name instanceof NameToken) name = name.Name;
         // if (this.isFinalized) throw new Error; // @todo
 
-        const parameter = new Explicit({ Name : name, Index : this.Explicit.length, Parent : this });
+        const parent = this.Array[this.Array.length - 1];
+
+        const parameter = new Explicit({ Name : name, Index : this.Explicit.length, Parent : parent });
 
         this.Array.push(parameter);
+
+        this.scope.Parent = parameter.Scope;
 
         return parameter;
     }
