@@ -41,7 +41,32 @@ export default class Commands {
         if (name instanceof NameToken) name = name.Name;
 
         const parent = this.Array[this.Array.length - 1] || this;
-        const target = parent.Scope.Get(name);
+
+        let target = parent.Scope.TryGet(name);
+
+        // if name is not declared - add parameter to the root program
+        if (!target) {
+            let program = this.Program;
+
+            while (true) {
+                if (!program.Parent) break;
+
+                let command : Commands | Command = program.Parent;
+
+                while (true) {
+                    command = command.Parent;
+
+                    if (command instanceof Commands) break;
+                }
+
+                program = command.Program;
+            }
+
+            program.Parameters.Add(name);
+
+            target = parent.Scope.Get(name);
+        }
+
         const command = new Execution({ Target : target, Parent : parent });
 
         this.Array.push(command);

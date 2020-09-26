@@ -30,4 +30,11 @@ export default class References {
 
         throw new Error; // @todo
     }
+    public TryGet(name : NameToken) {
+        for (const [ key, reference ] of this.map) {
+            if (name.IsEqual(key)) return reference;
+        }
+
+        return null;
+    }
 }

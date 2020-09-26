@@ -86,6 +86,12 @@ export default class Scope {
 
         return this.References.Get(name);
     }
+    public TryGet(name : NameToken | Name | string) {
+        if (name instanceof NameToken) name = name.Name;
+        if (typeof name === `string`) name = Name.Plain(name);
+
+        return this.References.TryGet(name);
+    }
 
     public toString() : string {
         const references = this.References;

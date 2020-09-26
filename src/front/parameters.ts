@@ -77,7 +77,7 @@ export default class Parameters {
     public Add(name : NameToken | Name | string) : Explicit {
         if (typeof name === `string`) name = Name.Plain(name);
         if (name instanceof NameToken) name = name.Name;
-        if (this.isFinalized) throw new Error; // @todo
+        // if (this.isFinalized) throw new Error; // @todo
 
         const parameter = new Explicit({ Name : name, Index : this.Explicit.length, Parent : this });
 
