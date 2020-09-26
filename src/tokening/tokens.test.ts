@@ -150,9 +150,57 @@ it(``, () => {
     const word0 = words[0] as QuotedWord;
 
     expect(word0.Text).toBe(`"lol"`);
+    expect(word0.Begin.Offset).toBe(0);
+    expect(word0.End.Offset).toBe(5);
     expect(words[1]).toBeInstanceOf(QuotedWord);
 
     const word1 = words[1] as QuotedWord;
 
     expect(word1.Text).toBe(`"kek"`);
+    expect(word1.Begin.Offset).toBe(5);
+    expect(word1.End.Offset).toBe(10);
+});
+
+it(``, () => {
+    const tokens = [ ...Tokens.FromString(`print("lol")`) ];
+
+    expect(tokens).toHaveLength(4);
+
+    // print
+    expect(tokens[0]).toBeInstanceOf(NameToken);
+
+    const token0 = tokens[0] as NameToken;
+    const words = token0.Name.Words;
+
+    expect(words).toHaveLength(1);
+
+    expect(words[0]).toBeInstanceOf(PlainWord);
+
+    const word0 = words[0] as PlainWord;
+
+    expect(word0.Text).toBe(`print`);
+    expect(word0.Begin.Offset).toBe(0);
+    expect(word0.End.Offset).toBe(5);
+
+    // (
+    expect(tokens[1]).toBeInstanceOf(OpeningRoundBraceToken);
+
+    // "lol"
+    expect(tokens[2]).toBeInstanceOf(NameToken);
+
+    const token2 = tokens[2] as NameToken;
+    const words2 = token2.Name.Words;
+
+    expect(words2).toHaveLength(1);
+
+    expect(words2[0]).toBeInstanceOf(QuotedWord);
+
+    const word2_0 = words2[0] as QuotedWord;
+
+    expect(word2_0.Text).toBe(`"lol"`);
+    expect(word2_0.Begin.Offset).toBe(6);
+    expect(word2_0.End.Offset).toBe(11);
+
+    // )
+    expect(tokens[3]).toBeInstanceOf(ClosingRoundBraceToken);
 });
