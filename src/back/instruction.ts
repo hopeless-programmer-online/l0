@@ -7,7 +7,7 @@ export default abstract class Instruction {
 
             // console.log(index);
 
-            if (index === -1) throw new Error;
+            if (index === -1) throw new Error(`Failed to find super in ${state}.`);
 
             return new ShuffleInstruction({
                 Sources : [
@@ -84,7 +84,7 @@ export default abstract class Instruction {
         const first = Instruction.FromCommands(program.Commands.Array, [
             null, // current instruction
             // ...(program.Parent ? [] : [ null ]),
-            ...parameters.Array,
+            ...parameters,
         ]);
 
         return new InstructionSource({
@@ -93,7 +93,7 @@ export default abstract class Instruction {
                 () => new StaticSource({ Value : first }),
                 // restore saved static parameters
                 ...parameters.Static.map(parameter => {
-                    const target = parameter.Reference.Target;
+                    const target = parameter.Target.Target;
 
                     if (target instanceof Declaration) {
                         if (target.Program === program) {
@@ -103,7 +103,7 @@ export default abstract class Instruction {
 
                     const index = state.findIndex(something => something === target);
 
-                    if (index === -1) throw new Error;
+                    if (index === -1) throw new Error(`Failed to find ${target} in ${state}.`);
 
                     return (buffer : Array<any>) => new StaticSource({ Value : buffer[index] });
                 }),

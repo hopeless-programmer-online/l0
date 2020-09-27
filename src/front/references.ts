@@ -28,7 +28,7 @@ export default class References {
             if (name.IsEqual(key)) return reference;
         }
 
-        throw new Error; // @todo
+        throw new Error(`${name} does not exists in ${this.toString()}.`);
     }
     public TryGet(name : NameToken) {
         for (const [ key, reference ] of this.map) {

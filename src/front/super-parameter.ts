@@ -1,12 +1,9 @@
 import Dynamic from "./dynamic-parameter";
 import Name from "../tokening/name";
-import Parameters from "./parameters";
-import Parameter from "./parameter";
-
-type Parent = Parameters | Parameter;
+import Scope from "./scope";
 
 export default class SuperParameter extends Dynamic {
-    public constructor({ Parent } : { Parent : Parent }) {
+    public constructor({ Parent } : { Parent : Scope }) {
         super({ Name : Name.Plain(`super`), Parent });
     }
 }

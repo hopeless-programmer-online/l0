@@ -4,6 +4,7 @@ import NameToken from "../tokening/name-token";
 import Execution from "./execution";
 import Command from "./command";
 import Program from "./program";
+import Parameter from "./parameter";
 
 export default class Inputs {
     readonly Execution : Execution;
@@ -19,7 +20,8 @@ export default class Inputs {
         // if name is not declared - add parameter to the root program
         if (!reference) {
             let command : Command = this.Execution;
-            let program : Program;
+
+            const programs = [];
 
             while (true) {
                 // search for root program
@@ -27,7 +29,9 @@ export default class Inputs {
 
                 while (parent instanceof Command) parent = parent.Parent;
 
-                program = parent.Program;
+                const program = parent.Program;
+
+                programs.unshift(program);
 
                 // break on program without parent (root)
                 if (!program.Parent) break;
@@ -36,7 +40,11 @@ export default class Inputs {
                 command = program.Parent;
             }
 
-            program.Parameters.Add(name);
+            let parameter : Parameter = programs[0].Parameters.Add(name);
+
+            for (const program of programs.slice(1)) {
+                parameter = program.Parameters.AddStatic(parameter.Reference);
+            }
 
             reference = this.Execution.Parent.Scope.Get(name);
         }

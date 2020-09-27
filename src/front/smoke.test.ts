@@ -59,14 +59,14 @@ it(``, () => {
         `}` +
     ``);
 
-    const s = program.Parameters.Scope;
+    const s = program.Parameters.ExplicitScope;
 
     expect(s.Get(`super`).Target).toBeInstanceOf(SuperParameter);
     expect(s.Get(`x`).Target).toBeInstanceOf(ExplicitParameter);
     expect(s.Get(`y`).Target).toBeInstanceOf(ExplicitParameter);
     expect(s.Get(`z`).Target).toBeInstanceOf(ExplicitParameter);
 
-    const fs = f.Program.Parameters.Scope;
+    const fs = f.Program.Parameters.ExplicitScope;
 
     expect(fs.Get(`f`).Target).toBeInstanceOf(StaticParameter);
     expect(fs.Get(`/super`).Target).toBeInstanceOf(StaticParameter);

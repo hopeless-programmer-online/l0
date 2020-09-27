@@ -1,16 +1,13 @@
 import Implicit from "./implicit-parameter";
-import Parameters from "./parameters";
-import Parameter from "./parameter";
 import Reference from "./reference";
-
-type Parent = Parameters | Parameter;
+import Scope from "./scope";
 
 export default class StaticParameter extends Implicit {
-    readonly Reference : Reference;
+    readonly Target : Reference;
 
-    public constructor({ Reference, Parent } : { Reference : Reference, Parent : Parent }) {
-        super({ Name : Reference.Name, Parent });
+    public constructor({ Target, Parent } : { Target : Reference, Parent : Scope }) {
+        super({ Name : Target.Name, Parent });
 
-        this.Reference = Reference;
+        this.Target = Target;
     }
 }

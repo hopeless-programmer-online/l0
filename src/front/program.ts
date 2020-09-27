@@ -10,21 +10,12 @@ export default class Program {
     readonly Parent : Parent;
     readonly Scope = new Scope; // parent scope should always be null
     readonly Parameters : Parameters;
-    private commands : Commands | null = null;
+    readonly Commands : Commands;
 
     public constructor({ Parent = null } : { Parent? : Parent } = { Parent : null }) {
         this.Parent = Parent;
         this.Parameters = new Parameters({ Program : this });
-    }
-
-    public get Commands() : Commands {
-        if (!this.commands) {
-            this.Parameters.Finalize();
-
-            this.commands = new Commands({ Program : this });
-        }
-
-        return this.commands;
+        this.Commands = new Commands({ Program : this });
     }
 
     public toString() : string {

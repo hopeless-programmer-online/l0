@@ -145,3 +145,19 @@ it(``, () => {
         `}` +
     ``);
 });
+
+it(``, () => {
+    expect(parse(
+        `not (x) {\n` +
+        `  r : nand(x, x)\n` +
+        `  super(r)\n` +
+        `}` +
+    ``)).toBe(
+        `(nand) {\n` +
+        `\tnot (x) {\n` +
+        `\t\tr : nand(x, x)\n` +
+        `\t\tsuper(r)\n` +
+        `\t}\n` +
+        `}` +
+    ``);
+});

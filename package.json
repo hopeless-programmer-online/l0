@@ -1,6 +1,6 @@
 {
   "name": "l0",
-  "version": "1.3.1",
+  "version": "1.4.0",
   "description": "Small programming language",
   "main": "lib/l0",
   "exports": {

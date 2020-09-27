@@ -5,6 +5,7 @@ import Name from "../tokening/name";
 import NameToken from "../tokening/name-token";
 import Scope from "./scope";
 import Execution from "./execution";
+import Parameter from "./parameter";
 
 export default class Commands {
     readonly Program : Program;
@@ -19,7 +20,7 @@ export default class Commands {
         const { length } = array;
 
         if (length <= 0) {
-            return this.Program.Parameters.Scope;
+            return this.Program.Parameters.ExplicitScope;
         }
 
         return array[length - 1].Scope;
@@ -46,9 +47,13 @@ export default class Commands {
 
         // if name is not declared - add parameter to the root program
         if (!target) {
-            let program = this.Program;
+            const programs = [ this.Program ];
+
+            // let program = this.Program;
 
             while (true) {
+                const program = programs[0];
+
                 if (!program.Parent) break;
 
                 let command : Commands | Command = program.Parent;
@@ -59,10 +64,14 @@ export default class Commands {
                     if (command instanceof Commands) break;
                 }
 
-                program = command.Program;
+                programs.unshift(command.Program);
             }
 
-            program.Parameters.Add(name);
+            let parameter : Parameter = programs[0].Parameters.Add(name);
+
+            for (const program of programs.slice(1)) {
+                parameter = program.Parameters.AddStatic(parameter.Reference);
+            }
 
             target = parent.Scope.Get(name);
         }

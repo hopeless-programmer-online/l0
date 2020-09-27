@@ -1,22 +1,18 @@
-import Parameters from "./parameters";
 import Name from "../tokening/name";
 import Scope from "./scope";
 import Reference from "./reference";
 
-type Parent = Parameters | Parameter;
-
 export default abstract class Parameter {
-    readonly Parent : Parent;
-    readonly Scope : Scope;
+    readonly Parent : Scope;
     readonly Name : Name;
+    readonly Reference : Reference;
+    readonly Scope : Scope;
 
-    public constructor({ Name, Parent } : { Name : Name, Parent : Parent }) {
+    public constructor({ Name, Parent } : { Name : Name, Parent : Scope }) {
         this.Parent = Parent;
-        this.Scope = new Scope({
-            Parent    : Parent.Scope,
-            Reference : new Reference({ Name, Target : this }),
-        });
         this.Name = Name;
+        this.Reference = new Reference({ Name, Target : this });
+        this.Scope = new Scope({ Reference : this.Reference, Parent });
     }
 
     public toString() : string {
