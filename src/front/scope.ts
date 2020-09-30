@@ -26,53 +26,21 @@ export default class Scope {
             if (reference) {
                 let name = reference.Name;
 
-                while (references.Has(name)) {
-                    const words = name.Words;
+                while (true) {
+                    if (!references.Has(name)) break;
 
-                    if (words.length <= 0) throw new Error; // @todo
+                    // console.log(`overlapping ${name} : `, references.Get(name).Target, ` with `, reference.Target);
 
-                    const first = words[0];
-
-                    if (first instanceof PlainWord) {
-                        const position = new Position({
-                            Offset : 0,
-                            Line   : 0,
-                            Column : 0,
-                        });
-
-                        name = new Name({
-                            Words : [
-                                new PlainWord({
-                                    Text  : `/${first.Text}`,
-                                    Begin : position,
-                                    End   : position,
-                                }),
-                                ...words.slice(1),
-                            ],
-                        });
-                    }
-                    else throw new Error; // @todo
+                    name = prefix(name);
                 }
+
+                // console.log(`${name} : `, reference.Target);
 
                 references.Add(name, new Reference({
                     Name   : name,
                     Target : reference.Target,
                 }));
             }
-            // const reference = scope.Reference;
-
-            // if (reference) {
-            //     let string = reference.Name.String;
-
-            //     while (map.has(string)) {
-            //         string = `/${string}`;
-            //     }
-
-            //     map.set(string, new Reference({
-            //         Name   : new Name({ String : string }),
-            //         Target : reference.Target,
-            //     }));
-            // }
 
             scope = scope.Parent;
         } while (scope);
@@ -96,4 +64,33 @@ export default class Scope {
     public toString() : string {
         return this.References.toString();
     }
+}
+
+function prefix(name : Name) : Name {
+    const words = name.Words;
+
+    if (words.length <= 0) throw new Error; // @todo
+
+    const first = words[0];
+
+    if (first instanceof PlainWord) {
+        const position = new Position({
+            Offset : 0,
+            Line   : 0,
+            Column : 0,
+        });
+
+        return new Name({
+            Words : [
+                new PlainWord({
+                    Text  : `/${first.Text}`,
+                    Begin : position,
+                    End   : position,
+                }),
+                ...words.slice(1),
+            ],
+        });
+    }
+    // @todo: Quoted Word
+    else throw new Error; // @todo
 }

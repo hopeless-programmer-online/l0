@@ -23,7 +23,17 @@ export default class Parameters {
         this.StaticScope = new Scope;
 
         if (Program.Parent) {
-            const references = Program.Parent.Scope.References.Values;
+            const references = [];
+
+            let scope : Scope | null = Program.Parent.Scope;
+
+            while (scope) {
+                const reference = scope.Reference;
+
+                if (reference) references.unshift(reference);
+
+                scope = scope.Parent;
+            }
 
             for (const reference of references) this.AddStatic(reference);
         }

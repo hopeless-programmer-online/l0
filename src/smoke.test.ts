@@ -71,3 +71,42 @@ it(``, () => {
 
     expect(counter).toBe(1);
 });
+
+it(``, () => {
+    const tokens = Tokens.FromString(`f(){g(){/super()}g()}f()test()`);
+
+    // console.log(tokens);
+
+    const parser = new Parser;
+    const program = parser.Parse(tokens, [ `test` ]);
+
+    // console.log(util.inspect(program.Commands.Array, { depth : 5 }));
+
+    expect(program.Commands.Array.length).toBe(3);
+
+    let counter = 0;
+
+    function test(array : Array<any>) : Array<any> {
+        ++counter;
+
+        return [ array[1] ];
+    }
+
+    const instruction = Instruction.From(program, [
+        new ExternalInstruction({ Callback : test }),
+    ]);
+
+    // console.log(instruction);
+
+    const machine = new Machine({ Buffer : [ instruction ] });
+
+    // while (!machine.Done) {
+    //     console.log(util.inspect(machine.Buffer, { depth : null }));
+    //     // console.log(`buffer: `, machine.Buffer);
+    //     machine.Step();
+    // }
+
+    while(!machine.Done) machine.Step();
+
+    expect(counter).toBe(1);
+});

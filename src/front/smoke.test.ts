@@ -6,23 +6,13 @@ import SubOutput from "./sub-output";
 import ExplicitOutput from "./explicit-output";
 import Declaration from "./declaration";
 
-/*it(``, () => {
-    const program = new Program;
-
-    const f = program.Commands.Declare(`f`);
-    const x = f.Program.Parameters.Add(`x`);
-    const y = f.Program.Parameters.Add(`y`);
-    const z = f.Program.Parameters.Add(`z`);
-
-    const fc = program.Commands.Execute(`f`);
-
-    fc.Outputs.Add(`u`);
-    fc.Outputs.Add(`v`);
-    fc.Outputs.Add(`w`);
-});*/
-
 it(``, () => {
-    // [super](x, y, z) { f(u, v, w) { i, j, k : f() } a, b, c : f() }
+    // [super](x, y, z) {
+    //     [super, /super]f(u, v, w) {
+    //         i, j, k : f()
+    //     }
+    //     a, b, c : f()
+    // }
     const program = new Program;
 
     program.Parameters.Add(`x`);

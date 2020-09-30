@@ -8,7 +8,6 @@ type Parent = Declaration | null;
 
 export default class Program {
     readonly Parent : Parent;
-    readonly Scope = new Scope; // parent scope should always be null
     readonly Parameters : Parameters;
     readonly Commands : Commands;
 
