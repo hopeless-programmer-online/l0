@@ -1,8 +1,4 @@
-export default class Parameter {
-    public static From(text : string) {
-        return new Parameter({ name : new Name({ text }) })
-    }
-
+export default class Output {
     public readonly leave : Scope
 
     public constructor({ name } : { name : Name }) {

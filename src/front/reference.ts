@@ -8,6 +8,10 @@ export default class Reference {
         this.name = name
         this.target = target
     }
+
+    public toString() {
+        return this.name.toString()
+    }
 }
 
 import Declaration from './declaration'

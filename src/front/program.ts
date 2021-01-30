@@ -1,13 +1,13 @@
-import Commands from './commands'
-import Parameters from './parameters'
-
 export default class Program {
     public readonly parameters : Parameters
     public readonly commands : Commands
+    public readonly entry = new Scope
 
     public constructor({ parameters = new Parameters, commands = new Commands } : { parameters? : Parameters, commands? : Commands } = {}) {
         this.parameters = parameters
         this.commands = commands
+
+        parameters.entry.parent = this.entry
     }
 
     public toString() {
@@ -18,3 +18,7 @@ export default class Program {
         }\n}`
     }
 }
+
+import Commands from './commands'
+import Parameters from './parameters'
+import Scope from './scope'

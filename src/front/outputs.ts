@@ -1,15 +1,15 @@
-export default class Parameters {
+export default class Outputs {
     public static From(...names : Array<string>) {
-        const array = names.map(text => new Parameter({ name : new Name({ text }) }))
+        const array = names.map(text => new Output({ name : new Name({ text }) }))
 
-        return new Parameters({ array })
+        return new Outputs({ array })
     }
 
-    private readonly array : Array<Parameter>
+    private readonly array : Array<Output>
     public  readonly entry = new Scope
     public  readonly leave = new Scope({ parent : this.entry })
 
-    public constructor({ array = [] } : { array? : Array<Parameter> } = {}) {
+    public constructor({ array = [] } : { array? : Array<Output> } = {}) {
         this.array = array
 
         array.forEach((parameter, index) => {
@@ -19,6 +19,10 @@ export default class Parameters {
         })
 
         if (array.length > 0) this.leave.parent = array[array.length - 1].leave
+    }
+
+    public get empty() {
+        return this.array.length <= 0
     }
 
     public *[Symbol.iterator]() {
@@ -31,5 +35,5 @@ export default class Parameters {
 }
 
 import Name from './name'
-import Parameter from './parameter'
+import Output from './output'
 import Scope from './scope'
