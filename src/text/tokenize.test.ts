@@ -1,4 +1,4 @@
-import { Colon, Comma, CurlyClosing, CurlyOpening, RoundClosing, RoundOpening, SquareClosing, SquareOpening } from '../text'
+import { Colon, Comma, CurlyClosing, CurlyOpening, Identifier, RoundClosing, RoundOpening, SquareClosing, SquareOpening } from '../text'
 import tokenize from './tokenize'
 
 const type = Symbol()
@@ -11,6 +11,7 @@ Object.defineProperty(SquareOpening.prototype, type, { value : '[' })
 Object.defineProperty(SquareClosing.prototype, type, { value : ']' })
 Object.defineProperty(CurlyOpening.prototype, type, { value : '{' })
 Object.defineProperty(CurlyClosing.prototype, type, { value : '}' })
+Object.defineProperty(Identifier.prototype, type, { value : 'identifier' })
 
 it('should pass on empty string', () => {
     expect([ ...tokenize('') ]).toEqual([])
@@ -69,5 +70,15 @@ it('should parse curly opening', () => {
 it('should parse curly closing', () => {
     expect([ ...tokenize('}') ]).toMatchObject([
         { [type] : '}', begin : { offset : 0, line : 0, column : 0 }, end : { offset : 1, line : 0, column : 1 } },
+    ])
+})
+it('should parse letters, number and special characters', () => {
+    expect([ ...tokenize('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789~!@#$%^&*-=_+\\|/<>?') ]).toMatchObject([
+        {
+            [type] : 'identifier',
+            value : 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789~!@#$%^&*-=_+\\|/<>?',
+            begin : { offset : 0, line : 0, column : 0 },
+            end : { offset : 81, line : 0, column : 81 },
+        },
     ])
 })

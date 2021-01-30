@@ -1,4 +1,4 @@
-import { Colon, Comma, CurlyClosing, CurlyOpening, Location, RoundClosing, RoundOpening, SquareClosing, SquareOpening } from '../text'
+import { Colon, Comma, CurlyClosing, CurlyOpening, Identifier, Location, RoundClosing, RoundOpening, SquareClosing, SquareOpening } from '../text'
 
 export default function *tokenize(text : string) {
     const { length } = text
@@ -66,6 +66,63 @@ export default function *tokenize(text : string) {
 
         return new Token({ begin, end })
     }
+    function skipWord() {
+        while (offset < length) {
+            const x = getCurrent()
+
+            switch (x) {
+                case undefined:
+                case ' ':
+                case '\n':
+                case '\r':
+                case '\t':
+                case ',':
+                case ':':
+                case '\'':
+                case '`':
+                case '"':
+                    return x
+            }
+
+            move()
+        }
+    }
+    function scanWord(words : Array<string> = []) : Array<string> {
+        const start = offset
+
+        skipWord()
+
+        words.push(text.substring(start, offset))
+
+        const x = skipWhitespace()
+
+        switch (x) {
+            case undefined:
+            case '(':
+            case ')':
+            case '[':
+            case ']':
+            case '{':
+            case '}':
+            case ',':
+            case ':':
+                return words
+            // safety check
+            case ';':
+            case ' ':
+            case '\n':
+            case '\r':
+            case '\t':
+                throw new Error // @todo
+            // not implemented
+            case '\'':
+            case '`':
+            case '"':
+                throw new Error // @todo
+            default:
+                return scanWord(words)
+        }
+    }
 
     while (true) {
         const x = skipWhitespace()
@@ -79,6 +136,7 @@ export default function *tokenize(text : string) {
             case '\t': throw new Error // @todo
             // end of scanning
             case undefined: return
+            // check for tokens
             case ',': yield skip1(Comma); break
             case ':': yield skip1(Colon); break
             case '(': yield skip1(RoundOpening); break
@@ -87,8 +145,15 @@ export default function *tokenize(text : string) {
             case ']': yield skip1(SquareClosing); break
             case '{': yield skip1(CurlyOpening); break
             case '}': yield skip1(CurlyClosing); break
+            case '\'':
+            case '`':
+            case '"': throw new Error // @todo
             default:
-                throw new Error // @todo
+                const begin = location()
+                const value = scanWord().join(' ')
+                const end = location()
+
+                yield new Identifier({ value, begin, end })
         }
     }
 }
