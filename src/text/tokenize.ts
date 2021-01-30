@@ -13,17 +13,18 @@ export default function *tokenize(text : string) {
     function move() {
         if (offset >= length) throw new Error // @todo
 
+        const previous = getCurrent()
+
         ++offset
         ++column
 
-        const current = getCurrent()
+        if (previous === '\n') {
+            ++line
 
-        switch (current) {
-            case '\n':
-                ++line
-
-                column = 0
+            column = 0
         }
+
+        const current = getCurrent()
 
         return current
     }
