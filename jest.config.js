@@ -66,14 +66,14 @@ module.exports = {
     // ],
 
     // An array of file extensions your modules use
-    // moduleFileExtensions: [
-    //   "js",
-    //   "json",
-    //   "jsx",
-    //   "ts",
-    //   "tsx",
-    //   "node"
-    // ],
+    moduleFileExtensions: [
+      "js",
+      "json",
+      "jsx",
+      "ts",
+      "tsx",
+      "node"
+    ],
 
     // A map from regular expressions to module names or to arrays of module names that allow to stub out resources with a single module
     // moduleNameMapper: {},
@@ -113,7 +113,7 @@ module.exports = {
 
     // A list of paths to directories that Jest should use to search for files in
     roots : [
-        `<rootDir>/lib`,
+        `<rootDir>/src`,
     ],
 
     // Allows you to use a custom runner instead of Jest's default test runner
@@ -144,9 +144,10 @@ module.exports = {
     // ],
 
     // An array of regexp pattern strings that are matched against all test paths, matched tests are skipped
-    // testPathIgnorePatterns: [
-    //   "\\\\node_modules\\\\"
-    // ],
+    testPathIgnorePatterns: [
+        '/node_modules/',
+        'lib',
+    ],
 
     // The regexp pattern or array of patterns that Jest uses to detect test files
     // testRegex: [],
