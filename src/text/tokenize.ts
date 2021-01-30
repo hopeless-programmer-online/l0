@@ -1,5 +1,7 @@
 import { Colon, Comma, CurlyClosing, CurlyOpening, Identifier, Location, RoundClosing, RoundOpening, SquareClosing, SquareOpening } from '../text'
 
+type Quote = '\'' | '"' | '`'
+
 export default function *tokenize(text : string) {
     const { length } = text
 
@@ -93,6 +95,38 @@ export default function *tokenize(text : string) {
             move()
         }
     }
+    function skipString(opening : Quote) {
+        while (offset < length) {
+            const x = getCurrent()
+
+            switch (x) {
+                case undefined:
+                    throw new Error // @todo
+                case '\\': {
+                    const x = move()
+
+                    switch (x) {
+                        case 't':
+                        case 'n':
+                        case 'r':
+                        case '\\':
+                        case '\'':
+                        case '"':
+                        case '`':
+                            break
+                        default:
+                            throw new Error // @todo
+                    }
+                } break
+                case '\'':
+                case '`':
+                case '"':
+                    return x
+            }
+
+            move()
+        }
+    }
     function scanWord(words : Array<string> = []) : Array<string> {
         const start = offset
 
@@ -120,11 +154,47 @@ export default function *tokenize(text : string) {
             case ',':
             case ':':
                 return words
-            // not implemented
             case '\'':
             case '`':
             case '"':
+                return scanString(x, words)
+            default:
+                return scanWord(words)
+        }
+    }
+    function scanString(opening : Quote, words : Array<string> = []) : Array<string> {
+        const start = offset
+
+        move()
+        skipString(opening)
+        move()
+
+        words.push(text.substring(start, offset))
+
+        const x = skipWhitespace()
+
+        switch (x) {
+            // safety check
+            case ';':
+            case ' ':
+            case '\n':
+            case '\r':
+            case '\t':
                 throw new Error // @todo
+            case undefined:
+            case '(':
+            case ')':
+            case '[':
+            case ']':
+            case '{':
+            case '}':
+            case ',':
+            case ':':
+                return words
+            case '\'':
+            case '`':
+            case '"':
+                return scanString(x, words)
             default:
                 return scanWord(words)
         }
@@ -153,13 +223,20 @@ export default function *tokenize(text : string) {
             case '}': yield skip1(CurlyClosing); break
             case '\'':
             case '`':
-            case '"': throw new Error // @todo
-            default:
+            case '"': {
+                const begin = location()
+                const value = scanString(x).join(' ')
+                const end = location()
+
+                yield new Identifier({ value, begin, end })
+            } break
+            default: {
                 const begin = location()
                 const value = scanWord().join(' ')
                 const end = location()
 
                 yield new Identifier({ value, begin, end })
+            }
         }
     }
 }

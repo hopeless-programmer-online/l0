@@ -137,3 +137,43 @@ it('should parse word before brace', () => {
         },
     ])
 })
+it('should parse string', () => {
+    expect([ ...tokenize('"xyz"') ]).toMatchObject([
+        {
+            [type] : 'identifier',
+            value : '"xyz"',
+            begin : { offset : 0, line : 0, column : 0 },
+            end : { offset : 5, line : 0, column : 5 },
+        },
+    ])
+})
+it('should parse two strings', () => {
+    expect([ ...tokenize('"xyz" "uvw"') ]).toMatchObject([
+        {
+            [type] : 'identifier',
+            value : '"xyz" "uvw"',
+            begin : { offset : 0, line : 0, column : 0 },
+            end : { offset : 11, line : 0, column : 11 },
+        },
+    ])
+})
+it('should parse mixed identifier', () => {
+    expect([ ...tokenize('xyz "uvw"') ]).toMatchObject([
+        {
+            [type] : 'identifier',
+            value : 'xyz "uvw"',
+            begin : { offset : 0, line : 0, column : 0 },
+            end : { offset : 9, line : 0, column : 9 },
+        },
+    ])
+})
+it('should parse mixed identifier (string first)', () => {
+    expect([ ...tokenize('"xyz" uvw') ]).toMatchObject([
+        {
+            [type] : 'identifier',
+            value : '"xyz" uvw',
+            begin : { offset : 0, line : 0, column : 0 },
+            end : { offset : 9, line : 0, column : 9 },
+        },
+    ])
+})
