@@ -76,6 +76,12 @@ export default function *tokenize(text : string) {
                 case '\n':
                 case '\r':
                 case '\t':
+                case '(':
+                case ')':
+                case '[':
+                case ']':
+                case '{':
+                case '}':
                 case ',':
                 case ':':
                 case '\'':
@@ -97,6 +103,13 @@ export default function *tokenize(text : string) {
         const x = skipWhitespace()
 
         switch (x) {
+            // safety check
+            case ';':
+            case ' ':
+            case '\n':
+            case '\r':
+            case '\t':
+                throw new Error // @todo
             case undefined:
             case '(':
             case ')':
@@ -107,13 +120,6 @@ export default function *tokenize(text : string) {
             case ',':
             case ':':
                 return words
-            // safety check
-            case ';':
-            case ' ':
-            case '\n':
-            case '\r':
-            case '\t':
-                throw new Error // @todo
             // not implemented
             case '\'':
             case '`':

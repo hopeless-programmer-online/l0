@@ -82,3 +82,58 @@ it('should parse letters, number and special characters', () => {
         },
     ])
 })
+it('should parse space separated words', () => {
+    expect([ ...tokenize('x y z') ]).toMatchObject([
+        {
+            [type] : 'identifier',
+            value : 'x y z',
+            begin : { offset : 0, line : 0, column : 0 },
+            end : { offset : 5, line : 0, column : 5 },
+        },
+    ])
+})
+it('should parse word before comma', () => {
+    expect([ ...tokenize('x,') ]).toMatchObject([
+        {
+            [type] : 'identifier',
+            value : 'x',
+            begin : { offset : 0, line : 0, column : 0 },
+            end : { offset : 1, line : 0, column : 1 },
+        },
+        {
+            [type] : ',',
+            begin : { offset : 1, line : 0, column : 1 },
+            end : { offset : 2, line : 0, column : 2 },
+        },
+    ])
+})
+it('should parse word before colon', () => {
+    expect([ ...tokenize('x:') ]).toMatchObject([
+        {
+            [type] : 'identifier',
+            value : 'x',
+            begin : { offset : 0, line : 0, column : 0 },
+            end : { offset : 1, line : 0, column : 1 },
+        },
+        {
+            [type] : ':',
+            begin : { offset : 1, line : 0, column : 1 },
+            end : { offset : 2, line : 0, column : 2 },
+        },
+    ])
+})
+it('should parse word before brace', () => {
+    expect([ ...tokenize('x(') ]).toMatchObject([
+        {
+            [type] : 'identifier',
+            value : 'x',
+            begin : { offset : 0, line : 0, column : 0 },
+            end : { offset : 1, line : 0, column : 1 },
+        },
+        {
+            [type] : '(',
+            begin : { offset : 1, line : 0, column : 1 },
+            end : { offset : 2, line : 0, column : 2 },
+        },
+    ])
+})
