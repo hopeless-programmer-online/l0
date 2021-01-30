@@ -14,7 +14,7 @@ export default class Program {
         const { commands } = this
 
         return `(${this.parameters}) {${
-            commands.empty ? `` : commands.toString().replace(/\n/g, '\n\t')
+            commands.empty ? `` : commands.toString().replace(/^|\n/g, '\n\t')
         }\n}`
     }
 }
