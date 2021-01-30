@@ -1,9 +1,9 @@
-import Command from "./command"
+import Command from './command'
 
 export default class Commands {
     private readonly array : Array<Command>
 
-    public constructor({ array } : { array : Array<Command> } = { array : [] }) {
+    public constructor({ array = [] } : { array? : Array<Command> } = {}) {
         this.array = array
     }
 

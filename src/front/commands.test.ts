@@ -1,4 +1,4 @@
-import Commands from "./commands"
+import Commands from './commands'
 
 it('should stringify without commands', () => {
     expect((new Commands).toString()).toBe('')

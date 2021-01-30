@@ -5,7 +5,7 @@ export default class Program {
     public readonly parameters : Parameters
     public readonly commands : Commands
 
-    public constructor({ parameters, commands } : { parameters : Parameters, commands : Commands }) {
+    public constructor({ parameters = new Parameters, commands = new Commands } : { parameters? : Parameters, commands? : Commands } = {}) {
         this.parameters = parameters
         this.commands = commands
     }
