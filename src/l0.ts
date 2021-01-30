@@ -1,2 +1,1 @@
-export function parse(source : string) {
-}
+export { default as parse } from './parse'
