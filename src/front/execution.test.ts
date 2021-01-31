@@ -1,13 +1,13 @@
 import Execution from './execution'
+import ExplicitParameter from './explicit-parameter'
 import Inputs from './inputs'
 import Name from './name'
 import Output from './output'
 import Outputs from './outputs'
-import Parameter from './parameter'
 import Reference from './reference'
 
 function param(text : string) {
-    return new Reference({ name : Name.From(text), target : Parameter.From(text) })
+    return new Reference({ name : Name.From(text), target : ExplicitParameter.From(text) })
 }
 function output(text : string) {
     return new Output({ name : Name.From(text) })
