@@ -1,4 +1,4 @@
-export default class Output {
+export default abstract class Output {
     public readonly leave : Scope
 
     public constructor({ name } : { name : Name }) {

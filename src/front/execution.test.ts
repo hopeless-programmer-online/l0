@@ -1,4 +1,5 @@
 import Execution from './execution'
+import ExplicitOutput from './explicit-output'
 import ExplicitParameter from './explicit-parameter'
 import Inputs from './inputs'
 import Name from './name'
@@ -10,7 +11,7 @@ function param(text : string) {
     return new Reference({ name : Name.From(text), target : ExplicitParameter.From(text) })
 }
 function output(text : string) {
-    return new Output({ name : Name.From(text) })
+    return new ExplicitOutput({ name : Name.From(text) })
 }
 
 it('should stringify without inputs and outputs', () => {
@@ -66,10 +67,7 @@ it('should stringify with single output', () => {
 it('should stringify with two outputs', () => {
     const execution = new Execution({
         target : param('f'),
-        outputs : new Outputs({ array : [
-            output('u'),
-            output('v'),
-        ] }),
+        outputs : Outputs.From('u', 'v'),
     })
 
     expect(execution.toString()).toBe('u, v : f()')
@@ -94,11 +92,7 @@ it('should stringify with three inputs and outputs', () => {
             param('y'),
             param('z'),
         ] }),
-        outputs : new Outputs({ array : [
-            output('u'),
-            output('v'),
-            output('w'),
-        ] }),
+        outputs : Outputs.From('u', 'v', 'w'),
     })
 
     expect(execution.toString()).toBe('u, v, w : f(x, y, z)')
