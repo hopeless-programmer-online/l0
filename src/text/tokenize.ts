@@ -1,8 +1,9 @@
 import { Colon, Comma, CurlyClosing, CurlyOpening, Identifier, Location, RoundClosing, RoundOpening, SquareClosing, SquareOpening } from '../text'
+import Token from './token'
 
 type Quote = '\'' | '"' | '`'
 
-export default function *tokenize(text : string) {
+export default function *tokenize(text : string) : Generator<Token, void> {
     const { length } = text
 
     let offset = 0
