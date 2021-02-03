@@ -1,8 +1,13 @@
+import { Declaration, Name, ReferenceTarget, Execution, Inputs, Command, Parameter } from './front'
 import Commands from './front/commands'
+import ExplicitParameter from './front/explicit-parameter'
 import Parameters from './front/parameters'
 import Program from './front/program'
-import { Token, Identifier, Comma, Colon, RoundOpening, RoundClosing, SquareOpening, SquareClosing, CurlyOpening, CurlyClosing } from './text'
+import Reference from './front/reference'
+import { Token, Identifier, Comma, Colon, RoundOpening, RoundClosing, CurlyOpening, CurlyClosing } from './text'
 import tokenize from './text/tokenize'
+
+type Lookup = Map<string, ReferenceTarget>
 
 export default function parse(source : string) {
     const tokens = tokenize(source)
@@ -15,9 +20,30 @@ export default function parse(source : string) {
         token = (!done && value) || null
     }
 
-    // let globals = []
+    let globals : Parameter[] = []
     let nesting = 0
 
+    function getReference(text : string, lookup : Lookup) {
+        let target = lookup.get(text)
+
+        if (!target) {
+            target = ExplicitParameter.From(text)
+
+            globals.push(target)
+        }
+
+        return Reference.From(text, target)
+    }
+    function addReference(text : string, target : ReferenceTarget, lookup : Lookup) {
+        const existed = lookup.get(text)
+
+        if (existed) {
+            lookup.delete(text)
+            addReference(`/${text}`, existed, lookup)
+        }
+
+        lookup.set(text, target)
+    }
     function parseParametersStart() {
         move()
 
@@ -48,7 +74,7 @@ export default function parse(source : string) {
             }
         }
     }
-    function parseCommand(first : Identifier) {
+    function parseCommand(first : Identifier, lookup : Lookup) : Command[] {
         move()
 
         if (token instanceof RoundOpening) {
@@ -58,33 +84,55 @@ export default function parse(source : string) {
             token = (() => token)()
 
             if (nesting <= 0) {
-                if (token === null) return
+                if (token === null) {
+                    const command = new Execution({
+                        target : getReference(first.value, lookup),
+                        inputs : Inputs.From(...parameters.map(x => getReference(x, lookup))),
+                    })
+
+                    return [ command ]
+                }
             }
             else {
                 if (token instanceof CurlyClosing) {
+                    const command = new Execution({
+                        target : getReference(first.value, lookup),
+                        inputs : Inputs.From(...parameters.map(x => getReference(x, lookup))),
+                    })
+
                     --nesting
 
-                    // @todo: add call
-
-                    return
+                    return [ command ]
                 }
             }
 
             if (token instanceof Identifier) {
-                // @todo: add call
+                const command = new Execution({
+                    target : getReference(first.value, lookup),
+                    inputs : Inputs.From(...parameters.map(x => getReference(x, lookup))),
+                })
 
-                parseCommand(token)
+                const other = parseCommand(token, lookup)
 
-                return
+                return [ command, ...other ]
             }
             else if (token instanceof CurlyOpening) {
                 ++nesting
 
-                parseBody()
+                const command = new Declaration({
+                    name : Name.From(first.value),
+                })
 
-                // @todo: add declaration
+                addReference(first.value, command, lookup)
 
-                return
+                const commands = parseBody(new Map([ ...lookup ])) // @todo: extract commands
+
+                command.program = new Program({
+                    parameters : Parameters.From(...parameters),
+                    commands : Commands.From(...commands),
+                })
+
+                return [ command ]
             }
 
             throw new Error
@@ -99,10 +147,12 @@ export default function parse(source : string) {
             if (!(token instanceof RoundOpening)) throw new Error('Expecting parameters.')
 
             const parameters = parseParametersStart()
+            const command = new Execution({
+                target : getReference(first.value, lookup),
+                inputs : Inputs.From(...parameters.map(x => getReference(x, lookup))),
+            })
 
-            // @todo: add call
-
-            return
+            return [ command ]
         }
         else if (token instanceof Comma) {
             const outputs = [ first.value ]
@@ -128,41 +178,41 @@ export default function parse(source : string) {
             if (!(token instanceof RoundOpening)) throw new Error('Expecting parameters.')
 
             const inputs = parseParametersStart()
+            const command = new Execution({
+                target : getReference(first.value, lookup),
+                inputs : Inputs.From(...inputs.map(x => getReference(x, lookup))),
+            })
 
-            // @todo: add call
-
-            return
+            return [ command ]
         }
 
         throw new Error('Declaration or execution expected.')
     }
-    function parseBody() {
+    function parseBody(lookup : Lookup = new Map) {
+        const commands : Command[] = []
+
         while (true) {
             move()
 
             if (nesting <= 0) {
-                if (token === null) return
+                if (token === null) return commands
             }
             else if (token instanceof CurlyClosing) {
                 --nesting
 
-                return
+                return commands
             }
 
             if (!(token instanceof Identifier)) throw new Error('Identifier expected.')
 
-            parseCommand(token)
+            commands.push( ...parseCommand(token, lookup) )
         }
     }
 
-    parseBody()
+    const commands = parseBody()
 
     return new Program({
-        parameters : new Parameters({
-            array : [],
-        }),
-        commands : new Commands({
-            array : [],
-        })
+        parameters : new Parameters({ array : globals }),
+        commands : new Commands({ array : commands }),
     })
 }

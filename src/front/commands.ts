@@ -2,6 +2,10 @@ import Command from './command'
 import Scope from './scope'
 
 export default class Commands {
+    public static From(...array : Array<Command>) {
+        return new Commands({ array })
+    }
+
     private readonly array : Array<Command>
     public readonly entry = new Scope
     public readonly leave = new Scope({ parent : this.entry })

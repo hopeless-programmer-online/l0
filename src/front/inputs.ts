@@ -3,6 +3,10 @@ import Reference from './reference'
 export type Input = Reference
 
 export default class Inputs {
+    public static From(...array : Array<Input>) {
+        return new Inputs({ array })
+    }
+
     private readonly array : Array<Input>
 
     public constructor({ array = [] } : { array? : Array<Input> } = {}) {

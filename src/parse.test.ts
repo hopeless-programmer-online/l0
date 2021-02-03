@@ -1,16 +1,60 @@
 import { parse } from './l0'
 
+function check({ source, expected } : { source : string, expected : any }) {
+    const actual = parse(source)
+
+    // console.log(actual)
+
+    function wrap(expected : any, actual : any) : any {
+        if (expected === null || typeof expected !== 'object') return actual
+        if (Array.isArray(expected)) {
+            if (typeof actual !== 'object') return actual
+            if (!actual[Symbol.iterator]) return actual
+
+            const values = [ ...actual ]
+
+            return expected.map((x,i) => wrap(x, values[i]) )
+        }
+
+        const dummy : any = {}
+
+        if (typeof actual === 'object') {
+            for (const [ key, value ] of Object.entries(expected)) {
+                dummy[key] = wrap(value, actual[key])
+            }
+        }
+
+        return dummy
+    }
+
+    expect(wrap(expected, actual)).toMatchObject(expected)
+}
+
 it('should parse empty string without errors', () => {
-    // @todo: add expected output
-    expect(() => parse(`
-    `)).not.toThrow()
+    check({
+        source: `
+        `,
+        expected: {
+            parameters : [],
+            commands : [],
+        }
+    })
 })
 it('should parse declaration without errors', () => {
-    // @todo: add expected output
-    expect(() => parse(`
-        f() {
+    check({
+        source: `
+            f() {
+            }
+        `,
+        expected: {
+            parameters : [],
+            commands : [
+                {
+                    name : { text : 'f' },
+                },
+            ],
         }
-    `)).not.toThrow()
+    })
 })
 it('should parse declaration with single parameter without errors', () => {
     // @todo: add expected output

@@ -1,6 +1,10 @@
 export type Target = Declaration | Parameter | null
 
 export default class Reference {
+    public static From(text : string, target : Target) {
+        return new Reference({ name : Name.From(text), target })
+    }
+
     public readonly name : Name
     public readonly target : Target
 
