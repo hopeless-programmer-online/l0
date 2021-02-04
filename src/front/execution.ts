@@ -9,7 +9,7 @@ export default class Execution extends Command {
     public inputs : Inputs
     public outputs : Outputs
 
-    public constructor({ target, inputs = new Inputs, outputs = new Outputs } : { target : Target, inputs? : Inputs, outputs? : Outputs }) {
+    public constructor({ target, inputs = Inputs.From(), outputs = Outputs.From() } : { target : Target, inputs? : Inputs, outputs? : Outputs }) {
         super()
 
         this.target = target

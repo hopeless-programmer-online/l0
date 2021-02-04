@@ -51,219 +51,849 @@ it('should parse declaration without errors', () => {
             commands : [
                 {
                     name : { text : 'f' },
+                    program : {
+                        parameters : [],
+                        commands : [],
+                    },
                 },
             ],
-        }
+        },
     })
 })
 it('should parse declaration with single parameter without errors', () => {
-    // @todo: add expected output
-    expect(() => parse(`
-        f(x) {
-        }
-    `)).not.toThrow()
+    check({
+        source: `
+            f(x) {
+            }
+        `,
+        expected: {
+            parameters : [],
+            commands : [
+                {
+                    name : { text : 'f' },
+                    program : {
+                        parameters : [
+                            { name : { text : 'super' } },
+                            { name : { text : 'x' } },
+                        ],
+                        commands : [],
+                    },
+                },
+            ],
+        },
+    })
 })
 it('should parse declaration with two parameters without errors', () => {
-    // @todo: add expected output
-    expect(() => parse(`
-        f(x, y) {
-        }
-    `)).not.toThrow()
+    check({
+        source: `
+            f(x, y) {
+            }
+        `,
+        expected: {
+            parameters : [],
+            commands : [
+                {
+                    name : { text : 'f' },
+                    program : {
+                        parameters : [
+                            { name : { text : 'super' } },
+                            { name : { text : 'x' } },
+                            { name : { text : 'y' } },
+                        ],
+                        commands : [],
+                    },
+                },
+            ],
+        },
+    })
 })
 it('should parse declaration with three parameters without errors', () => {
-    // @todo: add expected output
-    expect(() => parse(`
-        f(x, y, z) {
-        }
-    `)).not.toThrow()
+    check({
+        source: `
+            f(x, y, z) {
+            }
+        `,
+        expected: {
+            parameters : [],
+            commands : [
+                {
+                    name : { text : 'f' },
+                    program : {
+                        parameters : [
+                            { name : { text : 'super' } },
+                            { name : { text : 'x' } },
+                            { name : { text : 'y' } },
+                            { name : { text : 'z' } },
+                        ],
+                        commands : [],
+                    },
+                },
+            ],
+        },
+    })
 })
 it('should parse execution without errors', () => {
-    // @todo: add expected output
-    expect(() => parse(`
-        f()
-    `)).not.toThrow()
+    check({
+        source: `
+            f()
+        `,
+        expected: {
+            parameters : [],
+            commands : [
+                {
+                    target : { name : { text : 'f' } },
+                    inputs : [],
+                    outputs : [],
+                },
+            ],
+        },
+    })
 })
 it('should parse execution with single input without errors', () => {
-    // @todo: add expected output
-    expect(() => parse(`
-        f(x)
-    `)).not.toThrow()
+    check({
+        source: `
+            f(x)
+        `,
+        expected: {
+            parameters : [],
+            commands : [
+                {
+                    target : { name : { text : 'f' } },
+                    inputs : [
+                        { name : { text : 'x' } },
+                    ],
+                    outputs : [],
+                },
+            ],
+        },
+    })
 })
 it('should parse execution with two inputs without errors', () => {
-    // @todo: add expected output
-    expect(() => parse(`
-        f(x, y)
-    `)).not.toThrow()
+    check({
+        source: `
+            f(x, y)
+        `,
+        expected: {
+            parameters : [],
+            commands : [
+                {
+                    target : { name : { text : 'f' } },
+                    inputs : [
+                        { name : { text : 'x' } },
+                        { name : { text : 'y' } },
+                    ],
+                    outputs : [],
+                },
+            ],
+        },
+    })
 })
 it('should parse execution with three inputs without errors', () => {
-    // @todo: add expected output
-    expect(() => parse(`
-        f(x, y, z)
-    `)).not.toThrow()
+    check({
+        source: `
+            f(x, y, z)
+        `,
+        expected: {
+            parameters : [],
+            commands : [
+                {
+                    target : { name : { text : 'f' } },
+                    inputs : [
+                        { name : { text : 'x' } },
+                        { name : { text : 'y' } },
+                        { name : { text : 'z' } },
+                    ],
+                    outputs : [],
+                },
+            ],
+        },
+    })
 })
 it('should parse execution with single output without errors', () => {
-    // @todo: add expected output
-    expect(() => parse(`
-        u : f()
-    `)).not.toThrow()
+    check({
+        source: `
+            u : f()
+        `,
+        expected: {
+            parameters : [],
+            commands : [
+                {
+                    target : { name : { text : 'f' } },
+                    inputs : [],
+                    outputs : [
+                        { name : { text : 'sub' } },
+                        { name : { text : 'u' } },
+                    ],
+                },
+            ],
+        },
+    })
 })
 it('should parse execution with two outputs without errors', () => {
-    // @todo: add expected output
-    expect(() => parse(`
-        u, v : f()
-    `)).not.toThrow()
+    check({
+        source: `
+            u, v : f()
+        `,
+        expected: {
+            parameters : [],
+            commands : [
+                {
+                    target : { name : { text : 'f' } },
+                    inputs : [],
+                    outputs : [
+                        { name : { text : 'sub' } },
+                        { name : { text : 'u' } },
+                        { name : { text : 'v' } },
+                    ],
+                },
+            ],
+        },
+    })
 })
 it('should parse execution with three outputs without errors', () => {
-    // @todo: add expected output
-    expect(() => parse(`
-        u, v, w : f()
-    `)).not.toThrow()
+    check({
+        source: `
+            u, v, w : f()
+        `,
+        expected: {
+            parameters : [],
+            commands : [
+                {
+                    target : { name : { text : 'f' } },
+                    inputs : [],
+                    outputs : [
+                        { name : { text : 'sub' } },
+                        { name : { text : 'u' } },
+                        { name : { text : 'v' } },
+                        { name : { text : 'w' } },
+                    ],
+                },
+            ],
+        },
+    })
+
 })
 it('should parse execution with three inputs and three outputs without errors', () => {
-    // @todo: add expected output
-    expect(() => parse(`
-        u, v, w : f(x, y, z)
-    `)).not.toThrow()
+    check({
+        source: `
+            u, v, w : f(x, y, z)
+        `,
+        expected: {
+            parameters : [],
+            commands : [
+                {
+                    target : { name : { text : 'f' } },
+                    inputs : [
+                        { name : { text : 'x' } },
+                        { name : { text : 'y' } },
+                        { name : { text : 'z' } },
+                    ],
+                    outputs : [
+                        { name : { text : 'sub' } },
+                        { name : { text : 'u' } },
+                        { name : { text : 'v' } },
+                        { name : { text : 'w' } },
+                    ],
+                },
+            ],
+        },
+    })
+
 })
 it('should parse nested declaration after execution without errors', () => {
-    // @todo: add expected output
-    expect(() => parse(`
-        f() {
-            f()
-            g() {
+    check({
+        source: `
+            f() {
+                f()
+                g() {
+                }
             }
-        }
-    `)).not.toThrow()
+        `,
+        expected: {
+            parameters : [],
+            commands : [
+                {
+                    name : { text : 'f' },
+                    program : {
+                        parameters: [
+                            { name : { text : 'super' } },
+                        ],
+                        commands : [
+                            {
+                                target : { name : { text : 'f' } },
+                                inputs : [],
+                                outputs : [],
+                            },
+                            {
+                                name : { text : 'g' },
+                                program : {
+                                    parameters: [
+                                        { name : { text : 'super' } },
+                                    ],
+                                    commands: [],
+                                },
+                            },
+                        ],
+                    },
+                },
+            ],
+        },
+    })
 })
 it('should parse nested execution after declaration without errors', () => {
-    // @todo: add expected output
-    expect(() => parse(`
-        f() {
-            g() {
+    check({
+        source: `
+            f() {
+                g() {
+                }
+                g()
             }
-            g()
-        }
-    `)).not.toThrow()
+        `,
+        expected: {
+            parameters : [],
+            commands : [
+                {
+                    name : { text : 'f' },
+                    program : {
+                        parameters: [
+                            { name : { text : 'super' } },
+                        ],
+                        commands : [
+                            {
+                                name : { text : 'g' },
+                                program : {
+                                    parameters: [
+                                        { name : { text : 'super' } },
+                                    ],
+                                    commands: [],
+                                },
+                            },
+                            {
+                                target : { name : { text : 'g' } },
+                                inputs : [],
+                                outputs : [
+                                    { name : { text : 'sub' } },
+                                ],
+                            },
+                        ],
+                    },
+                },
+            ],
+        },
+    })
 })
 it('should parse nested execution with single output after declaration without errors', () => {
-    // @todo: add expected output
-    expect(() => parse(`
-        f() {
-            g() {
+    check({
+        source: `
+            f() {
+                g() {
+                }
+                u : g()
             }
-            u : g()
-        }
-    `)).not.toThrow()
+        `,
+        expected: {
+            parameters : [],
+            commands : [
+                {
+                    name : { text : 'f' },
+                    program : {
+                        parameters: [
+                            { name : { text : 'super' } },
+                        ],
+                        commands : [
+                            {
+                                name : { text : 'g' },
+                                program : {
+                                    parameters: [
+                                        { name : { text : 'super' } },
+                                    ],
+                                    commands: [],
+                                },
+                            },
+                            {
+                                target : { name : { text : 'g' } },
+                                inputs : [],
+                                outputs : [
+                                    { name : { text : 'sub' } },
+                                    { name : { text : 'u' } },
+                                ],
+                            },
+                        ],
+                    },
+                },
+            ],
+        },
+    })
 })
 it('should parse nested execution with two outputs after declaration without errors', () => {
-    // @todo: add expected output
-    expect(() => parse(`
-        f() {
-            g() {
+    check({
+        source: `
+            f() {
+                g() {
+                }
+                u, v : g()
             }
-            u, v : g()
-        }
-    `)).not.toThrow()
+        `,
+        expected: {
+            parameters : [],
+            commands : [
+                {
+                    name : { text : 'f' },
+                    program : {
+                        parameters: [
+                            { name : { text : 'super' } },
+                        ],
+                        commands : [
+                            {
+                                name : { text : 'g' },
+                                program : {
+                                    parameters: [
+                                        { name : { text : 'super' } },
+                                    ],
+                                    commands: [],
+                                },
+                            },
+                            {
+                                target : { name : { text : 'g' } },
+                                inputs : [],
+                                outputs : [
+                                    { name : { text : 'sub' } },
+                                    { name : { text : 'u' } },
+                                    { name : { text : 'v' } },
+                                ],
+                            },
+                        ],
+                    },
+                },
+            ],
+        },
+    })
 })
 it('should parse nested execution with three outputs after declaration without errors', () => {
-    // @todo: add expected output
-    expect(() => parse(`
-        f() {
-            g() {
+    check({
+        source: `
+            f() {
+                g() {
+                }
+                u, v, w : g()
             }
-            u, v, w : g()
-        }
-    `)).not.toThrow()
+        `,
+        expected: {
+            parameters : [],
+            commands : [
+                {
+                    name : { text : 'f' },
+                    program : {
+                        parameters: [
+                            { name : { text : 'super' } },
+                        ],
+                        commands : [
+                            {
+                                name : { text : 'g' },
+                                program : {
+                                    parameters: [
+                                        { name : { text : 'super' } },
+                                    ],
+                                    commands: [],
+                                },
+                            },
+                            {
+                                target : { name : { text : 'g' } },
+                                inputs : [],
+                                outputs : [
+                                    { name : { text : 'sub' } },
+                                    { name : { text : 'u' } },
+                                    { name : { text : 'v' } },
+                                    { name : { text : 'w' } },
+                                ],
+                            },
+                        ],
+                    },
+                },
+            ],
+        },
+    })
 })
 it('should parse nested declaration without errors', () => {
-    // @todo: add expected output
-    expect(() => parse(`
-        f() {
-            g() {
+    check({
+        source: `
+            f() {
+                g() {
+                }
             }
-        }
-    `)).not.toThrow()
+        `,
+        expected: {
+            parameters : [],
+            commands : [
+                {
+                    name : { text : 'f' },
+                    program : {
+                        parameters: [
+                            { name : { text : 'super' } },
+                        ],
+                        commands : [
+                            {
+                                name : { text : 'g' },
+                                program : {
+                                    parameters: [
+                                        { name : { text : 'super' } },
+                                    ],
+                                    commands: [],
+                                },
+                            },
+                        ],
+                    },
+                },
+            ],
+        },
+    })
 })
 it('should parse nested declaration with single parameter without errors', () => {
-    // @todo: add expected output
-    expect(() => parse(`
-        f() {
-            g(x) {
+    check({
+        source: `
+            f() {
+                g(x) {
+                }
             }
-        }
-    `)).not.toThrow()
+        `,
+        expected: {
+            parameters : [],
+            commands : [
+                {
+                    name : { text : 'f' },
+                    program : {
+                        parameters: [
+                            { name : { text : 'super' } },
+                        ],
+                        commands : [
+                            {
+                                name : { text : 'g' },
+                                program : {
+                                    parameters: [
+                                        { name : { text : 'super' } },
+                                        { name : { text : 'x' } },
+                                    ],
+                                    commands: [],
+                                },
+                            },
+                        ],
+                    },
+                },
+            ],
+        },
+    })
 })
 it('should parse nested declaration with two parameters without errors', () => {
-    // @todo: add expected output
-    expect(() => parse(`
-        f() {
-            g(x, y) {
+    check({
+        source: `
+            f() {
+                g(x, y) {
+                }
             }
-        }
-    `)).not.toThrow()
+        `,
+        expected: {
+            parameters : [],
+            commands : [
+                {
+                    name : { text : 'f' },
+                    program : {
+                        parameters: [
+                            { name : { text : 'super' } },
+                        ],
+                        commands : [
+                            {
+                                name : { text : 'g' },
+                                program : {
+                                    parameters: [
+                                        { name : { text : 'super' } },
+                                        { name : { text : 'x' } },
+                                        { name : { text : 'y' } },
+                                    ],
+                                    commands: [],
+                                },
+                            },
+                        ],
+                    },
+                },
+            ],
+        },
+    })
 })
 it('should parse nested declaration with three parameters without errors', () => {
-    // @todo: add expected output
-    expect(() => parse(`
-        f() {
-            g(x, y, z) {
+    check({
+        source: `
+            f() {
+                g(x, y, z) {
+                }
             }
-        }
-    `)).not.toThrow()
+        `,
+        expected: {
+            parameters : [],
+            commands : [
+                {
+                    name : { text : 'f' },
+                    program : {
+                        parameters: [
+                            { name : { text : 'super' } },
+                        ],
+                        commands : [
+                            {
+                                name : { text : 'g' },
+                                program : {
+                                    parameters: [
+                                        { name : { text : 'super' } },
+                                        { name : { text : 'x' } },
+                                        { name : { text : 'y' } },
+                                        { name : { text : 'z' } },
+                                    ],
+                                    commands: [],
+                                },
+                            },
+                        ],
+                    },
+                },
+            ],
+        },
+    })
 })
 it('should parse nested execution without errors', () => {
-    // @todo: add expected output
-    expect(() => parse(`
-        f() {
-            f()
-        }
-    `)).not.toThrow()
+    check({
+        source: `
+            f() {
+                f()
+            }
+        `,
+        expected: {
+            parameters : [],
+            commands : [
+                {
+                    name : { text : 'f' },
+                    program : {
+                        parameters: [
+                            { name : { text : 'super' } },
+                        ],
+                        commands : [
+                            {
+                                target : { name : { text : 'f' } },
+                                inputs : [],
+                                outputs : [
+                                    { name : { text : 'sub' } },
+                                ],
+                            },
+                        ],
+                    },
+                },
+            ],
+        },
+    })
 })
 it('should parse nested execution with single input without errors', () => {
-    // @todo: add expected output
-    expect(() => parse(`
-        f() {
-            f(x)
-        }
-    `)).not.toThrow()
+    check({
+        source: `
+            f() {
+                f(x)
+            }
+        `,
+        expected: {
+            parameters : [
+                { name : { text : 'x' } },
+            ],
+            commands : [
+                {
+                    name : { text : 'f' },
+                    program : {
+                        parameters: [
+                            { name : { text : 'super' } },
+                        ],
+                        commands : [
+                            {
+                                target : { name : { text : 'f' } },
+                                inputs : [
+                                    { name : { text : 'x' } },
+                                ],
+                                outputs : [
+                                    { name : { text : 'sub' } },
+                                ],
+                            },
+                        ],
+                    },
+                },
+            ],
+        },
+    })
 })
 it('should parse nested execution with two inputs without errors', () => {
-    // @todo: add expected output
-    expect(() => parse(`
-        f() {
-            f(x, y)
-        }
-    `)).not.toThrow()
+    check({
+        source: `
+            f() {
+                f(x, y)
+            }
+        `,
+        expected: {
+            parameters : [
+                { name : { text : 'x' } },
+                { name : { text : 'y' } },
+            ],
+            commands : [
+                {
+                    name : { text : 'f' },
+                    program : {
+                        parameters: [
+                            { name : { text : 'super' } },
+                        ],
+                        commands : [
+                            {
+                                target : { name : { text : 'f' } },
+                                inputs : [
+                                    { name : { text : 'x' } },
+                                    { name : { text : 'y' } },
+                                ],
+                                outputs : [
+                                    { name : { text : 'sub' } },
+                                ],
+                            },
+                        ],
+                    },
+                },
+            ],
+        },
+    })
 })
 it('should parse nested execution with three inputs without errors', () => {
-    // @todo: add expected output
-    expect(() => parse(`
-        f() {
-            f(x, y, z)
-        }
-    `)).not.toThrow()
+    check({
+        source: `
+            f() {
+                f(x, y, z)
+            }
+        `,
+        expected: {
+            parameters : [
+                { name : { text : 'x' } },
+                { name : { text : 'y' } },
+                { name : { text : 'z' } },
+            ],
+            commands : [
+                {
+                    name : { text : 'f' },
+                    program : {
+                        parameters: [
+                            { name : { text : 'super' } },
+                        ],
+                        commands : [
+                            {
+                                target : { name : { text : 'f' } },
+                                inputs : [
+                                    { name : { text : 'x' } },
+                                    { name : { text : 'y' } },
+                                    { name : { text : 'z' } },
+                                ],
+                                outputs : [
+                                    { name : { text : 'sub' } },
+                                ],
+                            },
+                        ],
+                    },
+                },
+            ],
+        },
+    })
 })
 it('should parse nested execution with single output without errors', () => {
-    // @todo: add expected output
-    expect(() => parse(`
-        f() {
-            u : f()
-        }
-    `)).not.toThrow()
+    check({
+        source: `
+            f() {
+                u : f()
+            }
+        `,
+        expected: {
+            parameters : [],
+            commands : [
+                {
+                    name : { text : 'f' },
+                    program : {
+                        parameters: [
+                            { name : { text : 'super' } },
+                        ],
+                        commands : [
+                            {
+                                target : { name : { text : 'f' } },
+                                inputs : [],
+                                outputs : [
+                                    { name : { text : 'sub' } },
+                                    { name : { text : 'u' } },
+                                ],
+                            },
+                        ],
+                    },
+                },
+            ],
+        },
+    })
 })
 it('should parse nested execution with two outputs without errors', () => {
-    // @todo: add expected output
-    expect(() => parse(`
-        f() {
-            u, v : f()
-        }
-    `)).not.toThrow()
+    check({
+        source: `
+            f() {
+                u, v : f()
+            }
+        `,
+        expected: {
+            parameters : [],
+            commands : [
+                {
+                    name : { text : 'f' },
+                    program : {
+                        parameters: [
+                            { name : { text : 'super' } },
+                        ],
+                        commands : [
+                            {
+                                target : { name : { text : 'f' } },
+                                inputs : [],
+                                outputs : [
+                                    { name : { text : 'sub' } },
+                                    { name : { text : 'u' } },
+                                    { name : { text : 'v' } },
+                                ],
+                            },
+                        ],
+                    },
+                },
+            ],
+        },
+    })
 })
 it('should parse nested execution with three outputs without errors', () => {
-    // @todo: add expected output
-    expect(() => parse(`
-        f() {
-            u, v, w : f()
-        }
-    `)).not.toThrow()
+    check({
+        source: `
+            f() {
+                u, v, w : f()
+            }
+        `,
+        expected: {
+            parameters : [],
+            commands : [
+                {
+                    name : { text : 'f' },
+                    program : {
+                        parameters: [
+                            { name : { text : 'super' } },
+                        ],
+                        commands : [
+                            {
+                                target : { name : { text : 'f' } },
+                                inputs : [],
+                                outputs : [
+                                    { name : { text : 'sub' } },
+                                    { name : { text : 'u' } },
+                                    { name : { text : 'v' } },
+                                    { name : { text : 'w' } },
+                                ],
+                            },
+                        ],
+                    },
+                },
+            ],
+        },
+    })
 })

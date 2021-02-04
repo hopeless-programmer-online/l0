@@ -1,6 +1,7 @@
 import { Declaration, Name, ReferenceTarget, Execution, Inputs, Command, Parameter } from './front'
 import Commands from './front/commands'
 import ExplicitParameter from './front/explicit-parameter'
+import Outputs from './front/outputs'
 import Parameters from './front/parameters'
 import Program from './front/program'
 import Reference from './front/reference'
@@ -142,15 +143,20 @@ export default function parse(source : string) {
 
             if (!(token instanceof Identifier)) throw new Error('Expecting identifier.')
 
+            const callTarget = token
+
             move()
 
             if (!(token instanceof RoundOpening)) throw new Error('Expecting parameters.')
 
             const parameters = parseParametersStart()
             const command = new Execution({
-                target : getReference(first.value, lookup),
+                target : getReference(callTarget.value, lookup),
                 inputs : Inputs.From(...parameters.map(x => getReference(x, lookup))),
+                outputs : Outputs.From(first.value),
             })
+
+            for (const x of command.outputs)  addReference(x.name.text, x, lookup)
 
             return [ command ]
         }
@@ -173,15 +179,20 @@ export default function parse(source : string) {
 
             if (!(token instanceof Identifier)) throw new Error('Expecting identifier.')
 
+            const callTarget = token
+
             move()
 
             if (!(token instanceof RoundOpening)) throw new Error('Expecting parameters.')
 
             const inputs = parseParametersStart()
             const command = new Execution({
-                target : getReference(first.value, lookup),
+                target : getReference(callTarget.value, lookup),
                 inputs : Inputs.From(...inputs.map(x => getReference(x, lookup))),
+                outputs : Outputs.From(...outputs),
             })
+
+            for (const x of command.outputs)  addReference(x.name.text, x, lookup)
 
             return [ command ]
         }
