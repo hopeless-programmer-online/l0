@@ -1,5 +1,5 @@
 export default class Parameters {
-    public static From(...names : Array<string>) {
+    public static from(...names : Array<string>) {
         const array = [
             new Implicit({ name : new Name({ text : 'super' }) }),
             ...names.map(text => new Explicit({ name : new Name({ text }) })),

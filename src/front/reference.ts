@@ -1,8 +1,8 @@
-export type Target = Declaration | Parameter | null
+export type Target = Declaration | Parameter | Output | null
 
 export default class Reference {
-    public static From(text : string, target : Target) {
-        return new Reference({ name : Name.From(text), target })
+    public static from(text : string, target : Target) {
+        return new Reference({ name : Name.from(text), target })
     }
 
     public readonly name : Name
@@ -20,4 +20,5 @@ export default class Reference {
 
 import Declaration from './declaration'
 import Name from './name'
+import Output from './output'
 import Parameter from './parameter'

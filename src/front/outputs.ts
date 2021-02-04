@@ -1,8 +1,8 @@
 export default class Outputs {
-    public static From(...names : Array<string>) {
+    public static from(...names : Array<string>) {
         const array = [
-            new Implicit({ name : Name.From('sub') }),
-            ...names.map(text => new Explicit({ name : Name.From(text) })),
+            new Implicit({ name : Name.from('sub') }),
+            ...names.map(text => new Explicit({ name : Name.from(text) })),
         ]
 
         return new Outputs({ array })
@@ -25,7 +25,7 @@ export default class Outputs {
     }
 
     public get empty() {
-        return this.array.length <= 0
+        return this.explicit.length <= 0
     }
     public get explicit() {
         return this.array.filter(output => output instanceof Explicit)

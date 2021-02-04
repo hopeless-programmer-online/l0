@@ -3,7 +3,7 @@ import Reference from './reference'
 export type Input = Reference
 
 export default class Inputs {
-    public static From(...array : Array<Input>) {
+    public static from(...array : Array<Input>) {
         return new Inputs({ array })
     }
 

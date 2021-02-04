@@ -8,10 +8,10 @@ import Outputs from './outputs'
 import Reference from './reference'
 
 function param(text : string) {
-    return new Reference({ name : Name.From(text), target : ExplicitParameter.From(text) })
+    return new Reference({ name : Name.from(text), target : ExplicitParameter.from(text) })
 }
 function output(text : string) {
-    return new ExplicitOutput({ name : Name.From(text) })
+    return new ExplicitOutput({ name : Name.from(text) })
 }
 
 it('should stringify without inputs and outputs', () => {
@@ -67,7 +67,7 @@ it('should stringify with single output', () => {
 it('should stringify with two outputs', () => {
     const execution = new Execution({
         target : param('f'),
-        outputs : Outputs.From('u', 'v'),
+        outputs : Outputs.from('u', 'v'),
     })
 
     expect(execution.toString()).toBe('u, v : f()')
@@ -92,7 +92,7 @@ it('should stringify with three inputs and outputs', () => {
             param('y'),
             param('z'),
         ] }),
-        outputs : Outputs.From('u', 'v', 'w'),
+        outputs : Outputs.from('u', 'v', 'w'),
     })
 
     expect(execution.toString()).toBe('u, v, w : f(x, y, z)')

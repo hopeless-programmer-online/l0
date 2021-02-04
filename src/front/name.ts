@@ -1,5 +1,5 @@
 export default class Name {
-    public static From(text : string) {
+    public static from(text : string) {
         return new Name({ text })
     }
 

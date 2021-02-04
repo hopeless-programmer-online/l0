@@ -8,7 +8,7 @@ it('should stringify without commands', () => {
 })
 it('should stringify with single declaration', () => {
     const commands = new Commands({ array : [
-        new Declaration({ name : Name.From('f'), program : new Program }),
+        new Declaration({ name : Name.from('f'), program : new Program }),
     ] })
 
     expect(commands.toString()).toBe(
@@ -18,8 +18,8 @@ it('should stringify with single declaration', () => {
 })
 it('should stringify with two declarations', () => {
     const commands = new Commands({ array : [
-        new Declaration({ name : Name.From('f'), program : new Program }),
-        new Declaration({ name : Name.From('g'), program : new Program }),
+        new Declaration({ name : Name.from('f'), program : new Program }),
+        new Declaration({ name : Name.from('g'), program : new Program }),
     ] })
 
     expect(commands.toString()).toBe(

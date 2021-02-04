@@ -2,7 +2,7 @@ import Command from './command'
 import Scope from './scope'
 
 export default class Commands {
-    public static From(...array : Array<Command>) {
+    public static from(...array : Array<Command>) {
         return new Commands({ array })
     }
 
@@ -24,6 +24,11 @@ export default class Commands {
 
     public get empty() {
         return this.array.length <= 0
+    }
+    public get first() {
+        if (this.empty) throw new Error
+
+        return this.array[0]
     }
 
     public *[Symbol.iterator]() {

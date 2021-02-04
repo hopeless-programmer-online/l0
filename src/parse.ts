@@ -28,12 +28,12 @@ export default function parse(source : string) {
         let target = lookup.get(text)
 
         if (!target) {
-            target = ExplicitParameter.From(text)
+            target = ExplicitParameter.from(text)
 
             globals.push(target)
         }
 
-        return Reference.From(text, target)
+        return Reference.from(text, target)
     }
     function addReference(text : string, target : ReferenceTarget, lookup : Lookup) {
         const existed = lookup.get(text)
@@ -88,7 +88,7 @@ export default function parse(source : string) {
                 if (token === null) {
                     const command = new Execution({
                         target : getReference(first.value, lookup),
-                        inputs : Inputs.From(...parameters.map(x => getReference(x, lookup))),
+                        inputs : Inputs.from(...parameters.map(x => getReference(x, lookup))),
                     })
 
                     return [ command ]
@@ -98,7 +98,7 @@ export default function parse(source : string) {
                 if (token instanceof CurlyClosing) {
                     const command = new Execution({
                         target : getReference(first.value, lookup),
-                        inputs : Inputs.From(...parameters.map(x => getReference(x, lookup))),
+                        inputs : Inputs.from(...parameters.map(x => getReference(x, lookup))),
                     })
 
                     --nesting
@@ -110,7 +110,7 @@ export default function parse(source : string) {
             if (token instanceof Identifier) {
                 const command = new Execution({
                     target : getReference(first.value, lookup),
-                    inputs : Inputs.From(...parameters.map(x => getReference(x, lookup))),
+                    inputs : Inputs.from(...parameters.map(x => getReference(x, lookup))),
                 })
 
                 const other = parseCommand(token, lookup)
@@ -121,7 +121,7 @@ export default function parse(source : string) {
                 ++nesting
 
                 const command = new Declaration({
-                    name : Name.From(first.value),
+                    name : Name.from(first.value),
                 })
 
                 addReference(first.value, command, lookup)
@@ -129,8 +129,8 @@ export default function parse(source : string) {
                 const commands = parseBody(new Map([ ...lookup ])) // @todo: extract commands
 
                 command.program = new Program({
-                    parameters : Parameters.From(...parameters),
-                    commands : Commands.From(...commands),
+                    parameters : Parameters.from(...parameters),
+                    commands : Commands.from(...commands),
                 })
 
                 return [ command ]
@@ -152,8 +152,8 @@ export default function parse(source : string) {
             const parameters = parseParametersStart()
             const command = new Execution({
                 target : getReference(callTarget.value, lookup),
-                inputs : Inputs.From(...parameters.map(x => getReference(x, lookup))),
-                outputs : Outputs.From(first.value),
+                inputs : Inputs.from(...parameters.map(x => getReference(x, lookup))),
+                outputs : Outputs.from(first.value),
             })
 
             for (const x of command.outputs)  addReference(x.name.text, x, lookup)
@@ -188,8 +188,8 @@ export default function parse(source : string) {
             const inputs = parseParametersStart()
             const command = new Execution({
                 target : getReference(callTarget.value, lookup),
-                inputs : Inputs.From(...inputs.map(x => getReference(x, lookup))),
-                outputs : Outputs.From(...outputs),
+                inputs : Inputs.from(...inputs.map(x => getReference(x, lookup))),
+                outputs : Outputs.from(...outputs),
             })
 
             for (const x of command.outputs)  addReference(x.name.text, x, lookup)
