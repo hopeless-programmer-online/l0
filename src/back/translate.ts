@@ -61,12 +61,12 @@ export default function translate(program : Program) {
                 const template = findFirst(command.program)
 
                 const next = transformCommands(commands.slice(1), [ ...buffer, command ])
-                const instruction = new Template({ targets : [
+                const instruction = Template.from(
                     bind,
                     next,
                     template,
                     // @todo
-                ] })
+                )
 
                 if (lookup.has(command)) throw new Error // @todo
 
@@ -82,12 +82,12 @@ export default function translate(program : Program) {
                 if (target < 0) throw new Error // @todo
 
                 const next = transformCommands(commands.slice(1), [...buffer, ...command.outputs ])
-                const instruction = new Template({ targets : [
+                const instruction = Template.from(
                     call,
                     next,
                     target,
                     // @todo
-                ] })
+                )
 
                 if (lookup.has(command)) throw new Error // @todo
 
@@ -108,11 +108,6 @@ export default function translate(program : Program) {
     }
 
     transform(program, [ ...globals ])
-
-    // const entry = program.commands.empty
-    //     ? lookup.get(program.commands.first)
-    //     :
-    new Template({ targets :  })
 }
 
 class Placeholder {}

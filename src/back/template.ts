@@ -1,5 +1,7 @@
 export default class Template {
-    public static from()
+    public static from(...targets : number[]) {
+        return new Template({ targets })
+    }
 
     public readonly targets : number[]
 
