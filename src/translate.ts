@@ -137,7 +137,17 @@ export default function translate(program : Program) {
                 if (bind < 0) throw new Error // @todo
 
                 const then = targets.findIndex(x => x instanceof ExecutionControlPassingTemplate && x.command === command)
-                const continuation = transformCommands(commands.slice(1), [ ...targets, ...command.outputs ])
+
+                if (then < 0) throw new Error // @todo
+
+                const continuation = transformCommands(commands.slice(1), [
+                    // variables binded from current buffer
+                    ...targets,
+                    // continuation for passing control to target program
+                    new ContinuationInstructionPlaceholder,
+                    // execution outputs
+                    ...command.outputs,
+                ])
 
                 const continuationIndex = targets.findIndex(x => x === continuation)
 
@@ -171,12 +181,12 @@ export default function translate(program : Program) {
                     // pass index of continuation which will be on top of the buffer after binding as super
                     targets.length + 1, // add 1 to compensate absence of "self" in targets
                     // pass execution inputs
-                    ...[ ...command.inputs ].map(x => {
-                        const index = targets.indexOf(x)
+                    ...[ ...command.inputs ].map(({ target }) => {
+                        const index = targets.indexOf(target)
 
                         if (index < 0) throw new Error // @todo
 
-                        return index
+                        return index + 1 // add 1 to compensate absence of "self" in targets
                     }),
                 )
 
@@ -252,6 +262,7 @@ export default function translate(program : Program) {
 
 class Placeholder {}
 class BindProgram extends Placeholder {}
+class ContinuationInstructionPlaceholder extends Placeholder {}
 class TemplatePlaceholder extends Placeholder {}
 class ProgramLoopTemplate extends TemplatePlaceholder {
     public readonly program : Program

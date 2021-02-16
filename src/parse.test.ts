@@ -1135,8 +1135,11 @@ it('should parse two sequential executions of undeclared programs inside separat
         source: `
             a() {
                 f()
+                f()
             }
             b() {
+                f()
+                f()
             }
         `,
         expected: {
@@ -1159,13 +1162,13 @@ it('should parse two sequential executions of undeclared programs inside separat
                                     { name : { text : 'sub' } },
                                 ],
                             },
-                            // {
-                            //     target : { name : { text : 'f' } },
-                            //     inputs : [],
-                            //     outputs : [
-                            //         { name : { text : 'sub' } },
-                            //     ],
-                            // },
+                            {
+                                target : { name : { text : 'f' } },
+                                inputs : [],
+                                outputs : [
+                                    { name : { text : 'sub' } },
+                                ],
+                            },
                         ],
                     },
                 },
@@ -1176,22 +1179,47 @@ it('should parse two sequential executions of undeclared programs inside separat
                             { name : { text : 'super' } },
                         ],
                         commands : [
-                            // {
-                            //     target : { name : { text : 'f' } },
-                            //     inputs : [],
-                            //     outputs : [
-                            //         { name : { text : 'sub' } },
-                            //     ],
-                            // },
-                            // {
-                            //     target : { name : { text : 'f' } },
-                            //     inputs : [],
-                            //     outputs : [
-                            //         { name : { text : 'sub' } },
-                            //     ],
-                            // },
+                            {
+                                target : { name : { text : 'f' } },
+                                inputs : [],
+                                outputs : [
+                                    { name : { text : 'sub' } },
+                                ],
+                            },
+                            {
+                                target : { name : { text : 'f' } },
+                                inputs : [],
+                                outputs : [
+                                    { name : { text : 'sub' } },
+                                ],
+                            },
                         ],
                     },
+                },
+            ],
+        },
+    })
+})
+it('should parse two undeclared names without errors', () => {
+    check({
+        source: `
+            f(x)
+        `,
+        expected: {
+            parameters : [
+                { name : { text : 'super' } },
+                { name : { text : 'f' } },
+                { name : { text : 'x' } },
+            ],
+            commands : [
+                {
+                    target : { name : { text : 'f' } },
+                    inputs : [
+                        { name : { text : 'x' } },
+                    ],
+                    outputs : [
+                        { name : { text : 'sub' } },
+                    ],
                 },
             ],
         },

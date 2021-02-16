@@ -36,7 +36,7 @@ it('should translate execution without errors', () => {
 
     expect(counter).toBe(1)
 })
-it('should translate execution without errors', () => {
+it('should translate two sequential executions without errors', () => {
     let counter = 0
 
     const f = new ExternalInstruction({ callback : (buffer : any[]) => {
@@ -51,4 +51,42 @@ it('should translate execution without errors', () => {
     `, f)).not.toThrow()
 
     expect(counter).toBe(2)
+})
+it('should translate execution with input without errors', () => {
+    let counter = 0
+    let value;
+
+    const f = new ExternalInstruction({ callback : (buffer : any[]) => {
+        ++counter
+
+        value = buffer[2]
+
+        return [ buffer[1], buffer[1] ]
+    } })
+
+    expect(() => run(`
+        f(1)
+    `, f, 1)).not.toThrow()
+
+    expect(counter).toBe(1)
+    expect(value).toBe(1)
+})
+it('should translate execution with input without errors', () => {
+    let value;
+
+    const f = new ExternalInstruction({ callback : (buffer : any[]) => {
+        return [ buffer[1], buffer[1], 5 ]
+    } })
+    const g = new ExternalInstruction({ callback : (buffer : any[]) => {
+        value = buffer[2]
+
+        return [ buffer[1], buffer[1] ]
+    } })
+
+    expect(() => run(`
+        x : f()
+        g(x)
+    `, f, g)).not.toThrow()
+
+    expect(value).toBe(5)
 })
