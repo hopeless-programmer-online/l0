@@ -1,8 +1,5 @@
-import { parse } from "../l0"
-import ExternalInstruction from "./external-instruction"
-import Machine from "./machine"
-import TerminalInstruction from "./terminal-instruction"
-import translate from "./translate"
+import { parse, translate } from "./l0"
+import { ExternalInstruction, TerminalInstruction, Machine } from "./back"
 
 function run(source : string, ...params : any[]) {
     const instruction = translate(parse(source))

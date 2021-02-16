@@ -1,3 +1,5 @@
 export * as text from './text'
 export * as front from './front'
+export * as back from './back'
 export { default as parse } from './parse'
+export { default as translate } from './translate'

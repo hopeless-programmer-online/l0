@@ -1,8 +1,8 @@
-import { Command, Declaration, Execution, Program, ReferenceTarget } from '../front'
-import ExternalInstruction from './external-instruction'
-import InternalInstruction from './internal-instruction'
-import Template from './template'
-import TerminalInstruction from './terminal-instruction'
+import { Command, Declaration, Execution, Program, ReferenceTarget } from './front'
+import ExternalInstruction from './back/external-instruction'
+import InternalInstruction from './back/internal-instruction'
+import Template from './back/template'
+import TerminalInstruction from './back/terminal-instruction'
 
 export default function translate(program : Program) {
     const internals : Placeholder[] = [
