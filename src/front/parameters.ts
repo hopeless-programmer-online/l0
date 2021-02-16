@@ -27,6 +27,13 @@ export default class Parameters {
     public get explicit() {
         return this.array.filter(parameter => parameter instanceof Explicit)
     }
+    public get super() {
+        const sup = this.array.find(parameter => parameter instanceof Implicit && parameter.name.text === 'super')
+
+        if (!sup) throw new Error // @todo
+
+        return sup
+    }
 
     public *[Symbol.iterator]() {
         return yield * this.array

@@ -1,18 +1,57 @@
 import { parse } from "../l0"
+import ExternalInstruction from "./external-instruction"
+import Machine from "./machine"
+import TerminalInstruction from "./terminal-instruction"
 import translate from "./translate"
 
+function run(source : string, ...params : any[]) {
+    const instruction = translate(parse(source))
+    const machine = new Machine({ buffer : [
+        instruction,
+        ...params,
+    ] })
+
+    while (!(machine.instruction instanceof TerminalInstruction)) machine.step()
+}
+
 it('should translate empty string without errors', () => {
-    expect(() => translate(parse(`
-    `))).not.toThrow()
+    expect(() => run(`
+    `)).not.toThrow()
 })
 it('should translate declaration without errors', () => {
-    expect(() => translate(parse(`
+    expect(() => run(`
         f() {
         }
-    `))).not.toThrow()
+    `)).not.toThrow()
 })
 it('should translate execution without errors', () => {
-    expect(() => translate(parse(`
+    let counter = 0
+
+    const f = new ExternalInstruction({ callback : (buffer : any[]) => {
+        ++counter
+
+        return [ buffer[1], buffer[1] ]
+    } })
+
+    expect(() => run(`
         f()
-    `))).not.toThrow()
+    `, f)).not.toThrow()
+
+    expect(counter).toBe(1)
+})
+it('should translate execution without errors', () => {
+    let counter = 0
+
+    const f = new ExternalInstruction({ callback : (buffer : any[]) => {
+        ++counter
+
+        return [ buffer[1], buffer[1] ]
+    } })
+
+    expect(() => run(`
+        f()
+        f()
+    `, f)).not.toThrow()
+
+    expect(counter).toBe(2)
 })

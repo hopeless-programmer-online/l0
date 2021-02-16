@@ -12,8 +12,13 @@ function check({ source, expected } : { source : string, expected : any }) {
             if (!actual[Symbol.iterator]) return actual
 
             const values = [ ...actual ]
+            const mapped = []
 
-            return expected.map((x,i) => wrap(x, values[i]) )
+            for (let i = 0; i < Math.max(values.length, expected.length); ++i) {
+                mapped.push(wrap( expected[i] , values[i] ))
+            }
+
+            return mapped
         }
 
         const dummy : any = {}
@@ -27,7 +32,9 @@ function check({ source, expected } : { source : string, expected : any }) {
         return dummy
     }
 
-    expect(wrap(expected, actual)).toMatchObject(expected)
+    const wrapped = wrap(expected, actual)
+
+    expect(wrapped).toMatchObject(expected)
 }
 
 it('should parse empty string without errors', () => {
@@ -35,7 +42,9 @@ it('should parse empty string without errors', () => {
         source: `
         `,
         expected: {
-            parameters : [],
+            parameters : [
+                { name : { text : 'super' } },
+            ],
             commands : [],
         }
     })
@@ -47,12 +56,16 @@ it('should parse declaration without errors', () => {
             }
         `,
         expected: {
-            parameters : [],
+            parameters : [
+                { name : { text : 'super' } },
+            ],
             commands : [
                 {
                     name : { text : 'f' },
                     program : {
-                        parameters : [],
+                        parameters : [
+                            { name : { text : 'super' } },
+                        ],
                         commands : [],
                     },
                 },
@@ -67,7 +80,9 @@ it('should parse declaration with single parameter without errors', () => {
             }
         `,
         expected: {
-            parameters : [],
+            parameters : [
+                { name : { text : 'super' } },
+            ],
             commands : [
                 {
                     name : { text : 'f' },
@@ -90,7 +105,9 @@ it('should parse declaration with two parameters without errors', () => {
             }
         `,
         expected: {
-            parameters : [],
+            parameters : [
+                { name : { text : 'super' } },
+            ],
             commands : [
                 {
                     name : { text : 'f' },
@@ -114,7 +131,9 @@ it('should parse declaration with three parameters without errors', () => {
             }
         `,
         expected: {
-            parameters : [],
+            parameters : [
+                { name : { text : 'super' } },
+            ],
             commands : [
                 {
                     name : { text : 'f' },
@@ -138,12 +157,17 @@ it('should parse execution without errors', () => {
             f()
         `,
         expected: {
-            parameters : [],
+            parameters : [
+                { name : { text : 'super' } },
+                { name : { text : 'f' } },
+            ],
             commands : [
                 {
                     target : { name : { text : 'f' } },
                     inputs : [],
-                    outputs : [],
+                    outputs : [
+                        { name : { text : 'sub' } },
+                    ],
                 },
             ],
         },
@@ -155,14 +179,20 @@ it('should parse execution with single input without errors', () => {
             f(x)
         `,
         expected: {
-            parameters : [],
+            parameters : [
+                { name : { text : 'super' } },
+                { name : { text : 'f' } },
+                { name : { text : 'x' } },
+            ],
             commands : [
                 {
                     target : { name : { text : 'f' } },
                     inputs : [
                         { name : { text : 'x' } },
                     ],
-                    outputs : [],
+                    outputs : [
+                        { name : { text : 'sub' } },
+                    ],
                 },
             ],
         },
@@ -174,7 +204,12 @@ it('should parse execution with two inputs without errors', () => {
             f(x, y)
         `,
         expected: {
-            parameters : [],
+            parameters : [
+                { name : { text : 'super' } },
+                { name : { text : 'f' } },
+                { name : { text : 'x' } },
+                { name : { text : 'y' } },
+            ],
             commands : [
                 {
                     target : { name : { text : 'f' } },
@@ -182,7 +217,9 @@ it('should parse execution with two inputs without errors', () => {
                         { name : { text : 'x' } },
                         { name : { text : 'y' } },
                     ],
-                    outputs : [],
+                    outputs : [
+                        { name : { text : 'sub' } },
+                    ],
                 },
             ],
         },
@@ -194,7 +231,13 @@ it('should parse execution with three inputs without errors', () => {
             f(x, y, z)
         `,
         expected: {
-            parameters : [],
+            parameters : [
+                { name : { text : 'super' } },
+                { name : { text : 'f' } },
+                { name : { text : 'x' } },
+                { name : { text : 'y' } },
+                { name : { text : 'z' } },
+            ],
             commands : [
                 {
                     target : { name : { text : 'f' } },
@@ -203,7 +246,9 @@ it('should parse execution with three inputs without errors', () => {
                         { name : { text : 'y' } },
                         { name : { text : 'z' } },
                     ],
-                    outputs : [],
+                    outputs : [
+                        { name : { text : 'sub' } },
+                    ],
                 },
             ],
         },
@@ -215,7 +260,10 @@ it('should parse execution with single output without errors', () => {
             u : f()
         `,
         expected: {
-            parameters : [],
+            parameters : [
+                { name : { text : 'super' } },
+                { name : { text : 'f' } },
+            ],
             commands : [
                 {
                     target : { name : { text : 'f' } },
@@ -235,7 +283,10 @@ it('should parse execution with two outputs without errors', () => {
             u, v : f()
         `,
         expected: {
-            parameters : [],
+            parameters : [
+                { name : { text : 'super' } },
+                { name : { text : 'f' } },
+            ],
             commands : [
                 {
                     target : { name : { text : 'f' } },
@@ -256,7 +307,10 @@ it('should parse execution with three outputs without errors', () => {
             u, v, w : f()
         `,
         expected: {
-            parameters : [],
+            parameters : [
+                { name : { text : 'super' } },
+                { name : { text : 'f' } },
+            ],
             commands : [
                 {
                     target : { name : { text : 'f' } },
@@ -279,7 +333,13 @@ it('should parse execution with three inputs and three outputs without errors', 
             u, v, w : f(x, y, z)
         `,
         expected: {
-            parameters : [],
+            parameters : [
+                { name : { text : 'super' } },
+                { name : { text : 'f' } },
+                { name : { text : 'x' } },
+                { name : { text : 'y' } },
+                { name : { text : 'z' } },
+            ],
             commands : [
                 {
                     target : { name : { text : 'f' } },
@@ -310,7 +370,9 @@ it('should parse nested declaration after execution without errors', () => {
             }
         `,
         expected: {
-            parameters : [],
+            parameters : [
+                { name : { text : 'super' } },
+            ],
             commands : [
                 {
                     name : { text : 'f' },
@@ -322,7 +384,9 @@ it('should parse nested declaration after execution without errors', () => {
                             {
                                 target : { name : { text : 'f' } },
                                 inputs : [],
-                                outputs : [],
+                                outputs : [
+                                    { name : { text : 'sub' } },
+                                ],
                             },
                             {
                                 name : { text : 'g' },
@@ -350,7 +414,9 @@ it('should parse nested execution after declaration without errors', () => {
             }
         `,
         expected: {
-            parameters : [],
+            parameters : [
+                { name : { text : 'super' } },
+            ],
             commands : [
                 {
                     name : { text : 'f' },
@@ -392,7 +458,9 @@ it('should parse nested execution with single output after declaration without e
             }
         `,
         expected: {
-            parameters : [],
+            parameters : [
+                { name : { text : 'super' } },
+            ],
             commands : [
                 {
                     name : { text : 'f' },
@@ -435,7 +503,9 @@ it('should parse nested execution with two outputs after declaration without err
             }
         `,
         expected: {
-            parameters : [],
+            parameters : [
+                { name : { text : 'super' } },
+            ],
             commands : [
                 {
                     name : { text : 'f' },
@@ -479,7 +549,9 @@ it('should parse nested execution with three outputs after declaration without e
             }
         `,
         expected: {
-            parameters : [],
+            parameters : [
+                { name : { text : 'super' } },
+            ],
             commands : [
                 {
                     name : { text : 'f' },
@@ -523,7 +595,9 @@ it('should parse nested declaration without errors', () => {
             }
         `,
         expected: {
-            parameters : [],
+            parameters : [
+                { name : { text : 'super' } },
+            ],
             commands : [
                 {
                     name : { text : 'f' },
@@ -557,7 +631,9 @@ it('should parse nested declaration with single parameter without errors', () =>
             }
         `,
         expected: {
-            parameters : [],
+            parameters : [
+                { name : { text : 'super' } },
+            ],
             commands : [
                 {
                     name : { text : 'f' },
@@ -592,7 +668,9 @@ it('should parse nested declaration with two parameters without errors', () => {
             }
         `,
         expected: {
-            parameters : [],
+            parameters : [
+                { name : { text : 'super' } },
+            ],
             commands : [
                 {
                     name : { text : 'f' },
@@ -628,7 +706,9 @@ it('should parse nested declaration with three parameters without errors', () =>
             }
         `,
         expected: {
-            parameters : [],
+            parameters : [
+                { name : { text : 'super' } },
+            ],
             commands : [
                 {
                     name : { text : 'f' },
@@ -664,7 +744,9 @@ it('should parse nested execution without errors', () => {
             }
         `,
         expected: {
-            parameters : [],
+            parameters : [
+                { name : { text : 'super' } },
+            ],
             commands : [
                 {
                     name : { text : 'f' },
@@ -696,6 +778,7 @@ it('should parse nested execution with single input without errors', () => {
         `,
         expected: {
             parameters : [
+                { name : { text : 'super' } },
                 { name : { text : 'x' } },
             ],
             commands : [
@@ -731,6 +814,7 @@ it('should parse nested execution with two inputs without errors', () => {
         `,
         expected: {
             parameters : [
+                { name : { text : 'super' } },
                 { name : { text : 'x' } },
                 { name : { text : 'y' } },
             ],
@@ -768,6 +852,7 @@ it('should parse nested execution with three inputs without errors', () => {
         `,
         expected: {
             parameters : [
+                { name : { text : 'super' } },
                 { name : { text : 'x' } },
                 { name : { text : 'y' } },
                 { name : { text : 'z' } },
@@ -806,7 +891,9 @@ it('should parse nested execution with single output without errors', () => {
             }
         `,
         expected: {
-            parameters : [],
+            parameters : [
+                { name : { text : 'super' } },
+            ],
             commands : [
                 {
                     name : { text : 'f' },
@@ -838,7 +925,9 @@ it('should parse nested execution with two outputs without errors', () => {
             }
         `,
         expected: {
-            parameters : [],
+            parameters : [
+                { name : { text : 'super' } },
+            ],
             commands : [
                 {
                     name : { text : 'f' },
@@ -871,7 +960,9 @@ it('should parse nested execution with three outputs without errors', () => {
             }
         `,
         expected: {
-            parameters : [],
+            parameters : [
+                { name : { text : 'super' } },
+            ],
             commands : [
                 {
                     name : { text : 'f' },
@@ -890,6 +981,215 @@ it('should parse nested execution with three outputs without errors', () => {
                                     { name : { text : 'w' } },
                                 ],
                             },
+                        ],
+                    },
+                },
+            ],
+        },
+    })
+})
+it('should parse two sequential declarations with different names without errors', () => {
+    check({
+        source: `
+            f() {
+            }
+            g() {
+            }
+        `,
+        expected: {
+            parameters : [
+                { name : { text : 'super' } },
+            ],
+            commands : [
+                {
+                    name : { text : 'f' },
+                    program : {
+                        parameters : [
+                            { name : { text : 'super' } },
+                        ],
+                        commands : [],
+                    },
+                },
+                {
+                    name : { text : 'g' },
+                    program : {
+                        parameters : [
+                            { name : { text : 'super' } },
+                        ],
+                        commands : [],
+                    },
+                },
+            ],
+        },
+    })
+})
+it('should parse two sequential declarations with same names without errors', () => {
+    check({
+        source: `
+            f() {
+            }
+            f() {
+            }
+        `,
+        expected: {
+            parameters : [
+                { name : { text : 'super' } },
+            ],
+            commands : [
+                {
+                    name : { text : 'f' },
+                    program : {
+                        parameters : [
+                            { name : { text : 'super' } },
+                        ],
+                        commands : [],
+                    },
+                },
+                {
+                    name : { text : 'f' },
+                    program : {
+                        parameters : [
+                            { name : { text : 'super' } },
+                        ],
+                        commands : [],
+                    },
+                },
+            ],
+        },
+    })
+})
+it('should parse two sequential executions of undeclared programs without errors', () => {
+    check({
+        source: `
+            f()
+            f()
+        `,
+        expected: {
+            parameters : [
+                { name : { text : 'super' } },
+                { name : { text : 'f' } },
+            ],
+            commands : [
+                {
+                    target : { name : { text : 'f' } },
+                    inputs : [],
+                    outputs : [
+                        { name : { text : 'sub' } },
+                    ],
+                },
+                {
+                    target : { name : { text : 'f' } },
+                    inputs : [],
+                    outputs : [
+                        { name : { text : 'sub' } },
+                    ],
+                },
+            ],
+        },
+    })
+})
+it('should parse two nested sequential executions of undeclared programs without errors', () => {
+    check({
+        source: `
+            a() {
+                f()
+                f()
+            }
+        `,
+        expected: {
+            parameters : [
+                { name : { text : 'super' } },
+                { name : { text : 'f' } },
+            ],
+            commands : [
+                {
+                    name : { text : 'a' },
+                    program : {
+                        parameters : [
+                            { name : { text : 'super' } },
+                        ],
+                        commands : [
+                            {
+                                target : { name : { text : 'f' } },
+                                inputs : [],
+                                outputs : [
+                                    { name : { text : 'sub' } },
+                                ],
+                            },
+                            {
+                                target : { name : { text : 'f' } },
+                                inputs : [],
+                                outputs : [
+                                    { name : { text : 'sub' } },
+                                ],
+                            },
+                        ],
+                    },
+                },
+            ],
+        },
+    })
+})
+it('should parse two sequential executions of undeclared programs inside separate declarations without errors', () => {
+    check({
+        source: `
+            a() {
+                f()
+            }
+            b() {
+            }
+        `,
+        expected: {
+            parameters : [
+                { name : { text : 'super' } },
+                { name : { text : 'f' } },
+            ],
+            commands : [
+                {
+                    name : { text : 'a' },
+                    program : {
+                        parameters : [
+                            { name : { text : 'super' } },
+                        ],
+                        commands : [
+                            {
+                                target : { name : { text : 'f' } },
+                                inputs : [],
+                                outputs : [
+                                    { name : { text : 'sub' } },
+                                ],
+                            },
+                            // {
+                            //     target : { name : { text : 'f' } },
+                            //     inputs : [],
+                            //     outputs : [
+                            //         { name : { text : 'sub' } },
+                            //     ],
+                            // },
+                        ],
+                    },
+                },
+                {
+                    name : { text : 'b' },
+                    program : {
+                        parameters : [
+                            { name : { text : 'super' } },
+                        ],
+                        commands : [
+                            // {
+                            //     target : { name : { text : 'f' } },
+                            //     inputs : [],
+                            //     outputs : [
+                            //         { name : { text : 'sub' } },
+                            //     ],
+                            // },
+                            // {
+                            //     target : { name : { text : 'f' } },
+                            //     inputs : [],
+                            //     outputs : [
+                            //         { name : { text : 'sub' } },
+                            //     ],
+                            // },
                         ],
                     },
                 },
