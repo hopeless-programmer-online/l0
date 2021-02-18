@@ -90,3 +90,10 @@ it('should translate execution with input without errors', () => {
 
     expect(value).toBe(5)
 })
+it('should translate execution of empty declared program without errors', () => {
+    expect(() => run(`
+        f() {
+        }
+        f()
+    `)).not.toThrow()
+})

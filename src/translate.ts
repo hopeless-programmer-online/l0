@@ -98,7 +98,7 @@ export default function translate(program : Program) {
             const command = commands[0]
 
             if (command instanceof Declaration) {
-                transform(command.program, [ ...targets, command, ...program.parameters ])
+                transform(command.program, [ ...targets, command, ...command.program.parameters ])
 
                 const bind = targets.findIndex(x => x instanceof BindProgram)
 
