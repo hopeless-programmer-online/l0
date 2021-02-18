@@ -159,10 +159,14 @@ export default function parse(source : string) {
 
                 scope.add(first.value, command)
 
+                const p = Parameters.from(...parameters)
+
+                for (const x of p) scope.add(x.name.text, x)
+
                 const commands = parseBody(new Scope({ parent : scope })) // @todo: extract commands
 
                 command.program = new Program({
-                    parameters : Parameters.from(...parameters),
+                    parameters : p,
                     commands : Commands.from(...commands),
                 })
 

@@ -97,3 +97,15 @@ it('should translate execution of empty declared program without errors', () => 
         f()
     `)).not.toThrow()
 })
+it('should translate return from outer program', () => {
+    expect(() => run(`
+        f() {
+            g() {
+                /super()
+            }
+            g()
+        }
+
+        f()
+    `)).not.toThrow()
+})
