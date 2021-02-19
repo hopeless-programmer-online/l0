@@ -2,6 +2,7 @@ import { Declaration, Name, ReferenceTarget, Execution, Inputs, Command, Paramet
 import Commands from './front/commands'
 import ExplicitParameter from './front/explicit-parameter'
 import ImplicitParameter from './front/implicit-parameter'
+import Output from './front/output'
 import Outputs from './front/outputs'
 import Parameters from './front/parameters'
 import Program from './front/program'
@@ -23,56 +24,70 @@ export default function parse(source : string) {
     let globals : Parameter[] = []
 
     class Scope {
-        public parent : Scope | null
-        public lookup = new Map<string, ReferenceTarget>()
+        public static from(target : ReferenceTarget, parent : Scope | null = null) {
+            const reference = target && Reference.from(target.name.text, target)
 
-        public constructor({ parent = null } : { parent? : Scope | null } = {}) {
-            this.parent = parent
+            return new Scope({ reference, parent })
         }
 
-        private _get(name : string) : ReferenceTarget {
-            const { lookup } = this
-            const target = lookup.get(name)
+        public _parent : Scope | null
+        public readonly reference : Reference | null
 
-            if (target) return target
-
-            const { parent } = this
-
-            if (parent) return parent._get(name)
-            if (this !== root) throw new Error
-
-            const parameter = ExplicitParameter.from(name)
-
-            globals.push(parameter)
-            lookup.set(name, parameter)
-
-            return parameter
+        public constructor({ parent = null, reference = null } : { parent? : Scope | null, reference? : Reference | null } = {}) {
+            this._parent = parent
+            this.reference = reference
         }
 
-        public add(name : string, target : ReferenceTarget) {
-            const { lookup } = this
-            const existed = lookup.get(name)
+        public get parent() {
+            return this._parent
+        }
+        public get targets() {
+            const map = new Map<string, ReferenceTarget>()
+            let scope : Scope | null = this
 
-            if (existed) {
-                lookup.delete(name)
+            while (scope) {
+                const { reference } = scope
 
-                this.add(`/${name}`, existed)
+                if (reference) {
+                    const { name, target } = reference
+                    let { text } = name
+
+                    while (map.has(text)) text = `/${text}`
+
+                    map.set(text, target)
+                }
+
+                scope = scope.parent
             }
 
-            lookup.set(name, target)
+            return map
         }
-        public get(name : string) {
-            const target = this._get(name)
 
-            return Reference.from(name, target)
+        public get(text : string) {
+            const { targets } = this
+            const target = targets.get(text)
+
+            if (target) return Reference.from(text, target)
+
+            const parameter = ExplicitParameter.from(text)
+
+            globals.push(parameter)
+
+            const scope = Scope.from(parameter, root.parent)
+
+            root._parent = scope
+
+            // workaround for reference type deduction
+            return scope.reference as Reference
         }
     }
 
-    const root = new Scope
     const sup = ImplicitParameter.from('super')
+    const supScope = Scope.from(sup)
 
-    root.add('super', sup)
     globals.push(sup)
+
+    const root = new Scope({ parent : supScope })
 
     let nesting = 0
 
@@ -106,7 +121,7 @@ export default function parse(source : string) {
             }
         }
     }
-    function parseCommand(first : Identifier, scope : Scope) : { end : boolean, commands : Command[] } {
+    function parseCommand(first : Identifier, scope : Scope) : { end : boolean, commands : Command[], scope : Scope } {
         move()
 
         if (token instanceof RoundOpening) {
@@ -124,7 +139,7 @@ export default function parse(source : string) {
                         inputs : Inputs.from(...parameters.map(x => scope.get(x))),
                     })
 
-                    return { end : true, commands : [ command ] }
+                    return { end : true, commands : [ command ], scope }
                 }
             }
             else {
@@ -136,7 +151,7 @@ export default function parse(source : string) {
 
                     --nesting
 
-                    return { end : true, commands : [ command ] }
+                    return { end : true, commands : [ command ], scope }
                 }
             }
 
@@ -148,7 +163,7 @@ export default function parse(source : string) {
 
                 const other = parseCommand(token, scope)
 
-                return { end : other.end, commands : [ command, ...other.commands ] }
+                return { end : other.end, commands : [ command, ...other.commands ], scope : other.scope }
             }
             else if (token instanceof CurlyOpening) {
                 ++nesting
@@ -157,20 +172,21 @@ export default function parse(source : string) {
                     name : Name.from(first.value),
                 })
 
-                scope.add(first.value, command)
+                scope = Scope.from(command, scope)
 
                 const p = Parameters.from(...parameters)
+                let s = new Scope({ parent : scope })
 
-                for (const x of p) scope.add(x.name.text, x)
+                for (const x of p) s = Scope.from(x, s)
 
-                const commands = parseBody(new Scope({ parent : scope })) // @todo: extract commands
+                const commands = parseBody(s) // @todo: extract commands
 
                 command.program = new Program({
                     parameters : p,
                     commands : Commands.from(...commands),
                 })
 
-                return { end : false, commands : [ command ] }
+                return { end : false, commands : [ command ], scope }
             }
 
             throw new Error
@@ -193,9 +209,9 @@ export default function parse(source : string) {
                 outputs : Outputs.from(first.value),
             })
 
-            for (const x of command.outputs)  scope.add(x.name.text, x)
+            for (const x of command.outputs) scope = Scope.from(x, scope)
 
-            return { end : false, commands : [ command ] }
+            return { end : false, commands : [ command ], scope }
         }
         else if (token instanceof Comma) {
             const outputs = [ first.value ]
@@ -229,9 +245,9 @@ export default function parse(source : string) {
                 outputs : Outputs.from(...outputs),
             })
 
-            for (const x of command.outputs)  scope.add(x.name.text, x)
+            for (const x of command.outputs) scope = Scope.from(x, scope)
 
-            return { end : false, commands : [ command ] }
+            return { end : false, commands : [ command ], scope }
         }
 
         throw new Error('Declaration or execution expected.')
@@ -258,6 +274,8 @@ export default function parse(source : string) {
             commands.push(...body.commands)
 
             if (body.end) return commands
+
+            scope = body.scope
         }
     }
 

@@ -2,7 +2,8 @@ import { parse, translate } from "./l0"
 import { ExternalInstruction, TerminalInstruction, Machine } from "./back"
 
 function run(source : string, ...params : any[]) {
-    const instruction = translate(parse(source))
+    const program = parse(source)
+    const instruction = translate(program)
     const machine = new Machine({ buffer : [
         instruction,
         ...params,

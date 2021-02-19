@@ -1225,3 +1225,37 @@ it('should parse two undeclared names without errors', () => {
         },
     })
 })
+it('should parse call to outer super without errors', () => {
+    check({
+        source: `
+            f()
+            {
+                /super()
+            }
+        `,
+        expected: {
+            parameters : [
+                { name : { text : 'super' } },
+            ],
+            commands : [
+                {
+                    name : { text : 'f' },
+                    program : {
+                        parameters : [
+                            { name : { text : 'super' } },
+                        ],
+                        commands : [
+                            {
+                                target : { name : { text : '/super' } },
+                                inputs : [],
+                                outputs : [
+                                    { name : { text : 'sub' } },
+                                ],
+                            },
+                        ],
+                    },
+                },
+            ],
+        },
+    })
+})
