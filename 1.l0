@@ -1,0 +1,157 @@
+throw() {
+    /super()
+}
+f () {
+    throw()
+}
+
+bind : get buffer(throw)
+bind : #(bind, 0)
+
+map(list, callback) {
+    r : array()
+    l : length(list)
+
+    iterate(i) {
+        x : <(i, l)
+        x : not(x)
+
+        then() {
+            /super()
+        }
+
+        if (x, then)
+
+        x : #(list, i)
+        x : callback(x, i)
+
+        push back(r, x)
+
+        i : +(i, 1)
+
+        iterate(i)
+    }
+
+    iterate(0)
+
+    super(r)
+}
+
+declaration tag : array()
+
+is throw(target, params) {
+    check exact() {
+        is : =(target, throw)
+
+        then() {
+            //super(true)
+        }
+
+        if(is, then)
+    }
+    check internal() {
+        is : is internal instruction(target)
+        is : not(is)
+
+        then() {
+            /super()
+        }
+
+        if(is, then)
+
+        ; print("internal")
+
+        template : get template(target)
+        buffer : get buffer(target)
+        buffer : concat(buffer, params)
+
+        result : is throw(template, buffer)
+
+        /super(result)
+    }
+    check template() {
+        is : is template(target)
+        is : not(is)
+
+        then() {
+            /super()
+        }
+
+        if(is, then)
+
+        ; print("template")
+
+        callback(x) {
+            x : -(x, 1)
+            x : #(params, x)
+
+            super(x)
+        }
+
+        targets : get targets(target)
+        buffer : map(targets, callback)
+
+        target : #(buffer, 0)
+        buffer : slice(buffer, 1)
+
+        result : is throw(target, buffer)
+
+        /super(result)
+    }
+    check external() {
+        is : is external instruction(target)
+        is : not(is)
+
+        then() {
+            /super()
+        }
+
+        if(is, then)
+
+        ; print("external")
+
+        check bind() {
+            is : =(target, bind)
+            is : not(is)
+
+            then() {
+                /super()
+            }
+
+            if(is, then)
+
+            ; print("bind")
+
+            next : #(params, 0)
+            template : #(params, 1)
+            declaration : array()
+
+            push back(declaration, declaration tag)
+            push back(declaration, template)
+
+            params : slice(params, 2)
+
+            push back(params, declaration)
+            push back(declaration, params)
+
+            result : is throw(next, params)
+
+            //super(result)
+        }
+
+        check bind()
+    }
+
+    check exact()
+    check internal()
+    check external()
+    check template()
+
+    ; print("else")
+
+    super(false)
+}
+
+a : array()
+x : is throw(f, a)
+print(x)

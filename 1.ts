@@ -1,3 +1,5 @@
+import { join } from 'path'
+import { readFileSync } from 'fs'
 import { parse, translate, back } from './src/l0'
 
 const {
@@ -9,97 +11,8 @@ const {
     Machine,
 } = back
 
-const program = parse(`
-    throw() {
-        /super()
-    }
-    f () {
-        throw()
-    }
-
-    bind : get buffer(throw)
-    bind : #(bind, 0)
-
-    is throw(target) {
-        check template(template, buffer) {
-            targets     : get targets(x)
-            index       : #(targets, 0)
-            instruction : #(buffer, index)
-
-            x : is throw(instruction)
-
-        }
-        is exactly it() {
-            equal : =(target, throw)
-
-            then() {
-                //super(true)
-            }
-
-            if(equal, then)
-        }
-        is internal() {
-            is : is internal instruction(target)
-            is : not(is)
-
-            then() {
-                /super()
-            }
-
-            if(is, then)
-
-            buffer : array()
-
-            push(buffer, target)
-
-            closure : get buffer(target)
-
-            buffer : concat(buffer, closure)
-
-            x : get template(target)
-            x : get targets(x)
-            x : #(x, 0)
-            x : #(buffer, x)
-            x : is throw(x)
-
-            /super(x)
-        }
-        is external() {
-            is : is external instruction(target)
-            is : not(is)
-
-            then() {
-                /super()
-            }
-
-            if(is, then)
-
-            is bind() {
-                is : =(target, bind)
-                is : not(is)
-
-                then() {
-                    /super()
-                }
-
-                if(is, then)
-
-                print(is)
-            }
-
-            is bind()
-        }
-
-        is exactly it()
-        is internal()
-        is external()
-
-        super(false)
-    }
-
-    x : is throw(f)
-    print(x)
-`)
+const source = readFileSync(join(__dirname, '1.l0'), 'utf8')
+const program = parse(source)
 const instruction = translate(program)
 
 const print = new ExternalInstruction({ callback : buffer => {
@@ -174,16 +87,27 @@ const concat = new ExternalInstruction({ callback : ([ _, next, a, b ]) => {
 const slice = new ExternalInstruction({ callback : ([ _, next, a, b, e ]) => {
     return [ next, next, a.slice(b, e) ]
 } })
-const push = new ExternalInstruction({ callback : ([ _, next, a, x ]) => {
+const push_back = new ExternalInstruction({ callback : ([ _, next, a, x ]) => {
     a.push(x)
+
+    return [ next, next ]
+} })
+const push_front = new ExternalInstruction({ callback : ([ _, next, a, x ]) => {
+    a.unshift(x)
 
     return [ next, next ]
 } })
 const minus = new ExternalInstruction({ callback : ([ _, next, a, b ]) => {
     return [ next, next, a - b ]
 } })
+const plus = new ExternalInstruction({ callback : ([ _, next, a, b ]) => {
+    return [ next, next, a + b ]
+} })
 const not = new ExternalInstruction({ callback : ([ _, next, a ]) => {
     return [ next, next, !a ]
+} })
+const less = new ExternalInstruction({ callback : ([ _, next, a, b ]) => {
+    return [ next, next, a < b ]
 } })
 
 const machine = new Machine({ buffer : [
@@ -206,6 +130,7 @@ const machine = new Machine({ buffer : [
             return text
         }
 
+        if (text === 'nothing') return undefined
         if (text === 'print') return print
         if (text === 'is instruction') return is_instruction
         if (text === 'is internal instruction') return is_internal_instruction
@@ -222,11 +147,14 @@ const machine = new Machine({ buffer : [
         if (text === 'length') return length
         if (text === 'concat') return concat
         if (text === 'slice') return slice
-        if (text === 'push') return push
+        if (text === 'push back') return push_back
+        if (text === 'push front') return push_front
         if (text === '-') return minus
+        if (text === '+') return plus
         if (text === 'not') return not
+        if (text === '<') return less
 
-        throw new Error
+        throw new Error(`Can't fulfill parameter ${text}`)
     })
 ] })
 
