@@ -2,6 +2,8 @@ throw() {
     /super()
 }
 f () {
+    print("ololo")
+    print("kekeke")
     throw()
 }
 
@@ -138,14 +140,64 @@ is throw(target, params) {
 
             //super(result)
         }
+        check print() {
+            is : =(target, print)
+            is : not(is)
+
+            then() {
+                /super()
+            }
+
+            if(is, then)
+
+            ; print("print")
+
+            next : #(params, 0)
+            params : array()
+
+            push back(params, next)
+
+            result : is throw(next, params)
+
+            //super(result)
+        }
 
         check bind()
+        check print()
+    }
+    check tagged() {
+        then() {
+            /super()
+        }
+
+        is : is array(target)
+        is : not(is)
+
+        if(is, then)
+
+        first : #(target, 0)
+
+        is : =(first, declaration tag)
+        is : not(is)
+
+        if(is, then)
+
+        template : #(target, 1)
+        buffer : #(target, 2)
+        buffer : concat(buffer, params)
+
+        ; print("declaration")
+
+        result : is throw(template, buffer)
+
+        /super(result)
     }
 
     check exact()
     check internal()
     check external()
     check template()
+    check tagged()
 
     ; print("else")
 

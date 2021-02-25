@@ -75,8 +75,11 @@ const equal = new ExternalInstruction({ callback : ([ _, next, a, b ]) => {
 const at = new ExternalInstruction({ callback : ([ _, next, a, i ]) => {
     return [ next, next, a[i] ]
 } })
-const array = new ExternalInstruction({ callback : ([ _, next ]) => {
-    return [ next, next, [] ]
+const is_array = new ExternalInstruction({ callback : ([ _, next, a ]) => {
+    return [ next, next, Array.isArray(a) ]
+} })
+const array = new ExternalInstruction({ callback : ([ _, next, ...content ]) => {
+    return [ next, next, content ]
 } })
 const length = new ExternalInstruction({ callback : ([ _, next, a ]) => {
     return [ next, next, a.length ]
@@ -143,6 +146,7 @@ const machine = new Machine({ buffer : [
         if (text === 'if') return $if
         if (text === '=') return equal
         if (text === '#') return at
+        if (text === 'is array') return is_array
         if (text === 'array') return array
         if (text === 'length') return length
         if (text === 'concat') return concat
