@@ -2,9 +2,10 @@ throw() {
     /super()
 }
 f () {
-    print("ololo")
-    print("kekeke")
-    throw()
+    g() {
+        throw()
+    }
+    if(true, g)
 }
 
 bind : get buffer(throw)
@@ -161,9 +162,45 @@ is throw(target, params) {
 
             //super(result)
         }
+        check if() {
+            is : =(target, if)
+            is : not(is)
+
+            then() {
+                /super()
+            }
+
+            if(is, then)
+
+            ; print("if")
+
+            else : #(params, 0)
+            a : array(else)
+
+            is : #(params, 1)
+
+            then() {
+                ; print("then")
+
+                then : #(params, 2)
+
+                result : is throw(then, a)
+
+                ///super(result)
+            }
+
+            if(is, then)
+
+            ; print("else")
+
+            result : is throw(else, a)
+
+            //super(result)
+        }
 
         check bind()
         check print()
+        check if()
     }
     check tagged() {
         then() {
@@ -201,7 +238,7 @@ is throw(target, params) {
 
     ; print("else")
 
-    super(false)
+    super(nothing)
 }
 
 a : array()
