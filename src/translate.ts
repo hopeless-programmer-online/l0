@@ -3,6 +3,7 @@ import ExternalInstruction from './back/external-instruction'
 import InternalInstruction from './back/internal-instruction'
 import Template from './back/template'
 import TerminalInstruction from './back/terminal-instruction'
+import BindInstruction from './back/bind-instruction'
 
 export default function translate(program : Program) {
     const internals : Placeholder[] = [
@@ -213,40 +214,13 @@ export default function translate(program : Program) {
 
     if (!entryTemplate) throw new Error // @todo
 
+    const bind = new BindInstruction
+
     return new InternalInstruction({
         template : entryTemplate,
         buffer : [
             ...internals.map(x => {
-                if (x instanceof BindProgram) return new ExternalInstruction({
-                    callback : (buffer : any[]) => {
-                        const declarationTemplate = buffer[2]
-
-                        if (!(declarationTemplate instanceof Template)) throw new Error // @todo
-
-                        const globals = buffer.slice(3)
-                        const declaration = new InternalInstruction({
-                            template: declarationTemplate,
-                            buffer : globals,
-                        })
-
-                        declaration.buffer.push(declaration)
-
-                        const nextTemplate = buffer[1]
-
-                        if (!(nextTemplate instanceof Template)) throw new Error // @todo
-
-                        const next = new InternalInstruction({
-                            template: nextTemplate,
-                            buffer : [ ...globals ], // already contains declaration via push
-                        })
-
-                        return [
-                            next,
-                            ...globals,
-                            declaration,
-                        ]
-                    },
-                })
+                if (x instanceof BindProgram) return bind
                 if (!(x instanceof TemplatePlaceholder)) throw new Error // @todo
 
                 const template = lookup.get(x)
