@@ -3,6 +3,7 @@
   "version": "1.4.1",
   "description": "Small programming language",
   "main": "lib/l0",
+  "bin": "./lib/cli.js",
   "exports": {
     ".": "./lib/l0"
   },
