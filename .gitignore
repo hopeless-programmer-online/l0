@@ -1,5 +1,5 @@
 # typescript output
-lib/
+.ts/
 
 # Logs
 logs

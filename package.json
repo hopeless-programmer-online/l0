@@ -2,18 +2,17 @@
   "name": "l0",
   "version": "1.4.1",
   "description": "Small programming language",
-  "main": "lib/l0",
-  "bin": "./lib/cli.js",
+  "main": "./dist/l0.js",
+  "bin": "./dist/cli.js",
   "exports": {
-    ".": "./lib/l0"
+    ".": "./dist/l0.js"
   },
   "scripts": {
-    "clean": "rimraf lib",
-    "build-only": "tsc",
-    "build": "npm run clean && npm run build-only",
-    "test-only": "jest",
-    "test": "npm run build && npm run test-only",
-    "prepare": "npm run build"
+    "clean": "rimraf .ts && rimraf dist",
+    "c": "npm run clean",
+    "build": "tsc && rollup -c",
+    "b": "npm run build",
+    "test": "jest"
   },
   "repository": {
     "type": "git",
@@ -35,20 +34,24 @@
   },
   "homepage": "https://github.com/hopeless-programmer-online/l0#readme",
   "devDependencies": {
-    "@types/jest": "^25.2.3",
-    "@typescript-eslint/eslint-plugin": "^3.1.0",
-    "@typescript-eslint/parser": "^3.1.0",
-    "eslint": "^7.2.0",
-    "eslint-config-standard": "^14.1.1",
-    "eslint-plugin-import": "^2.20.2",
-    "eslint-plugin-jest": "^23.13.2",
+    "@rollup/plugin-typescript": "^8.2.1",
+    "@types/jest": "^26.0.23",
+    "@types/node": "^15.3.0",
+    "@typescript-eslint/eslint-plugin": "^4.24.0",
+    "@typescript-eslint/parser": "^4.24.0",
+    "eslint": "^7.26.0",
+    "eslint-config-standard": "^16.0.2",
+    "eslint-plugin-import": "^2.23.2",
+    "eslint-plugin-jest": "^24.3.6",
     "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-promise": "^4.2.1",
-    "eslint-plugin-standard": "^4.0.1",
-    "jest": "^26.0.1",
+    "eslint-plugin-promise": "^5.1.0",
+    "jest": "^26.6.3",
     "rimraf": "^3.0.2",
-    "ts-jest": "^26.4.4",
+    "rollup": "^2.48.0",
+    "rollup-plugin-dts": "^3.0.2",
+    "rollup-plugin-preserve-shebang": "^1.0.1",
+    "ts-jest": "^26.5.6",
     "ts-node": "^9.1.1",
-    "typescript": "^3.9.7"
+    "typescript": "^4.2.4"
   }
 }
