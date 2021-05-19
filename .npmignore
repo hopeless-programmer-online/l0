@@ -1,5 +1,12 @@
+/.ts
+/.vscode
+/coverage
+/node_modules
 /src
 .editorconfig
 .eslintrc.js
-tsconfig.json
+.gitignore
+.npmignore
 jest.config.js
+rollup.config.js
+tsconfig.json
