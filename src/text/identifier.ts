@@ -1,13 +1,23 @@
 import Token from './token'
 
+export type Words = Word[]
+
 export default class Identifier extends Token {
-    public readonly value : string
+    public words : Words
 
-    public constructor({ value, begin, end } : { value : string, begin : Location, end : Location }) {
-        super({ begin, end })
+    public constructor({ words } : { words : Words }) {
+        super({
+            begin : words[0].begin,
+            end   : words[words.length - 1].end,
+        })
 
-        this.value = value
+        this.words = words
+    }
+
+    public get string() : string {
+        return this.words.map(({ text }) => text).join(' ')
     }
 }
 
 import Location from './location'
+import Word from './word'

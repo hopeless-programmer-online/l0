@@ -4,6 +4,27 @@
 var path = require('path');
 var fs = require('fs');
 
+class Word {
+}
+
+class PlainWord extends Word {
+    constructor({ text, begin, end }) {
+        super();
+        this.text = text;
+        this.begin = begin;
+        this.end = end;
+    }
+}
+
+class QuotedWord extends Word {
+    constructor({ text, begin, end }) {
+        super();
+        this.text = text;
+        this.begin = begin;
+        this.end = end;
+    }
+}
+
 class Token {
     constructor({ begin, end }) {
         this.begin = begin;
@@ -19,9 +40,15 @@ class Comment extends Token {
 }
 
 class Identifier extends Token {
-    constructor({ value, begin, end }) {
-        super({ begin, end });
-        this.value = value;
+    constructor({ words }) {
+        super({
+            begin: words[0].begin,
+            end: words[words.length - 1].end,
+        });
+        this.words = words;
+    }
+    get string() {
+        return this.words.map(({ text }) => text).join(' ');
     }
 }
 
@@ -172,9 +199,14 @@ function* tokenize(text) {
         }
     }
     function* scanWord(words = []) {
-        const start = offset;
+        const begin = location();
         skipWord();
-        words.push(text.substring(start, offset));
+        const end = location();
+        words.push(new PlainWord({
+            text: text.substring(begin.offset, end.offset),
+            begin,
+            end,
+        }));
         const x = yield* skipWhitespace();
         switch (x) {
             // safety check
@@ -203,11 +235,16 @@ function* tokenize(text) {
         }
     }
     function* scanString(opening, words = []) {
-        const start = offset;
+        const begin = location();
         move();
         skipString();
         move();
-        words.push(text.substring(start, offset));
+        const end = location();
+        words.push(new QuotedWord({
+            text: text.substring(begin.offset, end.offset),
+            begin,
+            end,
+        }));
         const x = yield* skipWhitespace();
         switch (x) {
             // safety check
@@ -275,17 +312,13 @@ function* tokenize(text) {
             case '`':
             case '"':
                 {
-                    const begin = location();
-                    const value = (yield* scanString()).join(' ');
-                    const end = location();
-                    yield new Identifier({ value, begin, end });
+                    const words = yield* scanString();
+                    yield new Identifier({ words });
                 }
                 break;
             default: {
-                const begin = location();
-                const value = (yield* scanWord()).join(' ');
-                const end = location();
-                yield new Identifier({ value, begin, end });
+                const words = yield* scanWord();
+                yield new Identifier({ words });
             }
         }
     }
@@ -826,7 +859,7 @@ function parse(source) {
         if (token instanceof RoundClosing)
             return [];
         else if (token instanceof Identifier) {
-            return parseParametersContinue(token.value);
+            return parseParametersContinue(token.string);
         }
         else {
             throw new Error('Parameters expected.');
@@ -842,7 +875,7 @@ function parse(source) {
                 move();
                 if (!(token instanceof Identifier))
                     throw new Error('Identifier expected');
-                parameters.push(token.value);
+                parameters.push(token.string);
             }
             else {
                 throw new Error('Parameters expected.');
@@ -859,7 +892,7 @@ function parse(source) {
             if (nesting <= 0) {
                 if (token === null) {
                     const command = new Execution({
-                        target: scope.get(first.value),
+                        target: scope.get(first.string),
                         inputs: Inputs.from(...parameters.map(x => scope.get(x))),
                     });
                     return { end: true, commands: [command], scope };
@@ -868,7 +901,7 @@ function parse(source) {
             else {
                 if (token instanceof CurlyClosing) {
                     const command = new Execution({
-                        target: scope.get(first.value),
+                        target: scope.get(first.string),
                         inputs: Inputs.from(...parameters.map(x => scope.get(x))),
                     });
                     --nesting;
@@ -877,7 +910,7 @@ function parse(source) {
             }
             if (token instanceof Identifier) {
                 const command = new Execution({
-                    target: scope.get(first.value),
+                    target: scope.get(first.string),
                     inputs: Inputs.from(...parameters.map(x => scope.get(x))),
                 });
                 const other = parseCommand(token, scope);
@@ -886,7 +919,7 @@ function parse(source) {
             else if (token instanceof CurlyOpening) {
                 ++nesting;
                 const command = new Declaration({
-                    name: Name.from(first.value),
+                    name: Name.from(first.string),
                 });
                 scope = Scope.from(command, scope);
                 const p = Parameters.from(...parameters);
@@ -912,21 +945,21 @@ function parse(source) {
                 throw new Error('Expecting parameters.');
             const parameters = parseParametersStart();
             const command = new Execution({
-                target: scope.get(callTarget.value),
+                target: scope.get(callTarget.string),
                 inputs: Inputs.from(...parameters.map(x => scope.get(x))),
-                outputs: Outputs.from(first.value),
+                outputs: Outputs.from(first.string),
             });
             for (const x of command.outputs)
                 scope = Scope.from(x, scope);
             return { end: false, commands: [command], scope };
         }
         else if (token instanceof Comma) {
-            const outputs = [first.value];
+            const outputs = [first.string];
             while (true) {
                 move();
                 if (!(token instanceof Identifier))
                     throw new Error('Expecting identifier.');
-                outputs.push(token.value);
+                outputs.push(token.string);
                 move();
                 if (token instanceof Colon)
                     break;
@@ -942,7 +975,7 @@ function parse(source) {
                 throw new Error('Expecting parameters.');
             const inputs = parseParametersStart();
             const command = new Execution({
-                target: scope.get(callTarget.value),
+                target: scope.get(callTarget.string),
                 inputs: Inputs.from(...inputs.map(x => scope.get(x))),
                 outputs: Outputs.from(...outputs),
             });

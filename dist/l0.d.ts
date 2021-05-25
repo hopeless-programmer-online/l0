@@ -9,6 +9,34 @@ declare class Location {
     });
 }
 
+declare abstract class Word {
+    abstract readonly text: string;
+    abstract readonly begin: Location;
+    abstract readonly end: Location;
+}
+
+declare class PlainWord extends Word {
+    readonly text: string;
+    readonly begin: Location;
+    readonly end: Location;
+    constructor({ text, begin, end }: {
+        text: string;
+        begin: Location;
+        end: Location;
+    });
+}
+
+declare class QuotedWord extends Word {
+    readonly text: string;
+    readonly begin: Location;
+    readonly end: Location;
+    constructor({ text, begin, end }: {
+        text: string;
+        begin: Location;
+        end: Location;
+    });
+}
+
 declare abstract class Token {
     readonly begin: Location;
     readonly end: Location;
@@ -27,13 +55,13 @@ declare class Comment extends Token {
     });
 }
 
+declare type Words = Word[];
 declare class Identifier extends Token {
-    readonly value: string;
-    constructor({ value, begin, end }: {
-        value: string;
-        begin: Location;
-        end: Location;
+    words: Words;
+    constructor({ words }: {
+        words: Words;
     });
+    get string(): string;
 }
 
 declare class Comma extends Token {
@@ -62,6 +90,12 @@ declare class CurlyClosing extends Token {
 
 declare function tokenize(text: string): Generator<Token, void>;
 
+type text_d_Word = Word;
+declare const text_d_Word: typeof Word;
+type text_d_PlainWord = PlainWord;
+declare const text_d_PlainWord: typeof PlainWord;
+type text_d_QuotedWord = QuotedWord;
+declare const text_d_QuotedWord: typeof QuotedWord;
 type text_d_Token = Token;
 declare const text_d_Token: typeof Token;
 type text_d_Comment = Comment;
@@ -89,6 +123,9 @@ declare const text_d_Location: typeof Location;
 declare const text_d_tokenize: typeof tokenize;
 declare namespace text_d {
   export {
+    text_d_Word as Word,
+    text_d_PlainWord as PlainWord,
+    text_d_QuotedWord as QuotedWord,
     text_d_Token as Token,
     text_d_Comment as Comment,
     text_d_Identifier as Identifier,
