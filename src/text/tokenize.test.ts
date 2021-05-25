@@ -3,6 +3,7 @@ import tokenize from './tokenize'
 
 const type = Symbol()
 
+Object.defineProperty(Comment.prototype, type, { value : 'comment' })
 Object.defineProperty(Comma.prototype, type, { value : ',' })
 Object.defineProperty(Colon.prototype, type, { value : ':' })
 Object.defineProperty(RoundOpening.prototype, type, { value : '(' })
@@ -17,13 +18,16 @@ it('should pass on empty string', () => {
     expect([ ...tokenize('') ]).toEqual([])
 })
 it('should skip comments', () => {
-    expect([ ...tokenize('; ()[]{},:;\n') ]).toEqual([])
+    expect([ ...tokenize('; ()[]{},:;\n') ]).toMatchObject([
+        { [type] : 'comment', text : '; ()[]{},:;', begin : { offset : 0, line : 0, column : 0 }, end : { offset : 11, line : 0, column : 11 } },
+    ])
 })
 it('should skip comments without newline', () => {
     expect([ ...tokenize('; ()[]{},:;') ]).toEqual([])
 })
 it('should parse after comment', () => {
     expect([ ...tokenize('; ()[]{},:;\n,') ]).toMatchObject([
+        { [type] : 'comment', text : '; ()[]{},:;', begin : { offset : 0, line : 0, column : 0 }, end : { offset : 11, line : 0, column : 11 } },
         { [type] : ',', begin : { offset : 12, line : 1, column : 0 }, end : { offset : 13, line : 1, column : 1 } },
     ])
 })
