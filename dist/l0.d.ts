@@ -18,6 +18,15 @@ declare abstract class Token {
     });
 }
 
+declare class Comment extends Token {
+    readonly text: string;
+    constructor({ text, begin, end }: {
+        text: string;
+        begin: Location;
+        end: Location;
+    });
+}
+
 declare class Identifier extends Token {
     readonly value: string;
     constructor({ value, begin, end }: {
@@ -51,8 +60,12 @@ declare class CurlyOpening extends Token {
 declare class CurlyClosing extends Token {
 }
 
+declare function tokenize(text: string): Generator<Token, void>;
+
 type text_d_Token = Token;
 declare const text_d_Token: typeof Token;
+type text_d_Comment = Comment;
+declare const text_d_Comment: typeof Comment;
 type text_d_Identifier = Identifier;
 declare const text_d_Identifier: typeof Identifier;
 type text_d_Comma = Comma;
@@ -73,9 +86,11 @@ type text_d_CurlyClosing = CurlyClosing;
 declare const text_d_CurlyClosing: typeof CurlyClosing;
 type text_d_Location = Location;
 declare const text_d_Location: typeof Location;
+declare const text_d_tokenize: typeof tokenize;
 declare namespace text_d {
   export {
     text_d_Token as Token,
+    text_d_Comment as Comment,
     text_d_Identifier as Identifier,
     text_d_Comma as Comma,
     text_d_Colon as Colon,
@@ -86,6 +101,7 @@ declare namespace text_d {
     text_d_CurlyOpening as CurlyOpening,
     text_d_CurlyClosing as CurlyClosing,
     text_d_Location as Location,
+    text_d_tokenize as tokenize,
   };
 }
 
@@ -371,7 +387,7 @@ declare namespace back_d {
   };
 }
 
-declare function parse(source: string): Program;
+declare function parse(source: Generator<Token> | string): Program;
 
 declare function translate(program: Program): InternalInstruction;
 

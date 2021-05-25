@@ -1,4 +1,4 @@
-import { Colon, Comma, CurlyClosing, CurlyOpening, Identifier, Location, RoundClosing, RoundOpening, SquareClosing, SquareOpening } from '../text'
+import { Comment, Colon, Comma, CurlyClosing, CurlyOpening, Identifier, Location, RoundClosing, RoundOpening, SquareClosing, SquareOpening } from '../text'
 import Token from './token'
 
 type Quote = '\'' | '"' | '`'
@@ -34,20 +34,27 @@ export default function *tokenize(text : string) : Generator<Token, void> {
     function location() {
         return new Location({ offset, line, column })
     }
-    function skipLine() {
-        while (offset < length) {
-            const x = move()
-
-            if (x === '\n') return x
-        }
-    }
-    function skipWhitespace() {
+    function *skipWhitespace() : Generator<Token, string | undefined> {
         while (offset < length) {
             const x = getCurrent()
 
             switch (x) {
                 case ';':
-                    if (skipLine() === undefined) return
+                    const begin = location()
+
+                    while (true) {
+                        if (offset >= length) return
+
+                        const x = move()
+
+                        if (x === '\n') {
+                            const end = location()
+
+                            yield new Comment({ text : text.substring(begin.offset, end.offset), begin, end })
+
+                            break
+                        }
+                    }
                 case ' ':
                 case '\n':
                 case '\r':
@@ -60,7 +67,7 @@ export default function *tokenize(text : string) : Generator<Token, void> {
             move()
         }
     }
-    function skip1<Token>(Token : new ({ begin, end } : { begin : Location, end : Location }) => Token) {
+    function skip<Token>(Token : new ({ begin, end } : { begin : Location, end : Location }) => Token) {
         const begin = location()
 
         move()
@@ -128,14 +135,14 @@ export default function *tokenize(text : string) : Generator<Token, void> {
             move()
         }
     }
-    function scanWord(words : Array<string> = []) : Array<string> {
+    function *scanWord(words : Array<string> = []) : Generator<Token, Array<string>> {
         const start = offset
 
         skipWord()
 
         words.push(text.substring(start, offset))
 
-        const x = skipWhitespace()
+        const x = yield * skipWhitespace()
 
         switch (x) {
             // safety check
@@ -158,12 +165,12 @@ export default function *tokenize(text : string) : Generator<Token, void> {
             case '\'':
             case '`':
             case '"':
-                return scanString(x, words)
+                return yield * scanString(x, words)
             default:
-                return scanWord(words)
+                return yield * scanWord(words)
         }
     }
-    function scanString(opening : Quote, words : Array<string> = []) : Array<string> {
+    function *scanString(opening : Quote, words : Array<string> = []) : Generator<Token, Array<string>> {
         const start = offset
 
         move()
@@ -172,7 +179,7 @@ export default function *tokenize(text : string) : Generator<Token, void> {
 
         words.push(text.substring(start, offset))
 
-        const x = skipWhitespace()
+        const x = yield * skipWhitespace()
 
         switch (x) {
             // safety check
@@ -195,14 +202,14 @@ export default function *tokenize(text : string) : Generator<Token, void> {
             case '\'':
             case '`':
             case '"':
-                return scanString(x, words)
+                return yield * scanString(x, words)
             default:
-                return scanWord(words)
+                return yield * scanWord(words)
         }
     }
 
     while (true) {
-        const x = skipWhitespace()
+        const x = yield * skipWhitespace()
 
         switch (x) {
             // safety check
@@ -214,26 +221,26 @@ export default function *tokenize(text : string) : Generator<Token, void> {
             // end of scanning
             case undefined: return
             // check for tokens
-            case ',': yield skip1(Comma); break
-            case ':': yield skip1(Colon); break
-            case '(': yield skip1(RoundOpening); break
-            case ')': yield skip1(RoundClosing); break
-            case '[': yield skip1(SquareOpening); break
-            case ']': yield skip1(SquareClosing); break
-            case '{': yield skip1(CurlyOpening); break
-            case '}': yield skip1(CurlyClosing); break
+            case ',': yield skip(Comma); break
+            case ':': yield skip(Colon); break
+            case '(': yield skip(RoundOpening); break
+            case ')': yield skip(RoundClosing); break
+            case '[': yield skip(SquareOpening); break
+            case ']': yield skip(SquareClosing); break
+            case '{': yield skip(CurlyOpening); break
+            case '}': yield skip(CurlyClosing); break
             case '\'':
             case '`':
             case '"': {
                 const begin = location()
-                const value = scanString(x).join(' ')
+                const value = (yield * scanString(x)).join(' ')
                 const end = location()
 
                 yield new Identifier({ value, begin, end })
             } break
             default: {
                 const begin = location()
-                const value = scanWord().join(' ')
+                const value = (yield * scanWord()).join(' ')
                 const end = location()
 
                 yield new Identifier({ value, begin, end })

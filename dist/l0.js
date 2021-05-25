@@ -9,6 +9,13 @@ class Token {
     }
 }
 
+class Comment extends Token {
+    constructor({ text, begin, end }) {
+        super({ begin, end });
+        this.text = text;
+    }
+}
+
 class Identifier extends Token {
     constructor({ value, begin, end }) {
         super({ begin, end });
@@ -48,9 +55,244 @@ class Location {
     }
 }
 
+function* tokenize(text) {
+    const { length } = text;
+    let offset = 0;
+    let line = 0;
+    let column = 0;
+    function getCurrent() {
+        if (offset < length)
+            return text[offset];
+    }
+    function move() {
+        if (offset >= length)
+            throw new Error; // @todo
+        const previous = getCurrent();
+        ++offset;
+        ++column;
+        if (previous === '\n') {
+            ++line;
+            column = 0;
+        }
+        const current = getCurrent();
+        return current;
+    }
+    function location() {
+        return new Location({ offset, line, column });
+    }
+    function* skipWhitespace() {
+        while (offset < length) {
+            const x = getCurrent();
+            switch (x) {
+                case ';':
+                    const begin = location();
+                    while (true) {
+                        if (offset >= length)
+                            return;
+                        const x = move();
+                        if (x === '\n') {
+                            const end = location();
+                            yield new Comment({ text: text.substring(begin.offset, end.offset), begin, end });
+                            break;
+                        }
+                    }
+                case ' ':
+                case '\n':
+                case '\r':
+                case '\t':
+                    break;
+                default:
+                    return x;
+            }
+            move();
+        }
+    }
+    function skip(Token) {
+        const begin = location();
+        move();
+        const end = location();
+        return new Token({ begin, end });
+    }
+    function skipWord() {
+        while (offset < length) {
+            const x = getCurrent();
+            switch (x) {
+                case undefined:
+                case ' ':
+                case '\n':
+                case '\r':
+                case '\t':
+                case '(':
+                case ')':
+                case '[':
+                case ']':
+                case '{':
+                case '}':
+                case ',':
+                case ':':
+                case '\'':
+                case '`':
+                case '"':
+                    return x;
+            }
+            move();
+        }
+    }
+    function skipString(opening) {
+        while (offset < length) {
+            const x = getCurrent();
+            switch (x) {
+                case undefined:
+                    throw new Error; // @todo
+                case '\\':
+                    {
+                        const x = move();
+                        switch (x) {
+                            case 't':
+                            case 'n':
+                            case 'r':
+                            case '\\':
+                            case '\'':
+                            case '"':
+                            case '`':
+                                break;
+                            default:
+                                throw new Error; // @todo
+                        }
+                    }
+                    break;
+                case '\'':
+                case '`':
+                case '"':
+                    return x;
+            }
+            move();
+        }
+    }
+    function* scanWord(words = []) {
+        const start = offset;
+        skipWord();
+        words.push(text.substring(start, offset));
+        const x = yield* skipWhitespace();
+        switch (x) {
+            // safety check
+            case ';':
+            case ' ':
+            case '\n':
+            case '\r':
+            case '\t':
+                throw new Error; // @todo
+            case undefined:
+            case '(':
+            case ')':
+            case '[':
+            case ']':
+            case '{':
+            case '}':
+            case ',':
+            case ':':
+                return words;
+            case '\'':
+            case '`':
+            case '"':
+                return yield* scanString(x, words);
+            default:
+                return yield* scanWord(words);
+        }
+    }
+    function* scanString(opening, words = []) {
+        const start = offset;
+        move();
+        skipString();
+        move();
+        words.push(text.substring(start, offset));
+        const x = yield* skipWhitespace();
+        switch (x) {
+            // safety check
+            case ';':
+            case ' ':
+            case '\n':
+            case '\r':
+            case '\t':
+                throw new Error; // @todo
+            case undefined:
+            case '(':
+            case ')':
+            case '[':
+            case ']':
+            case '{':
+            case '}':
+            case ',':
+            case ':':
+                return words;
+            case '\'':
+            case '`':
+            case '"':
+                return yield* scanString(x, words);
+            default:
+                return yield* scanWord(words);
+        }
+    }
+    while (true) {
+        const x = yield* skipWhitespace();
+        switch (x) {
+            // safety check
+            case ';':
+            case ' ':
+            case '\n':
+            case '\r':
+            case '\t': throw new Error; // @todo
+            // end of scanning
+            case undefined: return;
+            // check for tokens
+            case ',':
+                yield skip(Comma);
+                break;
+            case ':':
+                yield skip(Colon);
+                break;
+            case '(':
+                yield skip(RoundOpening);
+                break;
+            case ')':
+                yield skip(RoundClosing);
+                break;
+            case '[':
+                yield skip(SquareOpening);
+                break;
+            case ']':
+                yield skip(SquareClosing);
+                break;
+            case '{':
+                yield skip(CurlyOpening);
+                break;
+            case '}':
+                yield skip(CurlyClosing);
+                break;
+            case '\'':
+            case '`':
+            case '"':
+                {
+                    const begin = location();
+                    const value = (yield* scanString()).join(' ');
+                    const end = location();
+                    yield new Identifier({ value, begin, end });
+                }
+                break;
+            default: {
+                const begin = location();
+                const value = (yield* scanWord()).join(' ');
+                const end = location();
+                yield new Identifier({ value, begin, end });
+            }
+        }
+    }
+}
+
 var text = /*#__PURE__*/Object.freeze({
     __proto__: null,
     Token: Token,
+    Comment: Comment,
     Identifier: Identifier,
     Comma: Comma,
     Colon: Colon,
@@ -60,7 +302,8 @@ var text = /*#__PURE__*/Object.freeze({
     SquareClosing: SquareClosing,
     CurlyOpening: CurlyOpening,
     CurlyClosing: CurlyClosing,
-    Location: Location
+    Location: Location,
+    tokenize: tokenize
 });
 
 class Scope {
@@ -562,244 +805,19 @@ var back = /*#__PURE__*/Object.freeze({
     Machine: Machine
 });
 
-function* tokenize(text) {
-    const { length } = text;
-    let offset = 0;
-    let line = 0;
-    let column = 0;
-    function getCurrent() {
-        if (offset < length)
-            return text[offset];
-    }
-    function move() {
-        if (offset >= length)
-            throw new Error; // @todo
-        const previous = getCurrent();
-        ++offset;
-        ++column;
-        if (previous === '\n') {
-            ++line;
-            column = 0;
-        }
-        const current = getCurrent();
-        return current;
-    }
-    function location() {
-        return new Location({ offset, line, column });
-    }
-    function skipLine() {
-        while (offset < length) {
-            const x = move();
-            if (x === '\n')
-                return x;
-        }
-    }
-    function skipWhitespace() {
-        while (offset < length) {
-            const x = getCurrent();
-            switch (x) {
-                case ';':
-                    if (skipLine() === undefined)
-                        return;
-                case ' ':
-                case '\n':
-                case '\r':
-                case '\t':
-                    break;
-                default:
-                    return x;
-            }
-            move();
-        }
-    }
-    function skip1(Token) {
-        const begin = location();
-        move();
-        const end = location();
-        return new Token({ begin, end });
-    }
-    function skipWord() {
-        while (offset < length) {
-            const x = getCurrent();
-            switch (x) {
-                case undefined:
-                case ' ':
-                case '\n':
-                case '\r':
-                case '\t':
-                case '(':
-                case ')':
-                case '[':
-                case ']':
-                case '{':
-                case '}':
-                case ',':
-                case ':':
-                case '\'':
-                case '`':
-                case '"':
-                    return x;
-            }
-            move();
-        }
-    }
-    function skipString(opening) {
-        while (offset < length) {
-            const x = getCurrent();
-            switch (x) {
-                case undefined:
-                    throw new Error; // @todo
-                case '\\':
-                    {
-                        const x = move();
-                        switch (x) {
-                            case 't':
-                            case 'n':
-                            case 'r':
-                            case '\\':
-                            case '\'':
-                            case '"':
-                            case '`':
-                                break;
-                            default:
-                                throw new Error; // @todo
-                        }
-                    }
-                    break;
-                case '\'':
-                case '`':
-                case '"':
-                    return x;
-            }
-            move();
-        }
-    }
-    function scanWord(words = []) {
-        const start = offset;
-        skipWord();
-        words.push(text.substring(start, offset));
-        const x = skipWhitespace();
-        switch (x) {
-            // safety check
-            case ';':
-            case ' ':
-            case '\n':
-            case '\r':
-            case '\t':
-                throw new Error; // @todo
-            case undefined:
-            case '(':
-            case ')':
-            case '[':
-            case ']':
-            case '{':
-            case '}':
-            case ',':
-            case ':':
-                return words;
-            case '\'':
-            case '`':
-            case '"':
-                return scanString(x, words);
-            default:
-                return scanWord(words);
-        }
-    }
-    function scanString(opening, words = []) {
-        const start = offset;
-        move();
-        skipString();
-        move();
-        words.push(text.substring(start, offset));
-        const x = skipWhitespace();
-        switch (x) {
-            // safety check
-            case ';':
-            case ' ':
-            case '\n':
-            case '\r':
-            case '\t':
-                throw new Error; // @todo
-            case undefined:
-            case '(':
-            case ')':
-            case '[':
-            case ']':
-            case '{':
-            case '}':
-            case ',':
-            case ':':
-                return words;
-            case '\'':
-            case '`':
-            case '"':
-                return scanString(x, words);
-            default:
-                return scanWord(words);
-        }
-    }
-    while (true) {
-        const x = skipWhitespace();
-        switch (x) {
-            // safety check
-            case ';':
-            case ' ':
-            case '\n':
-            case '\r':
-            case '\t': throw new Error; // @todo
-            // end of scanning
-            case undefined: return;
-            // check for tokens
-            case ',':
-                yield skip1(Comma);
-                break;
-            case ':':
-                yield skip1(Colon);
-                break;
-            case '(':
-                yield skip1(RoundOpening);
-                break;
-            case ')':
-                yield skip1(RoundClosing);
-                break;
-            case '[':
-                yield skip1(SquareOpening);
-                break;
-            case ']':
-                yield skip1(SquareClosing);
-                break;
-            case '{':
-                yield skip1(CurlyOpening);
-                break;
-            case '}':
-                yield skip1(CurlyClosing);
-                break;
-            case '\'':
-            case '`':
-            case '"':
-                {
-                    const begin = location();
-                    const value = scanString().join(' ');
-                    const end = location();
-                    yield new Identifier({ value, begin, end });
-                }
-                break;
-            default: {
-                const begin = location();
-                const value = scanWord().join(' ');
-                const end = location();
-                yield new Identifier({ value, begin, end });
-            }
-        }
-    }
-}
-
 function parse(source) {
-    const tokens = tokenize(source);
+    const tokens = typeof source === 'string'
+        ? tokenize(source)
+        : source;
     let token = null;
     function move() {
-        const { done, value } = tokens.next();
-        token = (!done && value) || null;
+        while (true) {
+            const { done, value } = tokens.next();
+            if (value instanceof Comment)
+                continue;
+            token = (!done && value) || null;
+            break;
+        }
     }
     let globals = [];
     class Scope {

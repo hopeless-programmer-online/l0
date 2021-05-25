@@ -7,18 +7,26 @@ import Outputs from './front/outputs'
 import Parameters from './front/parameters'
 import Program from './front/program'
 import Reference from './front/reference'
-import { Token, Identifier, Comma, Colon, RoundOpening, RoundClosing, CurlyOpening, CurlyClosing } from './text'
+import { Comment, Token, Identifier, Comma, Colon, RoundOpening, RoundClosing, CurlyOpening, CurlyClosing } from './text'
 import tokenize from './text/tokenize'
 
-export default function parse(source : string) {
-    const tokens = tokenize(source)
+export default function parse(source : Generator<Token> | string) {
+    const tokens = typeof source === 'string'
+        ? tokenize(source)
+        : source
 
     let token : Token | null = null
 
     function move() {
-        const { done, value } = tokens.next()
+        while (true) {
+            const { done, value } = tokens.next()
 
-        token = (!done && value) || null
+            if (value instanceof Comment) continue
+
+            token = (!done && value) || null
+
+            break
+        }
     }
 
     let globals : Parameter[] = []
