@@ -1,8 +1,10 @@
-import { Colon, Comma, CurlyClosing, CurlyOpening, Identifier, RoundClosing, RoundOpening, SquareClosing, SquareOpening } from '../text'
+import { Colon, Comma, CurlyClosing, CurlyOpening, Identifier, PlainWord, QuotedWord, RoundClosing, RoundOpening, SquareClosing, SquareOpening } from '../text'
 import tokenize from './tokenize'
 
 const type = Symbol()
 
+Object.defineProperty(PlainWord.prototype, type, { value : 'plain word' })
+Object.defineProperty(QuotedWord.prototype, type, { value : 'quoted word' })
 Object.defineProperty(Comment.prototype, type, { value : 'comment' })
 Object.defineProperty(Comma.prototype, type, { value : ',' })
 Object.defineProperty(Colon.prototype, type, { value : ':' })
@@ -80,7 +82,14 @@ it('should parse letters, number and special characters', () => {
     expect([ ...tokenize('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789~!@#$%^&*-=_+\\|/<>?') ]).toMatchObject([
         {
             [type] : 'identifier',
-            value : 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789~!@#$%^&*-=_+\\|/<>?',
+            words : [
+                {
+                    [type] : 'plain word',
+                    text : 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789~!@#$%^&*-=_+\\|/<>?',
+                    begin : { offset : 0, line : 0, column : 0 },
+                    end : { offset : 81, line : 0, column : 81 },
+                },
+            ],
             begin : { offset : 0, line : 0, column : 0 },
             end : { offset : 81, line : 0, column : 81 },
         },
@@ -90,7 +99,26 @@ it('should parse space separated words', () => {
     expect([ ...tokenize('x y z') ]).toMatchObject([
         {
             [type] : 'identifier',
-            value : 'x y z',
+            words : [
+                {
+                    [type] : 'plain word',
+                    text : 'x',
+                    begin : { offset : 0, line : 0, column : 0 },
+                    end : { offset : 1, line : 0, column : 1 },
+                },
+                {
+                    [type] : 'plain word',
+                    text : 'y',
+                    begin : { offset : 2, line : 0, column : 2 },
+                    end : { offset : 3, line : 0, column : 3 },
+                },
+                {
+                    [type] : 'plain word',
+                    text : 'z',
+                    begin : { offset : 4, line : 0, column : 4 },
+                    end : { offset : 5, line : 0, column : 5 },
+                },
+            ],
             begin : { offset : 0, line : 0, column : 0 },
             end : { offset : 5, line : 0, column : 5 },
         },
@@ -100,7 +128,14 @@ it('should parse word before comma', () => {
     expect([ ...tokenize('x,') ]).toMatchObject([
         {
             [type] : 'identifier',
-            value : 'x',
+            words : [
+                {
+                    [type] : 'plain word',
+                    text : 'x',
+                    begin : { offset : 0, line : 0, column : 0 },
+                    end : { offset : 1, line : 0, column : 1 },
+                },
+            ],
             begin : { offset : 0, line : 0, column : 0 },
             end : { offset : 1, line : 0, column : 1 },
         },
@@ -115,7 +150,14 @@ it('should parse word before colon', () => {
     expect([ ...tokenize('x:') ]).toMatchObject([
         {
             [type] : 'identifier',
-            value : 'x',
+            words : [
+                {
+                    [type] : 'plain word',
+                    text : 'x',
+                    begin : { offset : 0, line : 0, column : 0 },
+                    end : { offset : 1, line : 0, column : 1 },
+                },
+            ],
             begin : { offset : 0, line : 0, column : 0 },
             end : { offset : 1, line : 0, column : 1 },
         },
@@ -130,7 +172,14 @@ it('should parse word before brace', () => {
     expect([ ...tokenize('x(') ]).toMatchObject([
         {
             [type] : 'identifier',
-            value : 'x',
+            words : [
+                {
+                    [type] : 'plain word',
+                    text : 'x',
+                    begin : { offset : 0, line : 0, column : 0 },
+                    end : { offset : 1, line : 0, column : 1 },
+                },
+            ],
             begin : { offset : 0, line : 0, column : 0 },
             end : { offset : 1, line : 0, column : 1 },
         },
@@ -145,7 +194,14 @@ it('should parse string', () => {
     expect([ ...tokenize('"xyz"') ]).toMatchObject([
         {
             [type] : 'identifier',
-            value : '"xyz"',
+            words : [
+                {
+                    [type] : 'quoted word',
+                    text : '"xyz"',
+                    begin : { offset : 0, line : 0, column : 0 },
+                    end : { offset : 5, line : 0, column : 5 },
+                },
+            ],
             begin : { offset : 0, line : 0, column : 0 },
             end : { offset : 5, line : 0, column : 5 },
         },
@@ -155,7 +211,20 @@ it('should parse two strings', () => {
     expect([ ...tokenize('"xyz" "uvw"') ]).toMatchObject([
         {
             [type] : 'identifier',
-            value : '"xyz" "uvw"',
+            words : [
+                {
+                    [type] : 'quoted word',
+                    text : '"xyz"',
+                    begin : { offset : 0, line : 0, column : 0 },
+                    end : { offset : 5, line : 0, column : 5 },
+                },
+                {
+                    [type] : 'quoted word',
+                    text : '"uvw"',
+                    begin : { offset : 6, line : 0, column : 6 },
+                    end : { offset : 11, line : 0, column : 11 },
+                },
+            ],
             begin : { offset : 0, line : 0, column : 0 },
             end : { offset : 11, line : 0, column : 11 },
         },
@@ -165,7 +234,20 @@ it('should parse mixed identifier', () => {
     expect([ ...tokenize('xyz "uvw"') ]).toMatchObject([
         {
             [type] : 'identifier',
-            value : 'xyz "uvw"',
+            words : [
+                {
+                    [type] : 'plain word',
+                    text : 'xyz',
+                    begin : { offset : 0, line : 0, column : 0 },
+                    end : { offset : 3, line : 0, column : 3 },
+                },
+                {
+                    [type] : 'quoted word',
+                    text : '"uvw"',
+                    begin : { offset : 4, line : 0, column : 4 },
+                    end : { offset : 9, line : 0, column : 9 },
+                },
+            ],
             begin : { offset : 0, line : 0, column : 0 },
             end : { offset : 9, line : 0, column : 9 },
         },
@@ -175,7 +257,20 @@ it('should parse mixed identifier (string first)', () => {
     expect([ ...tokenize('"xyz" uvw') ]).toMatchObject([
         {
             [type] : 'identifier',
-            value : '"xyz" uvw',
+            words : [
+                {
+                    [type] : 'quoted word',
+                    text : '"xyz"',
+                    begin : { offset : 0, line : 0, column : 0 },
+                    end : { offset : 5, line : 0, column : 5 },
+                },
+                {
+                    [type] : 'plain word',
+                    text : 'uvw',
+                    begin : { offset : 6, line : 0, column : 6 },
+                    end : { offset : 9, line : 0, column : 9 },
+                },
+            ],
             begin : { offset : 0, line : 0, column : 0 },
             end : { offset : 9, line : 0, column : 9 },
         },

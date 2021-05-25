@@ -1,4 +1,4 @@
-import { Comment, Colon, Comma, CurlyClosing, CurlyOpening, Identifier, Location, RoundClosing, RoundOpening, SquareClosing, SquareOpening } from '../text'
+import { Comment, Colon, Comma, CurlyClosing, CurlyOpening, Identifier, Location, RoundClosing, RoundOpening, SquareClosing, SquareOpening, Word, PlainWord, QuotedWord } from '../text'
 import Token from './token'
 
 type Quote = '\'' | '"' | '`'
@@ -135,12 +135,18 @@ export default function *tokenize(text : string) : Generator<Token, void> {
             move()
         }
     }
-    function *scanWord(words : Array<string> = []) : Generator<Token, Array<string>> {
-        const start = offset
+    function *scanWord(words : Array<Word> = []) : Generator<Token, Array<Word>> {
+        const begin = location()
 
         skipWord()
 
-        words.push(text.substring(start, offset))
+        const end = location()
+
+        words.push(new PlainWord({
+            text : text.substring(begin.offset, end.offset),
+            begin,
+            end,
+        }))
 
         const x = yield * skipWhitespace()
 
@@ -170,14 +176,20 @@ export default function *tokenize(text : string) : Generator<Token, void> {
                 return yield * scanWord(words)
         }
     }
-    function *scanString(opening : Quote, words : Array<string> = []) : Generator<Token, Array<string>> {
-        const start = offset
+    function *scanString(opening : Quote, words : Array<Word> = []) : Generator<Token, Array<Word>> {
+        const begin = location()
 
         move()
         skipString(opening)
         move()
 
-        words.push(text.substring(start, offset))
+        const end = location()
+
+        words.push(new QuotedWord({
+            text : text.substring(begin.offset, end.offset),
+            begin,
+            end,
+        }))
 
         const x = yield * skipWhitespace()
 
@@ -232,18 +244,14 @@ export default function *tokenize(text : string) : Generator<Token, void> {
             case '\'':
             case '`':
             case '"': {
-                const begin = location()
-                const value = (yield * scanString(x)).join(' ')
-                const end = location()
+                const words = yield * scanString(x)
 
-                yield new Identifier({ value, begin, end })
+                yield new Identifier({ words })
             } break
             default: {
-                const begin = location()
-                const value = (yield * scanWord()).join(' ')
-                const end = location()
+                const words = yield * scanWord()
 
-                yield new Identifier({ value, begin, end })
+                yield new Identifier({ words })
             }
         }
     }

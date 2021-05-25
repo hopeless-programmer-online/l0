@@ -2,7 +2,6 @@ import { Declaration, Name, ReferenceTarget, Execution, Inputs, Command, Paramet
 import Commands from './front/commands'
 import ExplicitParameter from './front/explicit-parameter'
 import ImplicitParameter from './front/implicit-parameter'
-import Output from './front/output'
 import Outputs from './front/outputs'
 import Parameters from './front/parameters'
 import Program from './front/program'
@@ -104,7 +103,7 @@ export default function parse(source : Generator<Token> | string) {
 
         if (token instanceof RoundClosing) return []
         else if (token instanceof Identifier) {
-            return parseParametersContinue(token.value)
+            return parseParametersContinue(token.string)
         }
         else {
             throw new Error('Parameters expected.')
@@ -122,7 +121,7 @@ export default function parse(source : Generator<Token> | string) {
 
                 if (!(token instanceof Identifier)) throw new Error('Identifier expected')
 
-                parameters.push(token.value)
+                parameters.push(token.string)
             }
             else {
                 throw new Error('Parameters expected.')
@@ -143,7 +142,7 @@ export default function parse(source : Generator<Token> | string) {
             if (nesting <= 0) {
                 if (token === null) {
                     const command = new Execution({
-                        target : scope.get(first.value),
+                        target : scope.get(first.string),
                         inputs : Inputs.from(...parameters.map(x => scope.get(x))),
                     })
 
@@ -153,7 +152,7 @@ export default function parse(source : Generator<Token> | string) {
             else {
                 if (token instanceof CurlyClosing) {
                     const command = new Execution({
-                        target : scope.get(first.value),
+                        target : scope.get(first.string),
                         inputs : Inputs.from(...parameters.map(x => scope.get(x))),
                     })
 
@@ -165,7 +164,7 @@ export default function parse(source : Generator<Token> | string) {
 
             if (token instanceof Identifier) {
                 const command = new Execution({
-                    target : scope.get(first.value),
+                    target : scope.get(first.string),
                     inputs : Inputs.from(...parameters.map(x => scope.get(x))),
                 })
 
@@ -177,7 +176,7 @@ export default function parse(source : Generator<Token> | string) {
                 ++nesting
 
                 const command = new Declaration({
-                    name : Name.from(first.value),
+                    name : Name.from(first.string),
                 })
 
                 scope = Scope.from(command, scope)
@@ -212,9 +211,9 @@ export default function parse(source : Generator<Token> | string) {
 
             const parameters = parseParametersStart()
             const command = new Execution({
-                target : scope.get(callTarget.value),
+                target : scope.get(callTarget.string),
                 inputs : Inputs.from(...parameters.map(x => scope.get(x))),
-                outputs : Outputs.from(first.value),
+                outputs : Outputs.from(first.string),
             })
 
             for (const x of command.outputs) scope = Scope.from(x, scope)
@@ -222,14 +221,14 @@ export default function parse(source : Generator<Token> | string) {
             return { end : false, commands : [ command ], scope }
         }
         else if (token instanceof Comma) {
-            const outputs = [ first.value ]
+            const outputs = [ first.string ]
 
             while (true) {
                 move()
 
                 if (!(token instanceof Identifier)) throw new Error('Expecting identifier.')
 
-                outputs.push(token.value)
+                outputs.push(token.string)
                 move()
 
                 if (token instanceof Colon) break
@@ -248,7 +247,7 @@ export default function parse(source : Generator<Token> | string) {
 
             const inputs = parseParametersStart()
             const command = new Execution({
-                target : scope.get(callTarget.value),
+                target : scope.get(callTarget.string),
                 inputs : Inputs.from(...inputs.map(x => scope.get(x))),
                 outputs : Outputs.from(...outputs),
             })

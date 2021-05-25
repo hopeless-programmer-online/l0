@@ -1,3 +1,6 @@
+export { default as Word } from './text/word'
+export { default as PlainWord } from './text/plain-word'
+export { default as QuotedWord } from './text/quoted-word'
 export { default as Token } from './text/token'
 export { default as Comment } from './text/comment'
 export { default as Identifier } from './text/identifier'
