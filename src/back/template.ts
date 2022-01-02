@@ -3,9 +3,11 @@ export default class Template {
         return new Template({ targets })
     }
 
+    public readonly comment : string
     public readonly targets : number[]
 
-    public constructor({ targets } : { targets : number[] }) {
+    public constructor({ comment = ``, targets } : { comment? : string, targets : number[] }) {
+        this.comment = comment
         this.targets = targets
     }
 }

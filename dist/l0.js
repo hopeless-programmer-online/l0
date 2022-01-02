@@ -621,7 +621,8 @@ var front = /*#__PURE__*/Object.freeze({
 });
 
 class Template {
-    constructor({ targets }) {
+    constructor({ comment = ``, targets }) {
+        this.comment = comment;
         this.targets = targets;
     }
     static from(...targets) {
@@ -1123,8 +1124,13 @@ function translate(program) {
                 const superIndex = targets.indexOf(program.parameters.super);
                 if (superIndex < 0)
                     throw new Error; // @todo
-                const template = Template.from(superIndex + 1, // add 1 to compensate absence of "self" in targets
-                selfIndex);
+                const template = new Template({
+                    comment: `Super caller`,
+                    targets: [
+                        superIndex + 1,
+                        selfIndex, // no need to compensate self
+                    ],
+                });
                 const placeholder = internals.find(x => x instanceof ProgramLoopTemplate && x.program === program);
                 if (!placeholder)
                     throw new Error; // @todo
@@ -1144,15 +1150,19 @@ function translate(program) {
                 const thenIndex = targets.findIndex(x => x === then);
                 if (thenIndex < 0)
                     throw new Error; // @todo
-                const template = Template.from(
-                // pass control to bind program
-                bind + 1, // add 1 to compensate absence of "self" in targets
-                // pass index of next command template as continuation
-                thenIndex + 1, // add 1 to compensate absence of "self" in targets
-                // pass index of target program template
-                target + 1, // add 1 to compensate absence of "self" in targets
-                // pass rest of the parameters
-                ...targets.map((_, i) => i + 1));
+                const template = new Template({
+                    comment: `${command.name.text} declaration`,
+                    targets: [
+                        // pass control to bind program
+                        bind + 1,
+                        // pass index of next command template as continuation
+                        thenIndex + 1,
+                        // pass index of target program template
+                        target + 1,
+                        // pass rest of the parameters
+                        ...targets.map((_, i) => i + 1), // add 1 to compensate absence of "self" in targets
+                    ],
+                });
                 const placeholder = internals.find(x => x instanceof DeclarationBindingTemplate && x.command === command);
                 if (!placeholder)
                     throw new Error; // @todo
@@ -1179,15 +1189,19 @@ function translate(program) {
                 const continuationIndex = targets.findIndex(x => x === continuation);
                 if (continuationIndex < 0)
                     throw new Error; // @todo
-                const continuationBindingTemplate = Template.from(
-                // pass control to bind program
-                bind + 1, // add 1 to compensate absence of "self" in targets
-                // pass index of control passing template which will accept binded continuation as parameter
-                then + 1, // add 1 to compensate absence of "self" in targets
-                // pass index of the next command template to execute
-                continuationIndex + 1, // add 1 to compensate absence of "self" in targets
-                // pass rest of the parameters
-                ...targets.map((_, i) => i + 1));
+                const continuationBindingTemplate = new Template({
+                    comment: `Continuation binding for ${command.target.name.text}`,
+                    targets: [
+                        // pass control to bind program
+                        bind + 1,
+                        // pass index of control passing template which will accept binded continuation as parameter
+                        then + 1,
+                        // pass index of the next command template to execute
+                        continuationIndex + 1,
+                        // pass rest of the parameters
+                        ...targets.map((_, i) => i + 1), // add 1 to compensate absence of "self" in targets
+                    ],
+                });
                 const continuationBindingPlaceholder = internals.find(x => x instanceof ExecutionContinuationBindingTemplate && x.command === command);
                 if (!continuationBindingPlaceholder)
                     throw new Error; // @todo
@@ -1197,18 +1211,22 @@ function translate(program) {
                 const target = targets.findIndex(x => x === command.target.target);
                 if (target < 0)
                     throw new Error; // @todo
-                const controlPassTemplate = Template.from(
-                // pass control to target
-                target + 1, // add 1 to compensate absence of "self" in targets
-                // pass index of continuation which will be on top of the buffer after binding as super
-                targets.length + 1, // add 1 to compensate absence of "self" in targets
-                // pass execution inputs
-                ...[...command.inputs].map(({ target }) => {
-                    const index = targets.indexOf(target);
-                    if (index < 0)
-                        throw new Error; // @todo
-                    return index + 1; // add 1 to compensate absence of "self" in targets
-                }));
+                const controlPassTemplate = new Template({
+                    comment: `Control passing to ${command.target.name.text}`,
+                    targets: [
+                        // pass control to target
+                        target + 1,
+                        // pass index of continuation which will be on top of the buffer after binding as super
+                        targets.length + 1,
+                        // pass execution inputs
+                        ...[...command.inputs].map(({ target }) => {
+                            const index = targets.indexOf(target);
+                            if (index < 0)
+                                throw new Error; // @todo
+                            return index + 1; // add 1 to compensate absence of "self" in targets
+                        }),
+                    ],
+                });
                 const controlPassPlaceholder = internals.find(x => x instanceof ExecutionControlPassingTemplate && x.command === command);
                 if (!controlPassPlaceholder)
                     throw new Error; // @todo
