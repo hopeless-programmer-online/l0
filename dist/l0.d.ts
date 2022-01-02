@@ -343,8 +343,10 @@ declare namespace front_d {
 
 declare class Template {
     static from(...targets: number[]): Template;
+    readonly comment: string;
     readonly targets: number[];
-    constructor({ targets }: {
+    constructor({ comment, targets }: {
+        comment?: string;
         targets: number[];
     });
 }
