@@ -9,7 +9,13 @@ function run(source : string, ...params : any[]) {
         ...params,
     ] })
 
-    while (!(machine.instruction instanceof TerminalInstruction)) machine.step()
+    while (true) {
+        const { instruction } = machine
+
+        if (instruction instanceof TerminalInstruction) break
+
+        machine.step()
+    }
 }
 
 it('should translate empty string without errors', () => {
@@ -108,5 +114,24 @@ it('should translate return from outer program', () => {
         }
 
         f()
+    `)).not.toThrow()
+})
+it('should translate call from other program', () => {
+    expect(() => run(`
+        f() {
+        }
+        g() {
+            f()
+        }
+        g()
+    `)).not.toThrow()
+})
+it('should translate call of one of two programs', () => {
+    expect(() => run(`
+        f() {
+        }
+        g() {
+        }
+        g()
     `)).not.toThrow()
 })
