@@ -665,7 +665,8 @@ function callback(buffer) {
         template: declarationTemplate,
         buffer: globals,
     });
-    declaration.buffer.push(declaration);
+    // modifies declaration.buffer
+    globals.push(declaration);
     const nextTemplate = buffer[1];
     if (!(nextTemplate instanceof Template))
         throw new Error; // @todo
@@ -820,7 +821,11 @@ class Machine {
                 ...instruction.buffer,
                 ...buffer.slice(1),
             ];
-            this.buffer = instruction.template.targets.map(i => intermediate[i]);
+            this.buffer = instruction.template.targets.map(i => {
+                if (i >= intermediate.length)
+                    throw new Error;
+                return intermediate[i];
+            });
         }
         else if (instruction instanceof ExternalInstruction) {
             this.buffer = instruction.callback(buffer);
@@ -1117,7 +1122,7 @@ function translate(program) {
             throw new Error; // todo
         return index;
     }
-    function transform(program, targets) {
+    function transform(program, declaration, targets) {
         function transformCommands(commands, targets) {
             if (commands.length <= 0) {
                 const selfIndex = 0;
@@ -1125,7 +1130,7 @@ function translate(program) {
                 if (superIndex < 0)
                     throw new Error; // @todo
                 const template = new Template({
-                    comment: `Super caller`,
+                    comment: `Super caller${declaration ? ` for ${declaration.name.text}` : ``}`,
                     targets: [
                         superIndex + 1,
                         selfIndex, // no need to compensate self
@@ -1141,7 +1146,7 @@ function translate(program) {
             }
             const command = commands[0];
             if (command instanceof Declaration) {
-                transform(command.program, [...targets, command, ...command.program.parameters]);
+                transform(command.program, command, [...targets, command, ...command.program.parameters]);
                 const bind = targets.findIndex(x => x instanceof BindProgram);
                 if (bind < 0)
                     throw new Error; // @todo
@@ -1190,7 +1195,7 @@ function translate(program) {
                 if (continuationIndex < 0)
                     throw new Error; // @todo
                 const continuationBindingTemplate = new Template({
-                    comment: `Continuation binding for ${command.target.name.text}`,
+                    comment: `Continuation binding for ${command.target.name.text}()`,
                     targets: [
                         // pass control to bind program
                         bind + 1,
@@ -1198,7 +1203,7 @@ function translate(program) {
                         then + 1,
                         // pass index of the next command template to execute
                         continuationIndex + 1,
-                        // pass rest of the parameters
+                        // pass rest of the parameters (context saving)
                         ...targets.map((_, i) => i + 1), // add 1 to compensate absence of "self" in targets
                     ],
                 });
@@ -1212,11 +1217,11 @@ function translate(program) {
                 if (target < 0)
                     throw new Error; // @todo
                 const controlPassTemplate = new Template({
-                    comment: `Control passing to ${command.target.name.text}`,
+                    comment: `Control passing for ${command.target.name.text}()`,
                     targets: [
                         // pass control to target
                         target + 1,
-                        // pass index of continuation which will be on top of the buffer after binding as super
+                        // pass continuation which will be on top of the buffer after binding
                         targets.length + 1,
                         // pass execution inputs
                         ...[...command.inputs].map(({ target }) => {
@@ -1237,9 +1242,9 @@ function translate(program) {
             }
             throw new Error; // @todo
         }
-        transformCommands([...program.commands], [...targets, ...program.parameters]);
+        transformCommands([...program.commands], [...targets]);
     }
-    transform(program, [...internals]);
+    transform(program, null, [...internals, ...program.parameters]);
     const entry = findEntry(program, internals);
     const entryTemplate = lookup.get(entry);
     if (!entryTemplate)

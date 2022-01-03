@@ -18,6 +18,7 @@ export default [
             format: 'cjs',
         },
         plugins: [ shebang() ],
+        external: [ 'path', 'fs' ],
     },
     {
         input: '.ts/l0.d.ts',

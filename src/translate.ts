@@ -73,7 +73,7 @@ export default function translate(program : Program) {
 
         return index
     }
-    function transform(program : Program, targets : BufferTargets) {
+    function transform(program : Program, declaration : Declaration | null, targets : BufferTargets) {
         function transformCommands(commands : Command[], targets : BufferTargets) {
             if (commands.length <= 0) {
                 const selfIndex = 0
@@ -82,7 +82,7 @@ export default function translate(program : Program) {
                 if (superIndex < 0) throw new Error // @todo
 
                 const template = new Template({
-                    comment : `Super caller`,
+                    comment : `Super caller${declaration ? ` for ${declaration.name.text}`: ``}`,
                     targets : [
                         superIndex + 1, // add 1 to compensate absence of "self" in targets
                         selfIndex, // no need to compensate self
@@ -101,7 +101,7 @@ export default function translate(program : Program) {
             const command = commands[0]
 
             if (command instanceof Declaration) {
-                transform(command.program, [ ...targets, command, ...command.program.parameters ])
+                transform(command.program, command, [ ...targets, command, ...command.program.parameters ])
 
                 const bind = targets.findIndex(x => x instanceof BindProgram)
 
@@ -160,7 +160,7 @@ export default function translate(program : Program) {
                 if (continuationIndex < 0) throw new Error // @todo
 
                 const continuationBindingTemplate = new Template({
-                    comment : `Continuation binding for ${command.target.name.text}`,
+                    comment : `Continuation binding for ${command.target.name.text}()`,
                     targets : [
                         // pass control to bind program
                         bind + 1, // add 1 to compensate absence of "self" in targets
@@ -168,7 +168,7 @@ export default function translate(program : Program) {
                         then + 1, // add 1 to compensate absence of "self" in targets
                         // pass index of the next command template to execute
                         continuationIndex + 1, // add 1 to compensate absence of "self" in targets
-                        // pass rest of the parameters
+                        // pass rest of the parameters (context saving)
                         ...targets.map((_, i) => i + 1), // add 1 to compensate absence of "self" in targets
                     ],
                 })
@@ -185,11 +185,11 @@ export default function translate(program : Program) {
                 if (target < 0) throw new Error // @todo
 
                 const controlPassTemplate = new Template({
-                    comment : `Control passing to ${command.target.name.text}`,
+                    comment : `Control passing for ${command.target.name.text}()`,
                     targets : [
                         // pass control to target
                         target + 1, // add 1 to compensate absence of "self" in targets
-                        // pass index of continuation which will be on top of the buffer after binding as super
+                        // pass continuation which will be on top of the buffer after binding
                         targets.length + 1, // add 1 to compensate absence of "self" in targets
                         // pass execution inputs
                         ...[ ...command.inputs ].map(({ target }) => {
@@ -215,10 +215,10 @@ export default function translate(program : Program) {
             throw new Error // @todo
         }
 
-        transformCommands([ ...program.commands ], [ ...targets, ...program.parameters ])
+        transformCommands([ ...program.commands ], [ ...targets ])
     }
 
-    transform(program, [ ...internals ])
+    transform(program, null, [ ...internals, ...program.parameters ])
 
     const entry = findEntry(program, internals)
     const entryTemplate = lookup.get(entry)
@@ -229,7 +229,7 @@ export default function translate(program : Program) {
 
     return new InternalInstruction({
         template : entryTemplate,
-        buffer : [
+        buffer   : [
             ...internals.map(x => {
                 if (x instanceof BindProgram) return bind
                 if (!(x instanceof TemplatePlaceholder)) throw new Error // @todo

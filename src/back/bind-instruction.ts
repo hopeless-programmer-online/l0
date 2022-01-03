@@ -15,19 +15,20 @@ export function callback(buffer : any[]) {
 
     const globals = buffer.slice(3)
     const declaration = new Internal({
-        template: declarationTemplate,
-        buffer : globals,
+        template : declarationTemplate,
+        buffer   : globals,
     })
 
-    declaration.buffer.push(declaration)
+    // modifies declaration.buffer
+    globals.push(declaration)
 
     const nextTemplate = buffer[1]
 
     if (!(nextTemplate instanceof Template)) throw new Error // @todo
 
     const next = new Internal({
-        template: nextTemplate,
-        buffer : [ ...globals ], // already contains declaration via push
+        template : nextTemplate,
+        buffer   : [ ...globals ], // already contains declaration via push
     })
 
     return [

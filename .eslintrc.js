@@ -1,6 +1,6 @@
-const always = `always`;
-const never = `never`;
-const error = `error`;
+const always = `always`
+const never = `never`
+const error = `error`
 
 module.exports = {
     env           : {
@@ -71,8 +71,12 @@ module.exports = {
             error,
             never,
         ],
+        [`semi`] : [
+            error,
+            never,
+        ],
         // [`lines-between-class-members`] : [
         //     /** @see https://eslint.org/docs/rules/lines-between-class-members */
         // ],
     },
-};
+}
