@@ -785,11 +785,7 @@ class Machine {
                 ...instruction.buffer,
                 ...buffer.slice(1),
             ];
-            this.buffer = instruction.template.targets.map(i => {
-                if (i >= intermediate.length)
-                    throw new Error;
-                return intermediate[i];
-            });
+            this.buffer = instruction.template.targets.map(i => intermediate[i]);
         }
         else if (instruction instanceof ExternalInstruction) {
             this.buffer = instruction.callback(buffer);
