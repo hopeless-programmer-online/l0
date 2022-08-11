@@ -130,3 +130,44 @@ export default class Filler {
         }
     }
 }
+
+/*
+typeof()
+
+Object()
+Array()
+
+get(target, key)
+set(target, key, value)
+
+!
+&&
+||
+
+==
+===
+>
+>=
+<
+<=
+
++
+-
+*
+/
+%
+**
+//
+
+Array.length(target)
+Array.push(target, ...values)
+Array.pop(target)
+Array.unshift(target, ...values)
+Array.shift(target)
+Array.slice(target, begin, end)
+Array.splice(target, begin, end)
+
+Object.entries(target)
+Object.keys(target)
+Object.values(target)
+*/

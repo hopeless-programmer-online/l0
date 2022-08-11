@@ -1,10 +1,10 @@
-import { Command, Declaration, Execution, Program, ReferenceTarget } from './front'
+import { Command, Declaration, Execution, Name, Program, ReferenceTarget } from './front'
 import InternalInstruction from './back/internal-instruction'
 import Template from './back/template'
 import TerminalInstruction from './back/terminal-instruction'
 import BindInstruction from './back/bind-instruction'
 
-export default function translate(program : Program) {
+export default function translate<Value_, Template_, Instruction_>(program : Program, filler : Filler<Value_, Template_, Instruction_>) : Machine {
     const internals : Placeholder[] = [
         new BindProgram,
     ]
@@ -32,7 +32,7 @@ export default function translate(program : Program) {
 
     collect(program)
 
-    const lookup = new Map<TemplatePlaceholder, Template>()
+    const lookup = new Map<TemplatePlaceholder, Template_>()
 
     function findEntry(program : Program, targets : BufferTargets) {
         const { commands } = program
@@ -81,7 +81,7 @@ export default function translate(program : Program) {
 
                 if (superIndex < 0) throw new Error // @todo
 
-                const template = new Template({
+                const template = filler.createTemplate(/* new Template(*/ {
                     comment : `Super caller${declaration ? ` for ${declaration.name.text}`: ``}`,
                     targets : [
                         superIndex + 1, // add 1 to compensate absence of "self" in targets
@@ -114,7 +114,7 @@ export default function translate(program : Program) {
 
                 if (thenIndex < 0) throw new Error // @todo
 
-                const template = new Template({
+                const template = filler.createTemplate(/* new Template( */{
                     comment : `${command.name.text} declaration`,
                     targets : [
                         // pass control to bind program
@@ -159,7 +159,7 @@ export default function translate(program : Program) {
 
                 if (continuationIndex < 0) throw new Error // @todo
 
-                const continuationBindingTemplate = new Template({
+                const continuationBindingTemplate = filler.createTemplate(/* new Template( */{
                     comment : `Continuation binding for ${command.target.name.text}()`,
                     targets : [
                         // pass control to bind program
@@ -184,7 +184,7 @@ export default function translate(program : Program) {
 
                 if (target < 0) throw new Error // @todo
 
-                const controlPassTemplate = new Template({
+                const controlPassTemplate = filler.createTemplate(/* new Template( */{
                     comment : `Control passing for ${command.target.name.text}()`,
                     targets : [
                         // pass control to target
@@ -225,9 +225,9 @@ export default function translate(program : Program) {
 
     if (!entryTemplate) throw new Error // @todo
 
-    const bind = new BindInstruction
+    const bind = filler.bind // new BindInstruction
 
-    return new InternalInstruction({
+    const entryInstruction = filler.createInstruction(/* new InternalInstruction( */{
         template : entryTemplate,
         buffer   : [
             ...internals.map(x => {
@@ -240,9 +240,31 @@ export default function translate(program : Program) {
 
                 return template
             }),
-            new TerminalInstruction,
         ],
     })
+
+    const machine = filler.createMachine({ buffer : [
+        entryInstruction,
+        filler.terminal, // new TerminalInstruction,
+        ...program.parameters.explicit.map(({ name }) => filler.createNamed(name)),
+    ] })
+
+    return machine
+}
+
+export interface Machine {
+    get halted() : boolean
+
+    step() : void
+}
+
+export abstract class Filler<Value_, Template_, Instruction_> {
+    public abstract get bind() : Instruction_
+    public abstract get terminal() : Instruction_
+    public abstract createTemplate(params : { comment : string, targets : number[] }) : Template_
+    public abstract createInstruction(params : { template : Template_, buffer : (Value_ | Instruction_ | Template_)[] }) : Instruction_
+    public abstract createNamed(name : Name) : Value_ | Instruction_ | Template_
+    public abstract createMachine(params : { buffer : (Value_ | Instruction_ | Template_)[] }) : Machine
 }
 
 class Placeholder {}
