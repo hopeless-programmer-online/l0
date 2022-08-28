@@ -14,19 +14,25 @@ interface Buffer {
 interface Table {
     halt : boolean
 
-    not2() : boolean
-    isEqual2(other : Table) : boolean
+    toBoolean2() : boolean
+    not2() : Table
+    and2(other : Table) : Table
+    or2(other : Table) : Table
+    isEqual2(other : Table) : Table
+    isNotEqual2(other : Table) : Table
+    toNumber2() : number
+    add2(other : Table) : Table
     toString2() : string
 
     // toNothing(buffer : Buffer) : Buffer
-    // toBoolean(buffer : Buffer) : Buffer
-    // toNumber(buffer : Buffer) : Buffer
+    toBoolean(buffer : Buffer) : Buffer
+    toNumber(buffer : Buffer) : Buffer
     not(buffer : Buffer) : Buffer
-    // and(buffer : Buffer) : Buffer
-    // or(buffer : Buffer) : Buffer
+    and(buffer : Buffer) : Buffer
+    or(buffer : Buffer) : Buffer
     isEqual(buffer : Buffer) : Buffer
-    // isNotEqual(buffer : Buffer) : Buffer
-    // add(buffer : Buffer) : Buffer
+    isNotEqual(buffer : Buffer) : Buffer
+    add(buffer : Buffer) : Buffer
     // subtract(buffer : Buffer) : Buffer
     // multiply(buffer : Buffer) : Buffer
     // divide(buffer : Buffer) : Buffer
@@ -37,23 +43,23 @@ interface Table {
 }
 
 type Context = {
-    // // nothing
+    // nothing
     // Nothing : Table
-    // nothing : Table
+    nothing : Table
 
-    // // logic
-    // Boolean : Table
+    // logic
+    Boolean : Table
     true : Table
     false : Table
     not : Table
-    // and : Table
-    // or : Table
+    and : Table
+    or : Table
     [`==`] : Table
-    // [`!=`] : Table
+    [`!=`] : Table
 
-    // // arithmetic
-    // Number : Table
-    // [`+`] : Table
+    // arithmetic
+    Number : Table
+    [`+`] : Table
     // [`-`] : Table
     // [`*`] : Table
     // [`/`] : Table
@@ -104,19 +110,19 @@ export class Filler extends TranslationFiller<Table, Table, Table> {
 
         switch (text) {
             // case `Nothing`: return context.Nothing
-            // case `Nothing`: return context.Nothing
+            case `nothing`: return context.nothing
 
-            // case `Boolean`: return context.Boolean
+            case `Boolean`: return context.Boolean
             case `true`: return context.true
             case `false`: return context.false
             case `not`: return context.not
-            // case `and`: return context.and
-            // case `or`: return context.or
+            case `and`: return context.and
+            case `or`: return context.or
             case `==`: return context['==']
-            // case `!=`: return context['!=']
+            case `!=`: return context['!=']
 
-            // case `Number`: return context.Number
-            // case `+`: return context[`+`]
+            case `Number`: return context.Number
+            case `+`: return context[`+`]
             // case `-`: return context[`-`]
             // case `*`: return context[`*`]
             // case `/`: return context[`/`]
@@ -175,57 +181,92 @@ function createContext() : Context {
     }
     class Table_ implements Table {
         public halt = false
-        // public readonly entries : { key : Table_, value : Table_ }[] = []
 
-        // private uniformCall(target : Table_, buffer : Buffer) {
-        //     for (const { key, value } of this.entries) if (key.isEqual(target)) {
-        //         return value.call(buffer)
-        //     }
-
-        //     throw new Error // @todo
-        // }
-
-        public not2() : boolean {
-            return !this
+        public toBoolean2() : boolean {
+            return true
         }
-        public isEqual2(other : Table) : boolean {
-            return this === other
+        public not2() {
+            const value = this.toBoolean2()
+
+            return new Boolean_({ value })
+        }
+        public and2(other : Table) {
+            const left = this.toBoolean2()
+            const right = other.toBoolean2()
+            const value = left && right
+
+            return new Boolean_({ value })
+        }
+        public or2(other : Table) {
+            const left = this.toBoolean2()
+            const right = other.toBoolean2()
+            const value = left || right
+
+            return new Boolean_({ value })
+        }
+        public isEqual2(other : Table) : Table {
+            const value = this === other
+
+            return new Boolean_({ value })
+        }
+        public isNotEqual2(other : Table) : Table {
+            const value = this !== other
+
+            return new Boolean_({ value })
+        }
+        public toNumber2() : number {
+            return 1
+        }
+        public add2(other : Table) {
+            const value = this.toNumber2() + other.toNumber2()
+
+            return new Number_({ value })
         }
         public toString2() {
             return colorize(`table`, Colors.fgGreen)
         }
 
-        // public toNothing(buffer : Buffer) : Buffer {
-        //     return this.uniformCall(Nothing, buffer)
-        // }
-        // public toBoolean(buffer : Buffer) : Buffer {
-        //     return this.uniformCall(Boolean, buffer)
-        // }
+        public toBoolean(buffer : Buffer) : Buffer {
+            const [ next ] = buffer
+
+            return Buffer_.from([ next, next, new Boolean_({ value : this.toBoolean2() }) ])
+        }
+
         public not(buffer : Buffer_) : Buffer {
             const [ next ] = buffer
 
-            return Buffer_.from([ next, next, this.not2() ? true_ : false_ ])
+            return Buffer_.from([ next, next, this.not2() ])
         }
-        // public and(buffer : Buffer_) : Buffer {
-        //     return this.uniformCall(and, buffer)
-        // }
-        // public or(buffer : Buffer_) : Buffer {
-        //     return this.uniformCall(or, buffer)
-        // }
+        public and(buffer : Buffer_) : Buffer {
+            const [ next, other ] = buffer
+
+            return Buffer_.from([ next, next, this.and2(other) ])
+        }
+        public or(buffer : Buffer_) : Buffer {
+            const [ next, other ] = buffer
+
+            return Buffer_.from([ next, next, this.or2(other) ])
+        }
         public isEqual(buffer : Buffer_) : Buffer {
             const [ next, other ] = buffer
 
-            return Buffer_.from([ next, next, this.isEqual2(other) ? true_ : false_ ])
+            return Buffer_.from([ next, next, this.isEqual2(other) ])
         }
-        // public isNotEqual(buffer : Buffer_) : Buffer {
-        //     return this.uniformCall(or, buffer)
-        // }
-        // public toNumber(buffer : Buffer) : Buffer {
-        //     return this.uniformCall(Number, buffer)
-        // }
-        // public add(buffer : Buffer) : Buffer {
-        //     return this.uniformCall(add, buffer)
-        // }
+        public isNotEqual(buffer : Buffer_) : Buffer {
+            const [ next, other ] = buffer
+
+            return Buffer_.from([ next, next, this.isNotEqual2(other) ])
+        }
+        public toNumber(buffer : Buffer) : Buffer {
+            const [ next ] = buffer
+
+            return Buffer_.from([ next, next, new Number_({ value : this.toNumber2() }) ])
+        }
+        public add(buffer : Buffer) : Buffer {
+            const [ next, other ] = buffer
+
+            return Buffer_.from([ next, next, this.add2(other) ])
+        }
         // public subtract(buffer : Buffer) : Buffer {
         //     return this.uniformCall(subtract, buffer)
         // }
@@ -249,26 +290,25 @@ function createContext() : Context {
         }
     }
     class Nothing_ extends Table_ {
-        public not2() : boolean {
-            return !undefined
+        public toBoolean2() {
+            return false
         }
-        public isEqual2(other : Table) : boolean {
-            return other instanceof Nothing_
+        public toNumber2() {
+            return 0
+        }
+        public not2() {
+            const value = !undefined
+
+            return new Boolean_({ value })
+        }
+        public isEqual2(other : Table) {
+            const value = other instanceof Nothing_
+
+            return new Boolean_({ value })
         }
         public toString2() {
             return colorize(`nothing`, Colors.fgMagenta)
         }
-    //     public toNothing() {
-    //         return this
-    //     }
-    //     public toBoolean() {
-    //         return false_
-    //     }
-    //     public isEqual(other: Table_) {
-    //         return other instanceof Nothing_
-    //             ? true_
-    //             : false_
-    //     }
     }
     class Primitive_<Value> extends Table_ {
         public value : Value
@@ -280,53 +320,71 @@ function createContext() : Context {
         }
     }
     class Boolean_ extends Primitive_<boolean> {
-        public not2() : boolean {
-            return !this.value
+        public toBoolean2() {
+            return this.value
         }
-        public isEqual2(other : Table) : boolean {
-            return other instanceof Boolean_ && other.value === this.value
+        public not2() {
+            const value = !this.value
+
+            return new Boolean_({ value })
         }
+        public and2(other : Table) {
+            const value : boolean = other instanceof Boolean_ && other.value && this.value
+
+            return new Boolean_({ value })
+        }
+        public or2(other : Table) {
+            const value : boolean = other instanceof Boolean_ && (other.value || this.value)
+
+            return new Boolean_({ value })
+        }
+        public isEqual2(other : Table) {
+            const value : boolean = other instanceof Boolean_ && other.value === this.value
+
+            return new Boolean_({ value })
+        }
+        public isNotEqual2(other : Table) {
+            const value : boolean = other instanceof Boolean_ && other.value !== this.value
+
+            return new Boolean_({ value })
+        }
+
+        public toNumber2() {
+            return this.value ? 1 : 0
+        }
+
         public toString2() {
             return colorize(`${this.value}`, Colors.fgBlue)
         }
-
-        // public toBoolean() {
-        //     return this
-        // }
-        // public not() {
-        //     return new Boolean_({ value : !this.value })
-        // }
-        // public and(other : Boolean_) {
-        //     return new Boolean_({ value : this.value && other.value })
-        // }
-        // public or(other : Boolean_) {
-        //     return new Boolean_({ value : this.value || other.value })
-        // }
     }
     class Number_ extends Primitive_<number> {
-        public not2() : boolean {
-            return !this.value
+        public toBoolean2() {
+            return this.value !== 0 ? true : false
         }
-        public isEqual2(other : Table) : boolean {
-            return other instanceof Number_ && other.value === this.value
+        public not2() {
+            const value = !this.value
+
+            return new Boolean_({ value })
         }
+        public isEqual2(other : Table) {
+            const value : boolean = other instanceof Number_ && other.value === this.value
+
+            return new Boolean_({ value })
+        }
+        public isNotEqual2(other : Table) {
+            const value : boolean = other instanceof Number_ && other.value !== this.value
+
+            return new Boolean_({ value })
+        }
+
+        public toNumber2() {
+            return this.value
+        }
+
         public toString2() {
             return colorize(`${this.value}`, Colors.fgYellow)
         }
 
-        // public toBoolean() {
-        //     return this.value != 0
-        //         ? true_
-        //         : false_
-        // }
-        // public toNumber() {
-        //     return this
-        // }
-        // public isEqual(other: Table) {
-        //     return other instanceof Number_ && other.value === this.value
-        //         ? true_
-        //         : false_
-        // }
         // public add([ op, next, other ] : Buffer_) {
         //     const casted = other.toNumber()
 
@@ -459,18 +517,18 @@ function createContext() : Context {
     // const Nothing = new External_({ value : buffer => buffer.at(2).toNothing(buffer) })
     const nothing = new Nothing_
 
-    // const Boolean = new External_({ value : buffer => buffer.at(2).toBoolean(buffer) })
+    const Boolean = new External_({ value : buffer => buffer.at(1).toBoolean(buffer) })
     const true_ = new Boolean_({ value : true })
     const false_ = new Boolean_({ value : false })
-    const not = new External_({ value : buffer => buffer.at(2).not(buffer) })
-    // const and = new External_({ value : buffer => buffer.at(2).and(buffer) })
-    // const or = new External_({ value : buffer => buffer.at(2).or(buffer) })
-    // // @todo: if
-    const isEqual = new External_({ value : buffer => buffer.at(2).isEqual(buffer) })
-    // const isNotEqual = new External_({ value : buffer => buffer.at(2).isNotEqual(buffer) })
+    const not = new External_({ value : buffer => buffer.at(1).not(buffer) })
+    const and = new External_({ value : buffer => buffer.at(1).and(buffer) })
+    const or = new External_({ value : buffer => buffer.at(1).or(buffer) })
+    // @todo: if
+    const isEqual = new External_({ value : buffer => buffer.at(1).isEqual(buffer) })
+    const isNotEqual = new External_({ value : buffer => buffer.at(1).isNotEqual(buffer) })
 
-    // const Number = new External_({ value : buffer => buffer.at(2).toNumber(buffer) })
-    // const add = new External_({ value : buffer => buffer.at(2).add(buffer) })
+    const Number = new External_({ value : buffer => buffer.at(1).toNumber(buffer) })
+    const add = new External_({ value : buffer => buffer.at(1).add(buffer) })
     // const subtract = new External_({ value : buffer => buffer.at(2).add(buffer) })
     // const multiply = new External_({ value : buffer => buffer.at(2).multiply(buffer) })
     // const divide = new External_({ value : buffer => buffer.at(2).divide(buffer) })
@@ -516,19 +574,19 @@ function createContext() : Context {
 
     return {
         // Nothing,
-        // nothing,
+        nothing,
 
-        // Boolean,
+        Boolean,
         true : true_,
         false : false_,
         not,
-        // and,
-        // or,
+        and,
+        or,
         [`==`] : isEqual,
-        // [`!=`] : isNotEqual,
+        [`!=`] : isNotEqual,
 
-        // Number,
-        // [`+`] : add,
+        Number,
+        [`+`] : add,
         // [`-`] : subtract,
         // [`*`] : multiply,
         // [`/`] : divide,

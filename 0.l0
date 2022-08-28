@@ -1,0 +1,3 @@
+x : Number(true)
+
+print(x)
