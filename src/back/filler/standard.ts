@@ -4,6 +4,8 @@ import { Machine, Filler as TranslationFiller } from '../../translate'
 interface Buffer {
     [Symbol.iterator]() : Generator<Table, void>
 
+    get array() : Table[]
+
     at(index : number) : Table
     slice(begin : number) : Buffer
     push(...values : Table[]) : void
@@ -12,13 +14,17 @@ interface Buffer {
 interface Table {
     halt : boolean
 
+    not2() : boolean
+    isEqual2(other : Table) : boolean
+    toString2() : string
+
     // toNothing(buffer : Buffer) : Buffer
     // toBoolean(buffer : Buffer) : Buffer
     // toNumber(buffer : Buffer) : Buffer
-    // not(buffer : Buffer) : Buffer
+    not(buffer : Buffer) : Buffer
     // and(buffer : Buffer) : Buffer
     // or(buffer : Buffer) : Buffer
-    // isEqual(buffer : Buffer) : Buffer
+    isEqual(buffer : Buffer) : Buffer
     // isNotEqual(buffer : Buffer) : Buffer
     // add(buffer : Buffer) : Buffer
     // subtract(buffer : Buffer) : Buffer
@@ -27,7 +33,7 @@ interface Table {
     // wholeDivide(buffer : Buffer) : Buffer
     // power(buffer : Buffer) : Buffer
     // root(buffer : Buffer) : Buffer
-    call(buffer : Buffer) : Buffer
+    call(params : Buffer) : Buffer
 }
 
 type Context = {
@@ -37,12 +43,12 @@ type Context = {
 
     // // logic
     // Boolean : Table
-    // true : Table
-    // false : Table
-    // not : Table
+    true : Table
+    false : Table
+    not : Table
     // and : Table
     // or : Table
-    // [`==`] : Table
+    [`==`] : Table
     // [`!=`] : Table
 
     // // arithmetic
@@ -54,6 +60,10 @@ type Context = {
     // [`%`] : Table
     // [`**`] : Table
     // [`//`] : Table
+
+    // io
+    createNumber(value : number) : Table
+    print : Table
 
     // programs
     bind : Table
@@ -81,20 +91,28 @@ export class Filler extends TranslationFiller<Table, Table, Table> {
     public createInstruction({ template, buffer } : { template: Table; buffer: Table[] }) : Table {
         return this.context.createInstruction(template, buffer)
     }
-    public createNamed(name: Name) : Table {
+    public createNamed({ text } : Name) : Table {
         const { context } = this
 
-        switch (name.text) {
+        const number = text.match(/^(?:\d|\s)+(?:\.(?:\d|\s)+)?$/)
+
+        if (number) {
+            const value = Number(text.replace(/\s/g, ``))
+
+            return context.createNumber(value)
+        }
+
+        switch (text) {
             // case `Nothing`: return context.Nothing
             // case `Nothing`: return context.Nothing
 
             // case `Boolean`: return context.Boolean
-            // case `true`: return context.true
-            // case `false`: return context.false
-            // case `not`: return context.not
+            case `true`: return context.true
+            case `false`: return context.false
+            case `not`: return context.not
             // case `and`: return context.and
             // case `or`: return context.or
-            // case `==`: return context['==']
+            case `==`: return context['==']
             // case `!=`: return context['!=']
 
             // case `Number`: return context.Number
@@ -106,12 +124,14 @@ export class Filler extends TranslationFiller<Table, Table, Table> {
             // case `**`: return context[`**`]
             // case `//`: return context[`//`]
 
+            case `print`: return context.print
+
             // case `bind`: return context.bind
 
             // case `super`: return context.super
         }
 
-        throw new Error // @todo
+        throw new Error(`Can't fill name with text "${text}"`)
     }
     public createMachine({ buffer }: { buffer: Table[] }) {
         return this.context.createMachine(buffer)
@@ -124,29 +144,33 @@ function createContext() : Context {
             return new Buffer_({ array })
         }
 
-        private array : Table[]
+        private _array : Table[]
 
         public constructor({ array } : { array : Table[] }) {
-            this.array = array
+            this._array = array
+        }
+
+        public get array() {
+            return this._array
         }
 
         public * [Symbol.iterator]() : Generator<Table> {
-            for (const parameter of this.array) yield parameter
+            for (const parameter of this._array) yield parameter
 
             while (true) yield nothing
         }
 
         public at(index : number) {
-            return this.array[index] || nothing
+            return this._array[index] || nothing
         }
         public slice(begin : number) {
-            return Buffer_.from(this.array.slice(begin))
+            return Buffer_.from(this._array.slice(begin))
         }
         public push(...values: Table[]) {
-            this.array.push(...values)
+            this._array.push(...values)
         }
         public unshift(...values: Table[]) {
-            this.array.unshift(...values)
+            this._array.unshift(...values)
         }
     }
     class Table_ implements Table {
@@ -161,24 +185,38 @@ function createContext() : Context {
         //     throw new Error // @todo
         // }
 
+        public not2() : boolean {
+            return !this
+        }
+        public isEqual2(other : Table) : boolean {
+            return this === other
+        }
+        public toString2() {
+            return colorize(`table`, Colors.fgGreen)
+        }
+
         // public toNothing(buffer : Buffer) : Buffer {
         //     return this.uniformCall(Nothing, buffer)
         // }
         // public toBoolean(buffer : Buffer) : Buffer {
         //     return this.uniformCall(Boolean, buffer)
         // }
-        // public not(buffer : Buffer) : Buffer {
-        //     return this.uniformCall(not, buffer)
-        // }
+        public not(buffer : Buffer_) : Buffer {
+            const [ next ] = buffer
+
+            return Buffer_.from([ next, next, this.not2() ? true_ : false_ ])
+        }
         // public and(buffer : Buffer_) : Buffer {
         //     return this.uniformCall(and, buffer)
         // }
         // public or(buffer : Buffer_) : Buffer {
         //     return this.uniformCall(or, buffer)
         // }
-        // public isEqual(buffer : Buffer_) : Buffer {
-        //     return this.uniformCall(or, buffer)
-        // }
+        public isEqual(buffer : Buffer_) : Buffer {
+            const [ next, other ] = buffer
+
+            return Buffer_.from([ next, next, this.isEqual2(other) ? true_ : false_ ])
+        }
         // public isNotEqual(buffer : Buffer_) : Buffer {
         //     return this.uniformCall(or, buffer)
         // }
@@ -206,11 +244,20 @@ function createContext() : Context {
         // public root(buffer : Buffer) : Buffer {
         //     return this.uniformCall(root, buffer)
         // }
-        public call(buffer : Buffer) : Buffer {
+        public call(params : Buffer) : Buffer {
             throw new Error // @todo
         }
     }
     class Nothing_ extends Table_ {
+        public not2() : boolean {
+            return !undefined
+        }
+        public isEqual2(other : Table) : boolean {
+            return other instanceof Nothing_
+        }
+        public toString2() {
+            return colorize(`nothing`, Colors.fgMagenta)
+        }
     //     public toNothing() {
     //         return this
     //     }
@@ -232,94 +279,109 @@ function createContext() : Context {
             this.value = value
         }
     }
-    // class Boolean_ extends Primitive_<boolean> {
-    //     public toBoolean() {
-    //         return this
-    //     }
-    //     public isEqual(other: Table_) : Boolean_ {
-    //         return other instanceof Boolean_ && other.value === this.value
-    //             ? true_
-    //             : false_
-    //     }
-    //     public not() {
-    //         return new Boolean_({ value : !this.value })
-    //     }
-    //     public and(other : Boolean_) {
-    //         return new Boolean_({ value : this.value && other.value })
-    //     }
-    //     public or(other : Boolean_) {
-    //         return new Boolean_({ value : this.value || other.value })
-    //     }
-    // }
-    // class Number_ extends Primitive_<number> {
-    //     public toBoolean() {
-    //         return this.value != 0
-    //             ? true_
-    //             : false_
-    //     }
-    //     public toNumber() {
-    //         return this
-    //     }
-    //     public isEqual(other: Table) {
-    //         return other instanceof Number_ && other.value === this.value
-    //             ? true_
-    //             : false_
-    //     }
-    //     public add([ op, next, other ] : Buffer_) {
-    //         const casted = other.toNumber()
+    class Boolean_ extends Primitive_<boolean> {
+        public not2() : boolean {
+            return !this.value
+        }
+        public isEqual2(other : Table) : boolean {
+            return other instanceof Boolean_ && other.value === this.value
+        }
+        public toString2() {
+            return colorize(`${this.value}`, Colors.fgBlue)
+        }
 
-    //         if (!(casted instanceof Number_)) throw new Error // @todo
+        // public toBoolean() {
+        //     return this
+        // }
+        // public not() {
+        //     return new Boolean_({ value : !this.value })
+        // }
+        // public and(other : Boolean_) {
+        //     return new Boolean_({ value : this.value && other.value })
+        // }
+        // public or(other : Boolean_) {
+        //     return new Boolean_({ value : this.value || other.value })
+        // }
+    }
+    class Number_ extends Primitive_<number> {
+        public not2() : boolean {
+            return !this.value
+        }
+        public isEqual2(other : Table) : boolean {
+            return other instanceof Number_ && other.value === this.value
+        }
+        public toString2() {
+            return colorize(`${this.value}`, Colors.fgYellow)
+        }
 
-    //         return Buffer_.from([ next, next, new Number_({ value : this.value + casted.value }) ]) // @todo: replace with safe continuation?
-    //     }
-    //     public subtract([ op, next, other ] : Buffer_) {
-    //         const casted = other.toNumber()
+        // public toBoolean() {
+        //     return this.value != 0
+        //         ? true_
+        //         : false_
+        // }
+        // public toNumber() {
+        //     return this
+        // }
+        // public isEqual(other: Table) {
+        //     return other instanceof Number_ && other.value === this.value
+        //         ? true_
+        //         : false_
+        // }
+        // public add([ op, next, other ] : Buffer_) {
+        //     const casted = other.toNumber()
 
-    //         if (!(casted instanceof Number_)) throw new Error // @todo
+        //     if (!(casted instanceof Number_)) throw new Error // @todo
 
-    //         return Buffer_.from([ next, next, new Number_({ value : this.value - casted.value }) ]) // @todo: replace with safe continuation?
-    //     }
-    //     public multiply([ op, next, other ] : Buffer_) {
-    //         const casted = other.toNumber()
+        //     return Buffer_.from([ next, next, new Number_({ value : this.value + casted.value }) ]) // @todo: replace with safe continuation?
+        // }
+        // public subtract([ op, next, other ] : Buffer_) {
+        //     const casted = other.toNumber()
 
-    //         if (!(casted instanceof Number_)) throw new Error // @todo
+        //     if (!(casted instanceof Number_)) throw new Error // @todo
 
-    //         return Buffer_.from([ next, next, new Number_({ value : this.value * casted.value }) ]) // @todo: replace with safe continuation?
-    //     }
-    //     public divide([ op, next, other ] : Buffer_) {
-    //         const casted = other.toNumber()
+        //     return Buffer_.from([ next, next, new Number_({ value : this.value - casted.value }) ]) // @todo: replace with safe continuation?
+        // }
+        // public multiply([ op, next, other ] : Buffer_) {
+        //     const casted = other.toNumber()
 
-    //         if (!(casted instanceof Number_)) throw new Error // @todo
+        //     if (!(casted instanceof Number_)) throw new Error // @todo
 
-    //         return Buffer_.from([ next, next, new Number_({ value : this.value / casted.value }) ]) // @todo: replace with safe continuation?
-    //     }
-    //     public wholeDivide([ op, next, other ] : Buffer_) {
-    //         const x = this.value
-    //         const casted = other.toNumber()
+        //     return Buffer_.from([ next, next, new Number_({ value : this.value * casted.value }) ]) // @todo: replace with safe continuation?
+        // }
+        // public divide([ op, next, other ] : Buffer_) {
+        //     const casted = other.toNumber()
 
-    //         if (!(casted instanceof Number_)) throw new Error // @todo
+        //     if (!(casted instanceof Number_)) throw new Error // @todo
 
-    //         const y = casted.value
-    //         const remainder = x % y
-    //         const fraction = (x - remainder) / y
+        //     return Buffer_.from([ next, next, new Number_({ value : this.value / casted.value }) ]) // @todo: replace with safe continuation?
+        // }
+        // public wholeDivide([ op, next, other ] : Buffer_) {
+        //     const x = this.value
+        //     const casted = other.toNumber()
 
-    //         return Buffer_.from([ next, next, new Number_({ value : fraction }), new Number_({ value : remainder }) ]) // @todo: replace with safe continuation?
-    //     }
-    //     public power([ op, next, other ] : Buffer_) {
-    //         const casted = other.toNumber()
+        //     if (!(casted instanceof Number_)) throw new Error // @todo
 
-    //         if (!(casted instanceof Number_)) throw new Error // @todo
+        //     const y = casted.value
+        //     const remainder = x % y
+        //     const fraction = (x - remainder) / y
 
-    //         return Buffer_.from([ next, next, new Number_({ value : this.value ** casted.value }) ]) // @todo: replace with safe continuation?
-    //     }
-    //     public root([ op, next, other ] : Buffer_) {
-    //         const casted = other.toNumber()
+        //     return Buffer_.from([ next, next, new Number_({ value : fraction }), new Number_({ value : remainder }) ]) // @todo: replace with safe continuation?
+        // }
+        // public power([ op, next, other ] : Buffer_) {
+        //     const casted = other.toNumber()
 
-    //         if (!(casted instanceof Number_)) throw new Error // @todo
+        //     if (!(casted instanceof Number_)) throw new Error // @todo
 
-    //         return Buffer_.from([ next, next, new Number_({ value : this.value ** (1 / casted.value) }) ]) // @todo: replace with safe continuation?
-    //     }
-    // }
+        //     return Buffer_.from([ next, next, new Number_({ value : this.value ** casted.value }) ]) // @todo: replace with safe continuation?
+        // }
+        // public root([ op, next, other ] : Buffer_) {
+        //     const casted = other.toNumber()
+
+        //     if (!(casted instanceof Number_)) throw new Error // @todo
+
+        //     return Buffer_.from([ next, next, new Number_({ value : this.value ** (1 / casted.value) }) ]) // @todo: replace with safe continuation?
+        // }
+    }
     class Terminal_ extends Table_ {
         public halt = true
     }
@@ -343,9 +405,10 @@ function createContext() : Context {
             this.template = template
         }
 
-        public call(buffer : Buffer) {
-            const buffer_ = buffer.slice(0)
+        public call(params : Buffer) {
+            const buffer_ = params.slice(0)
 
+            buffer_.unshift(...this.buffer.array)
             buffer_.unshift(this)
 
             const next = Buffer_.from(this.template.targets.map(i => buffer_.at(i)))
@@ -374,11 +437,20 @@ function createContext() : Context {
 
         public step() {
             const { buffer } = this
+
+            // console.log(buffer)
+
             const instruction = buffer.at(0)
+
+            // console.log(instruction)
 
             if (instruction.halt) return
 
             const params = buffer.slice(1)
+
+            // if (instruction instanceof Internal_) {
+            //     console.log(instruction.template.targets)
+            // }
 
             this.buffer = instruction.call(params)
         }
@@ -388,13 +460,13 @@ function createContext() : Context {
     const nothing = new Nothing_
 
     // const Boolean = new External_({ value : buffer => buffer.at(2).toBoolean(buffer) })
-    // const true_ = new Boolean_({ value : true })
-    // const false_ = new Boolean_({ value : false })
-    // const not = new External_({ value : buffer => buffer.at(2).not(buffer) })
+    const true_ = new Boolean_({ value : true })
+    const false_ = new Boolean_({ value : false })
+    const not = new External_({ value : buffer => buffer.at(2).not(buffer) })
     // const and = new External_({ value : buffer => buffer.at(2).and(buffer) })
     // const or = new External_({ value : buffer => buffer.at(2).or(buffer) })
     // // @todo: if
-    // const isEqual = new External_({ value : buffer => buffer.at(2).isEqual(buffer) })
+    const isEqual = new External_({ value : buffer => buffer.at(2).isEqual(buffer) })
     // const isNotEqual = new External_({ value : buffer => buffer.at(2).isNotEqual(buffer) })
 
     // const Number = new External_({ value : buffer => buffer.at(2).toNumber(buffer) })
@@ -406,13 +478,22 @@ function createContext() : Context {
     // const power = new External_({ value : buffer => buffer.at(2).power(buffer) })
     // const root = new External_({ value : buffer => buffer.at(2).root(buffer) })
 
+    const createNumber = (value : number) => new Number_({ value })
+    const print = new External_({ value : buffer => {
+        const [ next ] = buffer
+
+        console.log(...buffer.array.slice(1).map(x => x.toString2()))
+
+        return Buffer_.from([ next, next ])
+    } })
+
     const bind = new External_({ value : buffer => {
-        const [ next, target ] = buffer // const [ op, next, target ] = buffer
+        const [ next, target ] = buffer
 
         if (!(next instanceof Template_)) throw new Error // @todo
         if (!(target instanceof Template_)) throw new Error // @todo
 
-        const buffer_ = buffer.slice(3)
+        const buffer_ = buffer.slice(2)
         const target_ = new Internal_({ template : target, buffer : buffer_ })
         const next_ = new Internal_({ template : next, buffer : buffer_ })
 
@@ -438,12 +519,12 @@ function createContext() : Context {
         // nothing,
 
         // Boolean,
-        // true : true_,
-        // false : false_,
-        // not,
+        true : true_,
+        false : false_,
+        not,
         // and,
         // or,
-        // [`==`] : isEqual,
+        [`==`] : isEqual,
         // [`!=`] : isNotEqual,
 
         // Number,
@@ -455,6 +536,9 @@ function createContext() : Context {
         // [`**`] : power,
         // [`//`] : root,
 
+        createNumber,
+        print,
+
         bind,
         createTemplate,
         createInstruction,
@@ -463,6 +547,39 @@ function createContext() : Context {
 
         createMachine,
     }
+}
+
+enum Colors {
+    reset      = 0,
+    bright     = 1,
+    dim        = 2,
+    underscore = 4,
+    blink      = 5,
+    reverse    = 7,
+    hidden     = 8,
+
+    fgBlack    = 30,
+    fgRed      = 31,
+    fgGreen    = 32,
+    fgYellow   = 33,
+    fgBlue     = 34,
+    fgMagenta  = 35,
+    fgCyan     = 36,
+    fgWhite    = 37,
+
+    bgBlack    = 40,
+    bgRed      = 41,
+    bgGreen    = 42,
+    bgYellow   = 43,
+    bgBlue     = 44,
+    bgMagenta  = 45,
+    bgCyan     = 46,
+    bgWhite    = 47,
+}
+
+
+function colorize(text : string, color : Colors = Colors.reset) {
+    return `\x1b[${color}m${text}\x1b[${Colors.reset}m`
 }
 
 /*
