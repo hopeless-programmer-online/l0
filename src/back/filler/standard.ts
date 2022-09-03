@@ -2,31 +2,33 @@ import { Name } from '../../front'
 import { Machine, Filler as TranslationFiller } from '../../translate'
 
 interface Buffer {
-    [Symbol.iterator]() : Generator<Table, void>
+    [Symbol.iterator]() : Generator<Something, void>
 
-    get array() : Table[]
+    get array() : Something[]
 
-    at(index : number) : Table
+    at(index : number) : Something
     slice(begin : number) : Buffer
-    push(...values : Table[]) : void
-    unshift(...values : Table[]) : void
+    push(...values : Something[]) : void
+    unshift(...values : Something[]) : void
 }
-interface Table {
+interface Something {
     halt : boolean
 
     toBoolean1() : boolean
+    isEqual1(other : Something) : boolean
+    isNotEqual1(other : Something) : boolean
     toNumber1() : number
     toString1() : string
 
-    toBoolean2() : Table
-    isEqual2(other : Table) : Table
-    isNotEqual2(other : Table) : Table
-    not2() : Table
-    and2(other : Table) : Table
-    or2(other : Table) : Table
-    toNumber2() : Table
-    add2(other : Table) : Table
-    toString2() : Table
+    toBoolean2() : Something
+    isEqual2(other : Something) : Something
+    isNotEqual2(other : Something) : Something
+    not2() : Something
+    and2(other : Something) : Something
+    or2(other : Something) : Something
+    toNumber2() : Something
+    add2(other : Something) : Something
+    toString2() : Something
 
     // toNothing(buffer : Buffer) : Buffer
     toBoolean(buffer : Buffer) : Buffer
@@ -49,21 +51,21 @@ interface Table {
 type Context = {
     // nothing
     // Nothing : Table
-    nothing : Table
+    nothing : Something
 
     // logic
-    Boolean : Table
-    true : Table
-    false : Table
-    not : Table
-    and : Table
-    or : Table
-    [`==`] : Table
-    [`!=`] : Table
+    Boolean : Something
+    true : Something
+    false : Something
+    not : Something
+    and : Something
+    or : Something
+    [`==`] : Something
+    [`!=`] : Something
 
     // arithmetic
-    Number : Table
-    [`+`] : Table
+    Number : Something
+    [`+`] : Something
     // [`-`] : Table
     // [`*`] : Table
     // [`/`] : Table
@@ -72,21 +74,21 @@ type Context = {
     // [`//`] : Table
 
     // io
-    createNumber(value : number) : Table
-    print : Table
+    createNumber(value : number) : Something
+    print : Something
 
     // programs
-    bind : Table
-    createTemplate : (targets : number[]) => Table
-    createInstruction : (template : Table, buffer : Table[]) => Table
+    bind : Something
+    createTemplate : (targets : number[]) => Something
+    createInstruction : (template : Something, buffer : Something[]) => Something
 
     // other
-    terminal : Table
+    terminal : Something
 
-    createMachine : (buffer : Table[]) => Machine
+    createMachine : (buffer : Something[]) => Machine
 }
 
-export class Filler extends TranslationFiller<Table, Table, Table> {
+export class Filler extends TranslationFiller<Something, Something, Something> {
     private context = createContext()
 
     public get bind() {
@@ -95,13 +97,13 @@ export class Filler extends TranslationFiller<Table, Table, Table> {
     public get terminal() {
         return this.context.terminal
     }
-    public createTemplate({ targets } : { comment: string; targets: number[] }) : Table {
+    public createTemplate({ targets } : { comment: string; targets: number[] }) : Something {
         return this.context.createTemplate(targets)
     }
-    public createInstruction({ template, buffer } : { template: Table; buffer: Table[] }) : Table {
+    public createInstruction({ template, buffer } : { template: Something; buffer: Something[] }) : Something {
         return this.context.createInstruction(template, buffer)
     }
-    public createNamed({ text } : Name) : Table {
+    public createNamed({ text } : Name) : Something {
         const { context } = this
 
         const number = text.match(/^(?:\d|\s)+(?:\.(?:\d|\s)+)?$/)
@@ -143,20 +145,20 @@ export class Filler extends TranslationFiller<Table, Table, Table> {
 
         throw new Error(`Can't fill name with text "${text}"`)
     }
-    public createMachine({ buffer }: { buffer: Table[] }) {
+    public createMachine({ buffer }: { buffer: Something[] }) {
         return this.context.createMachine(buffer)
     }
 }
 
 function createContext() : Context {
     class Buffer_ implements Buffer {
-        public static from(array : Table[]) {
+        public static from(array : Something[]) {
             return new Buffer_({ array })
         }
 
-        private _array : Table[]
+        private _array : Something[]
 
-        public constructor({ array } : { array : Table[] }) {
+        public constructor({ array } : { array : Something[] }) {
             this._array = array
         }
 
@@ -164,7 +166,7 @@ function createContext() : Context {
             return this._array
         }
 
-        public * [Symbol.iterator]() : Generator<Table> {
+        public * [Symbol.iterator]() : Generator<Something> {
             for (const parameter of this._array) yield parameter
 
             while (true) yield nothing
@@ -176,54 +178,64 @@ function createContext() : Context {
         public slice(begin : number) {
             return Buffer_.from(this._array.slice(begin))
         }
-        public push(...values: Table[]) {
+        public push(...values: Something[]) {
             this._array.push(...values)
         }
-        public unshift(...values: Table[]) {
+        public unshift(...values: Something[]) {
             this._array.unshift(...values)
         }
     }
-    class Table_ implements Table {
+    class Something_ implements Something {
         public halt = false
 
-        public toBoolean1() {
-            return true
+        public toBoolean1() : boolean {
+            throw new Error // @todo
         }
-        public toNumber1() {
-            return 1
+        public isEqual1(other: Something): boolean {
+            throw new Error // @todo
         }
-        public toString1() {
-            return colorize(`table`, Colors.fgGreen)
+        public isNotEqual1(other: Something): boolean {
+            return !this.isEqual1(other)
+        }
+        public toNumber1() : number {
+            throw new Error // @todo
+        }
+        public toString1() : string {
+            throw new Error // @todo
         }
 
-        public toBoolean2() {
+        public toBoolean2() : Something {
             return this.toBoolean1() ? true_ : false_
         }
-        public not2() {
-            return nothing // @todo
+        public not2() : Something {
+            throw new Error // @todo
         }
-        public and2(other : Table) {
-            return nothing // @todo
+        public and2(other : Something) : Something {
+            throw new Error // @todo
         }
-        public or2(other : Table) {
-            return nothing // @todo
+        public or2(other : Something) : Something {
+            throw new Error // @todo
         }
-        public isEqual2(other : Table) : Table {
-            return nothing // @todo
+        public isEqual2(other : Something) : Something {
+            const value = this.isEqual1(other)
+
+            return new Boolean_({ value })
         }
-        public isNotEqual2(other : Table) : Table {
-            return nothing // @todo
+        public isNotEqual2(other : Something) : Something {
+            const value = this.isNotEqual1(other)
+
+            return new Boolean_({ value })
         }
         public toNumber2() {
             const value = this.toNumber1()
 
             return new Number_({ value })
         }
-        public add2(other : Table) {
-            return nothing // @todo
+        public add2(other : Something) : Something {
+            throw new Error // @todo
         }
         public toString2() {
-            const value = colorize(`table`, Colors.fgGreen)
+            const value = this.toString1()
 
             return new String_({ value })
         }
@@ -290,9 +302,12 @@ function createContext() : Context {
             throw new Error // @todo
         }
     }
-    class Nothing_ extends Table_ {
+    class Nothing_ extends Something_ {
         public toBoolean1() {
             return false
+        }
+        public isEqual1(other : Something) {
+            return other instanceof Nothing_
         }
         public toNumber1() {
             return 0
@@ -301,7 +316,7 @@ function createContext() : Context {
             return colorize(`nothing`, Colors.fgMagenta)
         }
     }
-    class Primitive_<Value> extends Table_ {
+    class Primitive_<Value> extends Something_ {
         public value : Value
 
         public constructor({ value } : { value : Value }) {
@@ -314,22 +329,22 @@ function createContext() : Context {
         public toBoolean1() {
             return this.value
         }
+        public isEqual1(other : Something) {
+            return other instanceof Boolean_ && other.value === this.value
+        }
         public toNumber1() {
             return this.value ? 1 : 0
         }
         public toString1() {
             return colorize(`${this.value}`, Colors.fgBlue)
         }
-
-        public isEqual2(other : Table) {
-            const value : boolean = other instanceof Boolean_ && other.value === this.value
-
-            return new Boolean_({ value })
-        }
     }
     class Number_ extends Primitive_<number> {
         public toBoolean1() {
             return this.value !== 0 ? true : false
+        }
+        public isEqual1(other : Something) {
+            return other instanceof Number_ && other.value === this.value
         }
         public toNumber1() {
             return this.value
@@ -401,10 +416,10 @@ function createContext() : Context {
     }
     class String_ extends Primitive_<string> {
     }
-    class Terminal_ extends Table_ {
+    class Terminal_ extends Something_ {
         public halt = true
     }
-    class Template_ extends Table_ {
+    class Template_ extends Something_ {
         public readonly targets : number[]
 
         public constructor({ targets } : { targets : number[] }) {
@@ -413,7 +428,7 @@ function createContext() : Context {
             this.targets = targets
         }
     }
-    class Internal_ extends Table_ {
+    class Internal_ extends Something_ {
         public readonly template : Template_
         public readonly buffer : Buffer
 
@@ -521,7 +536,7 @@ function createContext() : Context {
         return next_.call(Buffer_.from([]))
     } })
     const createTemplate = (targets : number[]) => new Template_({ targets })
-    const createInstruction = (template : Table, buffer : Table[]) => {
+    const createInstruction = (template : Something, buffer : Something[]) => {
         if (!(template instanceof Template_)) throw new Error // @todo
 
         const buffer_ = Buffer_.from(buffer)
@@ -531,7 +546,7 @@ function createContext() : Context {
 
     const terminal = new Terminal_
 
-    const createMachine = (buffer : Table[]) => new Machine_({ buffer : Buffer_.from(buffer) })
+    const createMachine = (buffer : Something[]) => new Machine_({ buffer : Buffer_.from(buffer) })
 
     return {
         // Nothing,
