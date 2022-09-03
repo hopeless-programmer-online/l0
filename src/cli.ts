@@ -10,9 +10,6 @@ const url = process.argv[2]
 if (url) {
     const text = readFileSync(resolve(url), 'utf8')
 
-    console.log(text)
-    console.log(Filler)
-
     const program = parse(text)
     const filler = new Filler
     const machine = translate(program, filler)
