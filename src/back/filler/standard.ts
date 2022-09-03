@@ -14,15 +14,19 @@ interface Buffer {
 interface Table {
     halt : boolean
 
-    toBoolean2() : boolean
+    toBoolean1() : boolean
+    toNumber1() : number
+    toString1() : string
+
+    toBoolean2() : Table
+    isEqual2(other : Table) : Table
+    isNotEqual2(other : Table) : Table
     not2() : Table
     and2(other : Table) : Table
     or2(other : Table) : Table
-    isEqual2(other : Table) : Table
-    isNotEqual2(other : Table) : Table
-    toNumber2() : number
+    toNumber2() : Table
     add2(other : Table) : Table
-    toString2() : string
+    toString2() : Table
 
     // toNothing(buffer : Buffer) : Buffer
     toBoolean(buffer : Buffer) : Buffer
@@ -182,56 +186,63 @@ function createContext() : Context {
     class Table_ implements Table {
         public halt = false
 
-        public toBoolean2() : boolean {
+        public toBoolean1() {
             return true
         }
-        public not2() {
-            const value = this.toBoolean2()
-
-            return new Boolean_({ value })
-        }
-        public and2(other : Table) {
-            const left = this.toBoolean2()
-            const right = other.toBoolean2()
-            const value = left && right
-
-            return new Boolean_({ value })
-        }
-        public or2(other : Table) {
-            const left = this.toBoolean2()
-            const right = other.toBoolean2()
-            const value = left || right
-
-            return new Boolean_({ value })
-        }
-        public isEqual2(other : Table) : Table {
-            const value = this === other
-
-            return new Boolean_({ value })
-        }
-        public isNotEqual2(other : Table) : Table {
-            const value = this !== other
-
-            return new Boolean_({ value })
-        }
-        public toNumber2() : number {
+        public toNumber1() {
             return 1
         }
-        public add2(other : Table) {
-            const value = this.toNumber2() + other.toNumber2()
+        public toString1() {
+            return colorize(`table`, Colors.fgGreen)
+        }
+
+        public toBoolean2() {
+            return this.toBoolean1() ? true_ : false_
+        }
+        public not2() {
+            return nothing // @todo
+        }
+        public and2(other : Table) {
+            return nothing // @todo
+        }
+        public or2(other : Table) {
+            return nothing // @todo
+        }
+        public isEqual2(other : Table) : Table {
+            return nothing // @todo
+        }
+        public isNotEqual2(other : Table) : Table {
+            return nothing // @todo
+        }
+        public toNumber2() {
+            const value = this.toNumber1()
 
             return new Number_({ value })
         }
+        public add2(other : Table) {
+            return nothing // @todo
+        }
         public toString2() {
-            return colorize(`table`, Colors.fgGreen)
+            const value = colorize(`table`, Colors.fgGreen)
+
+            return new String_({ value })
         }
 
         public toBoolean(buffer : Buffer) : Buffer {
             const [ next ] = buffer
 
-            return Buffer_.from([ next, next, new Boolean_({ value : this.toBoolean2() }) ])
+            return Buffer_.from([ next, next, this.toBoolean2() ])
         }
+        public isEqual(buffer : Buffer_) : Buffer {
+            const [ next, other ] = buffer
 
+            return Buffer_.from([ next, next, this.isEqual2(other) ])
+        }
+        public isNotEqual(buffer : Buffer_) : Buffer {
+            const [ next, other ] = buffer
+
+            return Buffer_.from([ next, next, this.isNotEqual2(other) ])
+        }
         public not(buffer : Buffer_) : Buffer {
             const [ next ] = buffer
 
@@ -247,20 +258,10 @@ function createContext() : Context {
 
             return Buffer_.from([ next, next, this.or2(other) ])
         }
-        public isEqual(buffer : Buffer_) : Buffer {
-            const [ next, other ] = buffer
-
-            return Buffer_.from([ next, next, this.isEqual2(other) ])
-        }
-        public isNotEqual(buffer : Buffer_) : Buffer {
-            const [ next, other ] = buffer
-
-            return Buffer_.from([ next, next, this.isNotEqual2(other) ])
-        }
         public toNumber(buffer : Buffer) : Buffer {
             const [ next ] = buffer
 
-            return Buffer_.from([ next, next, new Number_({ value : this.toNumber2() }) ])
+            return Buffer_.from([ next, next, this.toNumber2() ])
         }
         public add(buffer : Buffer) : Buffer {
             const [ next, other ] = buffer
@@ -290,23 +291,13 @@ function createContext() : Context {
         }
     }
     class Nothing_ extends Table_ {
-        public toBoolean2() {
+        public toBoolean1() {
             return false
         }
-        public toNumber2() {
+        public toNumber1() {
             return 0
         }
-        public not2() {
-            const value = !undefined
-
-            return new Boolean_({ value })
-        }
-        public isEqual2(other : Table) {
-            const value = other instanceof Nothing_
-
-            return new Boolean_({ value })
-        }
-        public toString2() {
+        public toString1() {
             return colorize(`nothing`, Colors.fgMagenta)
         }
     }
@@ -320,70 +311,38 @@ function createContext() : Context {
         }
     }
     class Boolean_ extends Primitive_<boolean> {
-        public toBoolean2() {
+        public toBoolean1() {
             return this.value
         }
-        public not2() {
-            const value = !this.value
-
-            return new Boolean_({ value })
+        public toNumber1() {
+            return this.value ? 1 : 0
         }
-        public and2(other : Table) {
-            const value : boolean = other instanceof Boolean_ && other.value && this.value
-
-            return new Boolean_({ value })
+        public toString1() {
+            return colorize(`${this.value}`, Colors.fgBlue)
         }
-        public or2(other : Table) {
-            const value : boolean = other instanceof Boolean_ && (other.value || this.value)
 
-            return new Boolean_({ value })
-        }
         public isEqual2(other : Table) {
             const value : boolean = other instanceof Boolean_ && other.value === this.value
 
             return new Boolean_({ value })
         }
-        public isNotEqual2(other : Table) {
-            const value : boolean = other instanceof Boolean_ && other.value !== this.value
-
-            return new Boolean_({ value })
-        }
-
-        public toNumber2() {
-            return this.value ? 1 : 0
-        }
-
-        public toString2() {
-            return colorize(`${this.value}`, Colors.fgBlue)
-        }
     }
     class Number_ extends Primitive_<number> {
-        public toBoolean2() {
+        public toBoolean1() {
             return this.value !== 0 ? true : false
         }
-        public not2() {
-            const value = !this.value
-
-            return new Boolean_({ value })
-        }
-        public isEqual2(other : Table) {
-            const value : boolean = other instanceof Number_ && other.value === this.value
-
-            return new Boolean_({ value })
-        }
-        public isNotEqual2(other : Table) {
-            const value : boolean = other instanceof Number_ && other.value !== this.value
-
-            return new Boolean_({ value })
-        }
-
-        public toNumber2() {
+        public toNumber1() {
             return this.value
         }
-
-        public toString2() {
+        public toString1() {
             return colorize(`${this.value}`, Colors.fgYellow)
         }
+
+        // public isEqual2(other : Table) {
+        //     const value : boolean = other instanceof Number_ && other.value === this.value
+
+        //     return new Boolean_({ value })
+        // }
 
         // public add([ op, next, other ] : Buffer_) {
         //     const casted = other.toNumber()
@@ -439,6 +398,8 @@ function createContext() : Context {
 
         //     return Buffer_.from([ next, next, new Number_({ value : this.value ** (1 / casted.value) }) ]) // @todo: replace with safe continuation?
         // }
+    }
+    class String_ extends Primitive_<string> {
     }
     class Terminal_ extends Table_ {
         public halt = true
@@ -540,7 +501,7 @@ function createContext() : Context {
     const print = new External_({ value : buffer => {
         const [ next ] = buffer
 
-        console.log(...buffer.array.slice(1).map(x => x.toString2()))
+        console.log(...buffer.array.slice(1).map(x => x.toString1()))
 
         return Buffer_.from([ next, next ])
     } })
