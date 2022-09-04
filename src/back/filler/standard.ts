@@ -31,6 +31,7 @@ interface Something {
     subtract2(other : Something) : Something
     multiply2(other : Something) : Something
     divide2(other : Something) : Something
+    wholeDivide2(other : Something) : Something[]
     toString2() : Something
 
     // toNothing(buffer : Buffer) : Buffer
@@ -45,7 +46,7 @@ interface Something {
     subtract(buffer : Buffer) : Buffer
     multiply(buffer : Buffer) : Buffer
     divide(buffer : Buffer) : Buffer
-    // wholeDivide(buffer : Buffer) : Buffer
+    wholeDivide(buffer : Buffer) : Buffer
     // power(buffer : Buffer) : Buffer
     // root(buffer : Buffer) : Buffer
     call(params : Buffer) : Buffer
@@ -72,7 +73,7 @@ type Context = {
     [`-`] : Something
     [`*`] : Something
     [`/`] : Something
-    // [`%`] : Table
+    [`%`] : Something
     // [`**`] : Table
     // [`//`] : Table
 
@@ -135,7 +136,7 @@ export class Filler extends TranslationFiller<Something, Something, Something> {
             case `-`: return context[`-`]
             case `*`: return context[`*`]
             case `/`: return context[`/`]
-            // case `%`: return context[`%`]
+            case `%`: return context[`%`]
             // case `**`: return context[`**`]
             // case `//`: return context[`//`]
 
@@ -246,6 +247,9 @@ function createContext() : Context {
         public divide2(other : Something) : Something {
             throw new Error // @todo
         }
+        public wholeDivide2(other : Something) : Something[] {
+            throw new Error // @todo
+        }
         public toString2() {
             const value = this.toString1()
 
@@ -306,6 +310,11 @@ function createContext() : Context {
             const [ op, next, me, other ] = buffer
 
             return Buffer_.from([ next, next, this.divide2(other) ])
+        }
+        public wholeDivide(buffer : Buffer) : Buffer {
+            const [ op, next, me, other ] = buffer
+
+            return Buffer_.from([ next, next, ...this.wholeDivide2(other) ])
         }
         // public wholeDivide(buffer : Buffer) : Buffer {
         //     return this.uniformCall(wholeDivide, buffer)
@@ -407,35 +416,14 @@ function createContext() : Context {
 
             return new Number_({ value })
         }
+        public wholeDivide2(other: Something) {
+            const a = this.value
+            const b = other.toNumber1()
+            const c = a % b
 
-        // public add([ op, next, other ] : Buffer_) {
-        //     const casted = other.toNumber()
+            return [ new Number_({ value : (a - c) / b }), new Number_({ value : c }) ]
+        }
 
-        //     if (!(casted instanceof Number_)) throw new Error // @todo
-
-        //     return Buffer_.from([ next, next, new Number_({ value : this.value + casted.value }) ]) // @todo: replace with safe continuation?
-        // }
-        // public subtract([ op, next, other ] : Buffer_) {
-        //     const casted = other.toNumber()
-
-        //     if (!(casted instanceof Number_)) throw new Error // @todo
-
-        //     return Buffer_.from([ next, next, new Number_({ value : this.value - casted.value }) ]) // @todo: replace with safe continuation?
-        // }
-        // public multiply([ op, next, other ] : Buffer_) {
-        //     const casted = other.toNumber()
-
-        //     if (!(casted instanceof Number_)) throw new Error // @todo
-
-        //     return Buffer_.from([ next, next, new Number_({ value : this.value * casted.value }) ]) // @todo: replace with safe continuation?
-        // }
-        // public divide([ op, next, other ] : Buffer_) {
-        //     const casted = other.toNumber()
-
-        //     if (!(casted instanceof Number_)) throw new Error // @todo
-
-        //     return Buffer_.from([ next, next, new Number_({ value : this.value / casted.value }) ]) // @todo: replace with safe continuation?
-        // }
         // public wholeDivide([ op, next, other ] : Buffer_) {
         //     const x = this.value
         //     const casted = other.toNumber()
@@ -555,7 +543,7 @@ function createContext() : Context {
     const subtract = new External_({ value : buffer => buffer.at(2).subtract(buffer) })
     const multiply = new External_({ value : buffer => buffer.at(2).multiply(buffer) })
     const divide = new External_({ value : buffer => buffer.at(2).divide(buffer) })
-    // const wholeDivide = new External_({ value : buffer => buffer.at(2).wholeDivide(buffer) })
+    const wholeDivide = new External_({ value : buffer => buffer.at(2).wholeDivide(buffer) })
     // const power = new External_({ value : buffer => buffer.at(2).power(buffer) })
     // const root = new External_({ value : buffer => buffer.at(2).root(buffer) })
 
@@ -613,7 +601,7 @@ function createContext() : Context {
         [`-`] : subtract,
         [`*`] : multiply,
         [`/`] : divide,
-        // [`%`] : wholeDivide,
+        [`%`] : wholeDivide,
         // [`**`] : power,
         // [`//`] : root,
 
