@@ -33,11 +33,11 @@ interface Something {
     // toNothing(buffer : Buffer) : Buffer
     toBoolean(buffer : Buffer) : Buffer
     toNumber(buffer : Buffer) : Buffer
+    isEqual(buffer : Buffer) : Buffer
+    isNotEqual(buffer : Buffer) : Buffer
     not(buffer : Buffer) : Buffer
     and(buffer : Buffer) : Buffer
     or(buffer : Buffer) : Buffer
-    isEqual(buffer : Buffer) : Buffer
-    isNotEqual(buffer : Buffer) : Buffer
     add(buffer : Buffer) : Buffer
     // subtract(buffer : Buffer) : Buffer
     // multiply(buffer : Buffer) : Buffer
@@ -57,11 +57,11 @@ type Context = {
     Boolean : Something
     true : Something
     false : Something
+    [`==`] : Something
+    [`!=`] : Something
     not : Something
     and : Something
     or : Something
-    [`==`] : Something
-    [`!=`] : Something
 
     // arithmetic
     Number : Something
@@ -241,42 +241,42 @@ function createContext() : Context {
         }
 
         public toBoolean(buffer : Buffer) : Buffer {
-            const [ next ] = buffer
+            const [ op, next ] = buffer
 
             return Buffer_.from([ next, next, this.toBoolean2() ])
         }
         public isEqual(buffer : Buffer_) : Buffer {
-            const [ next, other ] = buffer
+            const [ op, next, me, other ] = buffer
 
             return Buffer_.from([ next, next, this.isEqual2(other) ])
         }
         public isNotEqual(buffer : Buffer_) : Buffer {
-            const [ next, other ] = buffer
+            const [ op, next, me, other ] = buffer
 
             return Buffer_.from([ next, next, this.isNotEqual2(other) ])
         }
         public not(buffer : Buffer_) : Buffer {
-            const [ next ] = buffer
+            const [ op, next ] = buffer
 
             return Buffer_.from([ next, next, this.not2() ])
         }
         public and(buffer : Buffer_) : Buffer {
-            const [ next, other ] = buffer
+            const [ op, next, me, other ] = buffer
 
             return Buffer_.from([ next, next, this.and2(other) ])
         }
         public or(buffer : Buffer_) : Buffer {
-            const [ next, other ] = buffer
+            const [ op, next, me, other ] = buffer
 
             return Buffer_.from([ next, next, this.or2(other) ])
         }
         public toNumber(buffer : Buffer) : Buffer {
-            const [ next ] = buffer
+            const [ op, next ] = buffer
 
             return Buffer_.from([ next, next, this.toNumber2() ])
         }
         public add(buffer : Buffer) : Buffer {
-            const [ next, other ] = buffer
+            const [ op, next, me, other ] = buffer
 
             return Buffer_.from([ next, next, this.add2(other) ])
         }
@@ -337,6 +337,24 @@ function createContext() : Context {
         }
         public toString1() {
             return colorize(`${this.value}`, Colors.fgBlue)
+        }
+
+        public not2() {
+            const value = !this.value
+
+            return new Boolean_({ value })
+        }
+        public and2(other: Something) {
+            console.log(other)
+
+            const value = this.value && other.toBoolean1()
+
+            return new Boolean_({ value })
+        }
+        public or2(other: Something) {
+            const value = this.value || other.toBoolean1()
+
+            return new Boolean_({ value })
         }
     }
     class Number_ extends Primitive_<number> {
@@ -440,7 +458,7 @@ function createContext() : Context {
         }
 
         public call(params : Buffer) {
-            const buffer_ = params.slice(0)
+            const buffer_ = params.slice(1)
 
             buffer_.unshift(...this.buffer.array)
             buffer_.unshift(this)
@@ -480,31 +498,29 @@ function createContext() : Context {
 
             if (instruction.halt) return
 
-            const params = buffer.slice(1)
-
             // if (instruction instanceof Internal_) {
             //     console.log(instruction.template.targets)
             // }
 
-            this.buffer = instruction.call(params)
+            this.buffer = instruction.call(buffer)
         }
     }
 
     // const Nothing = new External_({ value : buffer => buffer.at(2).toNothing(buffer) })
     const nothing = new Nothing_
 
-    const Boolean = new External_({ value : buffer => buffer.at(1).toBoolean(buffer) })
+    const Boolean = new External_({ value : buffer => buffer.at(2).toBoolean(buffer) })
     const true_ = new Boolean_({ value : true })
     const false_ = new Boolean_({ value : false })
-    const not = new External_({ value : buffer => buffer.at(1).not(buffer) })
-    const and = new External_({ value : buffer => buffer.at(1).and(buffer) })
-    const or = new External_({ value : buffer => buffer.at(1).or(buffer) })
+    const not = new External_({ value : buffer => buffer.at(2).not(buffer) })
+    const and = new External_({ value : buffer => buffer.at(2).and(buffer) })
+    const or = new External_({ value : buffer => buffer.at(2).or(buffer) })
     // @todo: if
-    const isEqual = new External_({ value : buffer => buffer.at(1).isEqual(buffer) })
-    const isNotEqual = new External_({ value : buffer => buffer.at(1).isNotEqual(buffer) })
+    const isEqual = new External_({ value : buffer => buffer.at(2).isEqual(buffer) })
+    const isNotEqual = new External_({ value : buffer => buffer.at(2).isNotEqual(buffer) })
 
-    const Number = new External_({ value : buffer => buffer.at(1).toNumber(buffer) })
-    const add = new External_({ value : buffer => buffer.at(1).add(buffer) })
+    const Number = new External_({ value : buffer => buffer.at(2).toNumber(buffer) })
+    const add = new External_({ value : buffer => buffer.at(2).add(buffer) })
     // const subtract = new External_({ value : buffer => buffer.at(2).add(buffer) })
     // const multiply = new External_({ value : buffer => buffer.at(2).multiply(buffer) })
     // const divide = new External_({ value : buffer => buffer.at(2).divide(buffer) })
@@ -514,20 +530,20 @@ function createContext() : Context {
 
     const createNumber = (value : number) => new Number_({ value })
     const print = new External_({ value : buffer => {
-        const [ next ] = buffer
+        const [ op, next ] = buffer
 
-        console.log(...buffer.array.slice(1).map(x => x.toString1()))
+        console.log(...buffer.array.slice(2).map(x => x.toString1()))
 
         return Buffer_.from([ next, next ])
     } })
 
     const bind = new External_({ value : buffer => {
-        const [ next, target ] = buffer
+        const [ op, next, target ] = buffer
 
         if (!(next instanceof Template_)) throw new Error // @todo
         if (!(target instanceof Template_)) throw new Error // @todo
 
-        const buffer_ = buffer.slice(2)
+        const buffer_ = buffer.slice(3)
         const target_ = new Internal_({ template : target, buffer : buffer_ })
         const next_ = new Internal_({ template : next, buffer : buffer_ })
 
@@ -555,11 +571,11 @@ function createContext() : Context {
         Boolean,
         true : true_,
         false : false_,
+        [`==`] : isEqual,
+        [`!=`] : isNotEqual,
         not,
         and,
         or,
-        [`==`] : isEqual,
-        [`!=`] : isNotEqual,
 
         Number,
         [`+`] : add,
@@ -610,7 +626,6 @@ enum Colors {
     bgCyan     = 46,
     bgWhite    = 47,
 }
-
 
 function colorize(text : string, color : Colors = Colors.reset) {
     return `\x1b[${color}m${text}\x1b[${Colors.reset}m`
