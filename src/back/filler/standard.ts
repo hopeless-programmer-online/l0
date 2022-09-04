@@ -28,6 +28,9 @@ interface Something {
     or2(other : Something) : Something
     toNumber2() : Something
     add2(other : Something) : Something
+    subtract2(other : Something) : Something
+    multiply2(other : Something) : Something
+    divide2(other : Something) : Something
     toString2() : Something
 
     // toNothing(buffer : Buffer) : Buffer
@@ -39,9 +42,9 @@ interface Something {
     and(buffer : Buffer) : Buffer
     or(buffer : Buffer) : Buffer
     add(buffer : Buffer) : Buffer
-    // subtract(buffer : Buffer) : Buffer
-    // multiply(buffer : Buffer) : Buffer
-    // divide(buffer : Buffer) : Buffer
+    subtract(buffer : Buffer) : Buffer
+    multiply(buffer : Buffer) : Buffer
+    divide(buffer : Buffer) : Buffer
     // wholeDivide(buffer : Buffer) : Buffer
     // power(buffer : Buffer) : Buffer
     // root(buffer : Buffer) : Buffer
@@ -66,9 +69,9 @@ type Context = {
     // arithmetic
     Number : Something
     [`+`] : Something
-    // [`-`] : Table
-    // [`*`] : Table
-    // [`/`] : Table
+    [`-`] : Something
+    [`*`] : Something
+    [`/`] : Something
     // [`%`] : Table
     // [`**`] : Table
     // [`//`] : Table
@@ -129,9 +132,9 @@ export class Filler extends TranslationFiller<Something, Something, Something> {
 
             case `Number`: return context.Number
             case `+`: return context[`+`]
-            // case `-`: return context[`-`]
-            // case `*`: return context[`*`]
-            // case `/`: return context[`/`]
+            case `-`: return context[`-`]
+            case `*`: return context[`*`]
+            case `/`: return context[`/`]
             // case `%`: return context[`%`]
             // case `**`: return context[`**`]
             // case `//`: return context[`//`]
@@ -234,6 +237,15 @@ function createContext() : Context {
         public add2(other : Something) : Something {
             throw new Error // @todo
         }
+        public subtract2(other : Something) : Something {
+            throw new Error // @todo
+        }
+        public multiply2(other : Something) : Something {
+            throw new Error // @todo
+        }
+        public divide2(other : Something) : Something {
+            throw new Error // @todo
+        }
         public toString2() {
             const value = this.toString1()
 
@@ -280,15 +292,21 @@ function createContext() : Context {
 
             return Buffer_.from([ next, next, this.add2(other) ])
         }
-        // public subtract(buffer : Buffer) : Buffer {
-        //     return this.uniformCall(subtract, buffer)
-        // }
-        // public multiply(buffer : Buffer) : Buffer {
-        //     return this.uniformCall(multiply, buffer)
-        // }
-        // public divide(buffer : Buffer) : Buffer {
-        //     return this.uniformCall(divide, buffer)
-        // }
+        public subtract(buffer : Buffer) : Buffer {
+            const [ op, next, me, other ] = buffer
+
+            return Buffer_.from([ next, next, this.subtract2(other) ])
+        }
+        public multiply(buffer : Buffer) : Buffer {
+            const [ op, next, me, other ] = buffer
+
+            return Buffer_.from([ next, next, this.multiply2(other) ])
+        }
+        public divide(buffer : Buffer) : Buffer {
+            const [ op, next, me, other ] = buffer
+
+            return Buffer_.from([ next, next, this.divide2(other) ])
+        }
         // public wholeDivide(buffer : Buffer) : Buffer {
         //     return this.uniformCall(wholeDivide, buffer)
         // }
@@ -345,8 +363,6 @@ function createContext() : Context {
             return new Boolean_({ value })
         }
         public and2(other: Something) {
-            console.log(other)
-
             const value = this.value && other.toBoolean1()
 
             return new Boolean_({ value })
@@ -371,11 +387,26 @@ function createContext() : Context {
             return colorize(`${this.value}`, Colors.fgYellow)
         }
 
-        // public isEqual2(other : Table) {
-        //     const value : boolean = other instanceof Number_ && other.value === this.value
+        public add2(other: Something) {
+            const value = this.value + other.toNumber1()
 
-        //     return new Boolean_({ value })
-        // }
+            return new Number_({ value })
+        }
+        public subtract2(other: Something) {
+            const value = this.value - other.toNumber1()
+
+            return new Number_({ value })
+        }
+        public multiply2(other: Something) {
+            const value = this.value * other.toNumber1()
+
+            return new Number_({ value })
+        }
+        public divide2(other: Something) {
+            const value = this.value / other.toNumber1()
+
+            return new Number_({ value })
+        }
 
         // public add([ op, next, other ] : Buffer_) {
         //     const casted = other.toNumber()
@@ -521,9 +552,9 @@ function createContext() : Context {
 
     const Number = new External_({ value : buffer => buffer.at(2).toNumber(buffer) })
     const add = new External_({ value : buffer => buffer.at(2).add(buffer) })
-    // const subtract = new External_({ value : buffer => buffer.at(2).add(buffer) })
-    // const multiply = new External_({ value : buffer => buffer.at(2).multiply(buffer) })
-    // const divide = new External_({ value : buffer => buffer.at(2).divide(buffer) })
+    const subtract = new External_({ value : buffer => buffer.at(2).subtract(buffer) })
+    const multiply = new External_({ value : buffer => buffer.at(2).multiply(buffer) })
+    const divide = new External_({ value : buffer => buffer.at(2).divide(buffer) })
     // const wholeDivide = new External_({ value : buffer => buffer.at(2).wholeDivide(buffer) })
     // const power = new External_({ value : buffer => buffer.at(2).power(buffer) })
     // const root = new External_({ value : buffer => buffer.at(2).root(buffer) })
@@ -579,9 +610,9 @@ function createContext() : Context {
 
         Number,
         [`+`] : add,
-        // [`-`] : subtract,
-        // [`*`] : multiply,
-        // [`/`] : divide,
+        [`-`] : subtract,
+        [`*`] : multiply,
+        [`/`] : divide,
         // [`%`] : wholeDivide,
         // [`**`] : power,
         // [`//`] : root,
