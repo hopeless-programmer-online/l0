@@ -79,6 +79,7 @@ type Context = {
 
     // io
     createNumber(value : number) : Something
+    createString(value : string) : Something
     print : Something
 
     // programs
@@ -107,7 +108,8 @@ export class Filler extends TranslationFiller<Something, Something, Something> {
     public createInstruction({ template, buffer } : { template: Something; buffer: Something[] }) : Something {
         return this.context.createInstruction(template, buffer)
     }
-    public createNamed({ text } : Name) : Something {
+    public createNamed(name : Name) : Something {
+        const { text } = name
         const { context } = this
 
         const number = text.match(/^(?:\d|\s)+(?:\.(?:\d|\s)+)?$/)
@@ -116,6 +118,15 @@ export class Filler extends TranslationFiller<Something, Something, Something> {
             const value = Number(text.replace(/\s/g, ``))
 
             return context.createNumber(value)
+        }
+
+        try {
+            const string = JSON.parse(text)
+
+            if (typeof string === `string`) return context.createString(string)
+        }
+        catch(error) {
+            // do nothing
         }
 
         switch (text) {
@@ -423,35 +434,26 @@ function createContext() : Context {
 
             return [ new Number_({ value : (a - c) / b }), new Number_({ value : c }) ]
         }
-
-        // public wholeDivide([ op, next, other ] : Buffer_) {
-        //     const x = this.value
-        //     const casted = other.toNumber()
-
-        //     if (!(casted instanceof Number_)) throw new Error // @todo
-
-        //     const y = casted.value
-        //     const remainder = x % y
-        //     const fraction = (x - remainder) / y
-
-        //     return Buffer_.from([ next, next, new Number_({ value : fraction }), new Number_({ value : remainder }) ]) // @todo: replace with safe continuation?
-        // }
-        // public power([ op, next, other ] : Buffer_) {
-        //     const casted = other.toNumber()
-
-        //     if (!(casted instanceof Number_)) throw new Error // @todo
-
-        //     return Buffer_.from([ next, next, new Number_({ value : this.value ** casted.value }) ]) // @todo: replace with safe continuation?
-        // }
-        // public root([ op, next, other ] : Buffer_) {
-        //     const casted = other.toNumber()
-
-        //     if (!(casted instanceof Number_)) throw new Error // @todo
-
-        //     return Buffer_.from([ next, next, new Number_({ value : this.value ** (1 / casted.value) }) ]) // @todo: replace with safe continuation?
-        // }
     }
     class String_ extends Primitive_<string> {
+        public toBoolean1() {
+            return this.value.length > 0 ? true : false
+        }
+        public isEqual1(other : Something) {
+            return other instanceof String_ && other.value === this.value
+        }
+        public toNumber1() {
+            return global.Number(this.value)
+        }
+        public toString1() {
+            return colorize(`${this.value}`, Colors.fgRed)
+        }
+
+        public add2(other: Something) {
+            const value = this.value + other.toString1()
+
+            return new String_({ value })
+        }
     }
     class Terminal_ extends Something_ {
         public halt = true
@@ -548,6 +550,7 @@ function createContext() : Context {
     // const root = new External_({ value : buffer => buffer.at(2).root(buffer) })
 
     const createNumber = (value : number) => new Number_({ value })
+    const createString = (value : string) => new String_({ value })
     const print = new External_({ value : buffer => {
         const [ op, next ] = buffer
 
@@ -606,6 +609,7 @@ function createContext() : Context {
         // [`//`] : root,
 
         createNumber,
+        createString,
         print,
 
         bind,
