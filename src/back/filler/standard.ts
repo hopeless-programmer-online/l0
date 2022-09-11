@@ -35,6 +35,7 @@ interface Something {
     power2(other : Something) : Something
     root2(other : Something) : Something
     toString2() : Something
+    pushBack2(values : Something[]) : void
 
     // toNothing(buffer : Buffer) : Buffer
     toBoolean(buffer : Buffer) : Buffer
@@ -51,6 +52,7 @@ interface Something {
     wholeDivide(buffer : Buffer) : Buffer
     power(buffer : Buffer) : Buffer
     root(buffer : Buffer) : Buffer
+    pushBack(buffer : Buffer) : Buffer
     call(params : Buffer) : Buffer
 }
 
@@ -81,6 +83,7 @@ type Context = {
 
     // collections
     List : Something
+    push_back : Something
 
     // io
     createNumber(value : number) : Something
@@ -157,6 +160,7 @@ export class Filler extends TranslationFiller<Something, Something, Something> {
             case `//`: return context[`//`]
 
             case `List`: return context.List
+            case `push_back`: return context.push_back
 
             case `print`: return context.print
 
@@ -279,6 +283,9 @@ function createContext() : Context {
 
             return new String_({ value })
         }
+        public pushBack2(values : Something[]) {
+            throw new Error // @todo
+        }
 
         public toBoolean(buffer : Buffer) : Buffer {
             const [ op, next ] = buffer
@@ -349,6 +356,14 @@ function createContext() : Context {
             const [ op, next, me, other ] = buffer
 
             return Buffer_.from([ next, next, this.root2(other) ])
+        }
+        public pushBack(buffer : Buffer) : Buffer {
+            const [ op, next, me ] = buffer
+            const values = buffer.slice(3).array
+
+            this.pushBack2(values)
+
+            return Buffer_.from([ next, next ])
         }
         public call(params : Buffer) : Buffer {
             throw new Error // @todo
@@ -480,7 +495,7 @@ function createContext() : Context {
         }
     }
     class List_ extends Something_ {
-        private elements : Something_[] = []
+        private elements : Something[] = []
 
         public toBoolean1() {
             return this.elements.length > 0 ? true : false
@@ -498,9 +513,13 @@ function createContext() : Context {
         public toString1() {
             let elements = this.elements.map(x => x.toString1()).join(colorize(`, `, Colors.fgWhite))
 
-            if (elements.length > 0) elements = ` elements `
+            if (elements.length > 0) elements = ` ${elements} `
 
             return colorize(`[`, Colors.fgWhite) + elements + colorize(`]`, Colors.fgWhite)
+        }
+
+        public pushBack2(values : Something[]) {
+            this.elements.push(...values)
         }
     }
     class Terminal_ extends Something_ {
@@ -602,6 +621,7 @@ function createContext() : Context {
 
         return Buffer_.from([ next, next, new List_ ])
     } })
+    const push_back = new External_({ value : buffer => buffer.at(2).pushBack(buffer) })
 
     const createNumber = (value : number) => new Number_({ value })
     const createString = (value : string) => new String_({ value })
@@ -663,6 +683,7 @@ function createContext() : Context {
         [`//`] : root,
 
         List,
+        push_back,
 
         createNumber,
         createString,
