@@ -79,6 +79,9 @@ type Context = {
     [`**`] : Something
     [`//`] : Something
 
+    // collections
+    List : Something
+
     // io
     createNumber(value : number) : Something
     createString(value : string) : Something
@@ -152,6 +155,8 @@ export class Filler extends TranslationFiller<Something, Something, Something> {
             case `%`: return context[`%`]
             case `**`: return context[`**`]
             case `//`: return context[`//`]
+
+            case `List`: return context.List
 
             case `print`: return context.print
 
@@ -474,6 +479,30 @@ function createContext() : Context {
             return new String_({ value })
         }
     }
+    class List_ extends Something_ {
+        private elements : Something_[] = []
+
+        public toBoolean1() {
+            return this.elements.length > 0 ? true : false
+        }
+        public isEqual1(other : Something) : boolean {
+            const { elements } = this
+
+            return other instanceof List_ &&
+                other.elements.length === elements.length &&
+                other.elements.every((x, i) => i in elements && elements[i].isEqual1(x))
+        }
+        public toNumber1() {
+            return global.Number(this.elements.length)
+        }
+        public toString1() {
+            let elements = this.elements.map(x => x.toString1()).join(colorize(`, `, Colors.fgWhite))
+
+            if (elements.length > 0) elements = ` elements `
+
+            return colorize(`[`, Colors.fgWhite) + elements + colorize(`]`, Colors.fgWhite)
+        }
+    }
     class Terminal_ extends Something_ {
         public halt = true
     }
@@ -568,6 +597,12 @@ function createContext() : Context {
     const power = new External_({ value : buffer => buffer.at(2).power(buffer) })
     const root = new External_({ value : buffer => buffer.at(2).root(buffer) })
 
+    const List = new External_({ value : buffer => {
+        const [ op, next ] = buffer
+
+        return Buffer_.from([ next, next, new List_ ])
+    } })
+
     const createNumber = (value : number) => new Number_({ value })
     const createString = (value : string) => new String_({ value })
     const print = new External_({ value : buffer => {
@@ -626,6 +661,8 @@ function createContext() : Context {
         [`%`] : wholeDivide,
         [`**`] : power,
         [`//`] : root,
+
+        List,
 
         createNumber,
         createString,
