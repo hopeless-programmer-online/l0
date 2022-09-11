@@ -32,6 +32,8 @@ interface Something {
     multiply2(other : Something) : Something
     divide2(other : Something) : Something
     wholeDivide2(other : Something) : Something[]
+    power2(other : Something) : Something
+    root2(other : Something) : Something
     toString2() : Something
 
     // toNothing(buffer : Buffer) : Buffer
@@ -47,8 +49,8 @@ interface Something {
     multiply(buffer : Buffer) : Buffer
     divide(buffer : Buffer) : Buffer
     wholeDivide(buffer : Buffer) : Buffer
-    // power(buffer : Buffer) : Buffer
-    // root(buffer : Buffer) : Buffer
+    power(buffer : Buffer) : Buffer
+    root(buffer : Buffer) : Buffer
     call(params : Buffer) : Buffer
 }
 
@@ -74,8 +76,8 @@ type Context = {
     [`*`] : Something
     [`/`] : Something
     [`%`] : Something
-    // [`**`] : Table
-    // [`//`] : Table
+    [`**`] : Something
+    [`//`] : Something
 
     // io
     createNumber(value : number) : Something
@@ -148,8 +150,8 @@ export class Filler extends TranslationFiller<Something, Something, Something> {
             case `*`: return context[`*`]
             case `/`: return context[`/`]
             case `%`: return context[`%`]
-            // case `**`: return context[`**`]
-            // case `//`: return context[`//`]
+            case `**`: return context[`**`]
+            case `//`: return context[`//`]
 
             case `print`: return context.print
 
@@ -261,6 +263,12 @@ function createContext() : Context {
         public wholeDivide2(other : Something) : Something[] {
             throw new Error // @todo
         }
+        public power2(other : Something) : Something {
+            throw new Error // @todo
+        }
+        public root2(other : Something) : Something {
+            throw new Error // @todo
+        }
         public toString2() {
             const value = this.toString1()
 
@@ -327,15 +335,16 @@ function createContext() : Context {
 
             return Buffer_.from([ next, next, ...this.wholeDivide2(other) ])
         }
-        // public wholeDivide(buffer : Buffer) : Buffer {
-        //     return this.uniformCall(wholeDivide, buffer)
-        // }
-        // public power(buffer : Buffer) : Buffer {
-        //     return this.uniformCall(power, buffer)
-        // }
-        // public root(buffer : Buffer) : Buffer {
-        //     return this.uniformCall(root, buffer)
-        // }
+        public power(buffer : Buffer) : Buffer {
+            const [ op, next, me, other ] = buffer
+
+            return Buffer_.from([ next, next, this.power2(other) ])
+        }
+        public root(buffer : Buffer) : Buffer {
+            const [ op, next, me, other ] = buffer
+
+            return Buffer_.from([ next, next, this.root2(other) ])
+        }
         public call(params : Buffer) : Buffer {
             throw new Error // @todo
         }
@@ -433,6 +442,16 @@ function createContext() : Context {
             const c = a % b
 
             return [ new Number_({ value : (a - c) / b }), new Number_({ value : c }) ]
+        }
+        public power2(other: Something) {
+            const value = this.value ** other.toNumber1()
+
+            return new Number_({ value })
+        }
+        public root2(other: Something) {
+            const value = this.value ** (1 / other.toNumber1())
+
+            return new Number_({ value })
         }
     }
     class String_ extends Primitive_<string> {
@@ -546,8 +565,8 @@ function createContext() : Context {
     const multiply = new External_({ value : buffer => buffer.at(2).multiply(buffer) })
     const divide = new External_({ value : buffer => buffer.at(2).divide(buffer) })
     const wholeDivide = new External_({ value : buffer => buffer.at(2).wholeDivide(buffer) })
-    // const power = new External_({ value : buffer => buffer.at(2).power(buffer) })
-    // const root = new External_({ value : buffer => buffer.at(2).root(buffer) })
+    const power = new External_({ value : buffer => buffer.at(2).power(buffer) })
+    const root = new External_({ value : buffer => buffer.at(2).root(buffer) })
 
     const createNumber = (value : number) => new Number_({ value })
     const createString = (value : string) => new String_({ value })
@@ -605,8 +624,8 @@ function createContext() : Context {
         [`*`] : multiply,
         [`/`] : divide,
         [`%`] : wholeDivide,
-        // [`**`] : power,
-        // [`//`] : root,
+        [`**`] : power,
+        [`//`] : root,
 
         createNumber,
         createString,
