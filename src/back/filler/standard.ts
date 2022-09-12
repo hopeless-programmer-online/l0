@@ -36,6 +36,8 @@ interface Something {
     root2(other : Something) : Something
     toString2() : Something
     pushBack2(values : Something[]) : void
+    get2(key : Something) : Something
+    set2(key : Something, value : Something) : void
 
     // toNothing(buffer : Buffer) : Buffer
     toBoolean(buffer : Buffer) : Buffer
@@ -52,6 +54,8 @@ interface Something {
     wholeDivide(buffer : Buffer) : Buffer
     power(buffer : Buffer) : Buffer
     root(buffer : Buffer) : Buffer
+    get(buffer : Buffer) : Buffer
+    set(buffer : Buffer) : Buffer
     pushBack(buffer : Buffer) : Buffer
     call(params : Buffer) : Buffer
 }
@@ -84,6 +88,8 @@ type Context = {
     // collections
     List : Something
     push_back : Something
+    get : Something
+    set : Something
 
     // io
     createNumber(value : number) : Something
@@ -160,6 +166,8 @@ export class Filler extends TranslationFiller<Something, Something, Something> {
             case `//`: return context[`//`]
 
             case `List`: return context.List
+            case `get`: return context.get
+            case `set`: return context.set
             case `push_back`: return context.push_back
 
             case `print`: return context.print
@@ -283,6 +291,12 @@ function createContext() : Context {
 
             return new String_({ value })
         }
+        public get2(key : Something) : Something {
+            throw new Error // @todo
+        }
+        public set2(key : Something, value : Something) : void {
+            throw new Error // @todo
+        }
         public pushBack2(values : Something[]) {
             throw new Error // @todo
         }
@@ -356,6 +370,18 @@ function createContext() : Context {
             const [ op, next, me, other ] = buffer
 
             return Buffer_.from([ next, next, this.root2(other) ])
+        }
+        public get(buffer : Buffer) : Buffer {
+            const [ op, next, me, key ] = buffer
+
+            return Buffer_.from([ next, next, this.get2(key) ])
+        }
+        public set(buffer : Buffer) : Buffer {
+            const [ op, next, me, key, value ] = buffer
+
+            this.set2(key, value)
+
+            return Buffer_.from([ next, next ])
         }
         public pushBack(buffer : Buffer) : Buffer {
             const [ op, next, me ] = buffer
@@ -518,6 +544,12 @@ function createContext() : Context {
             return colorize(`[`, Colors.fgWhite) + elements + colorize(`]`, Colors.fgWhite)
         }
 
+        public get2(key : Something) : Something {
+            return this.elements[key.toNumber1()]
+        }
+        public set2(key : Something, value : Something) : void {
+            this.elements[key.toNumber1()] = value
+        }
         public pushBack2(values : Something[]) {
             this.elements.push(...values)
         }
@@ -621,6 +653,8 @@ function createContext() : Context {
 
         return Buffer_.from([ next, next, new List_ ])
     } })
+    const get = new External_({ value : buffer => buffer.at(2).get(buffer) })
+    const set = new External_({ value : buffer => buffer.at(2).set(buffer) })
     const push_back = new External_({ value : buffer => buffer.at(2).pushBack(buffer) })
 
     const createNumber = (value : number) => new Number_({ value })
@@ -683,6 +717,8 @@ function createContext() : Context {
         [`//`] : root,
 
         List,
+        get,
+        set,
         push_back,
 
         createNumber,
@@ -730,48 +766,3 @@ enum Colors {
 function colorize(text : string, color : Colors = Colors.reset) {
     return `\x1b[${color}m${text}\x1b[${Colors.reset}m`
 }
-
-/*
-Nothing(x)
-nothing
-
-Boolean(x)
-true
-false
-not(x)
-and(x, y)
-or(x, y)
-if(x, then)
-==(x, y) ; is equal
-!=(x, y) ; is not equal
-
-Number(x)
-+(x, y)  ; addition
--(x, y)  ; subtraction
-*(x, y)  ; multiplication
-/(x, y)  ; division
-**(x, y) ; power
-//(x, y) ; root
-%(x, y)  ; integer division
-
-; =(x, y)  ; set
-<(x, y)
->(x, y)
-<=(x, y)
->=(x, y)
-
-String(x)
-length(m)
-; todo
-
-Map()
-get(m, k)
-set(m, k, v)
-; todo
-
-Location(x)
-
-print(...text)
-
-bind(next, target, ...buffer)
-*/
