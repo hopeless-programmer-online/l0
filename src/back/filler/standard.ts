@@ -19,6 +19,8 @@ interface Something {
     isNotEqual1(other : Something) : boolean
     toNumber1() : number
     toString1() : string
+    popBack1(amount? : number) : Something[]
+    popFront1(amount? : number) : Something[]
 
     toBoolean2() : Something
     isEqual2(other : Something) : Something
@@ -36,6 +38,9 @@ interface Something {
     root2(other : Something) : Something
     toString2() : Something
     pushBack2(values : Something[]) : void
+    pushFront2(values : Something[]) : void
+    popBack2(amount : Something) : Something[]
+    popFront2(amount : Something) : Something[]
     get2(key : Something) : Something
     set2(key : Something, value : Something) : void
 
@@ -57,6 +62,9 @@ interface Something {
     get(buffer : Buffer) : Buffer
     set(buffer : Buffer) : Buffer
     pushBack(buffer : Buffer) : Buffer
+    pushFront(buffer : Buffer) : Buffer
+    popBack(buffer : Buffer) : Buffer
+    popFront(buffer : Buffer) : Buffer
     call(params : Buffer) : Buffer
 }
 
@@ -88,6 +96,9 @@ type Context = {
     // collections
     List : Something
     push_back : Something
+    push_front : Something
+    pop_back : Something
+    pop_front : Something
     get : Something
     set : Something
 
@@ -169,6 +180,9 @@ export class Filler extends TranslationFiller<Something, Something, Something> {
             case `get`: return context.get
             case `set`: return context.set
             case `push_back`: return context.push_back
+            case `push_front`: return context.push_front
+            case `pop_back`: return context.pop_back
+            case `pop_front`: return context.pop_front
 
             case `print`: return context.print
 
@@ -237,6 +251,12 @@ function createContext() : Context {
         public toString1() : string {
             throw new Error // @todo
         }
+        public popBack1(amount? : number) : Something[] {
+            throw new Error // @todo
+        }
+        public popFront1(amount? : number) : Something[] {
+            throw new Error // @todo
+        }
 
         public toBoolean2() : Something {
             return this.toBoolean1() ? true_ : false_
@@ -299,6 +319,19 @@ function createContext() : Context {
         }
         public pushBack2(values : Something[]) {
             throw new Error // @todo
+        }
+        public pushFront2(values : Something[]) {
+            throw new Error // @todo
+        }
+        public popBack2(amount : Something) : Something[] {
+            const amount_ = amount instanceof Nothing_ ? undefined : amount.toNumber1()
+
+            return this.popBack1(amount_)
+        }
+        public popFront2(amount : Something) : Something[] {
+            const amount_ = amount instanceof Nothing_ ? undefined : amount.toNumber1()
+
+            return this.popFront1(amount_)
         }
 
         public toBoolean(buffer : Buffer) : Buffer {
@@ -390,6 +423,24 @@ function createContext() : Context {
             this.pushBack2(values)
 
             return Buffer_.from([ next, next ])
+        }
+        public pushFront(buffer : Buffer) : Buffer {
+            const [ op, next, me ] = buffer
+            const values = buffer.slice(3).array
+
+            this.pushFront2(values)
+
+            return Buffer_.from([ next, next ])
+        }
+        public popBack(buffer : Buffer) : Buffer {
+            const [ op, next, me, amount ] = buffer
+
+            return Buffer_.from([ next, next, ...this.popBack2(amount) ])
+        }
+        public popFront(buffer : Buffer) : Buffer {
+            const [ op, next, me, amount ] = buffer
+
+            return Buffer_.from([ next, next, ...this.popFront2(amount) ])
         }
         public call(params : Buffer) : Buffer {
             throw new Error // @todo
@@ -543,6 +594,16 @@ function createContext() : Context {
 
             return colorize(`[`, Colors.fgWhite) + elements + colorize(`]`, Colors.fgWhite)
         }
+        public popBack1(amount: number = 1) {
+            const { elements } = this
+
+            return elements.splice(elements.length - amount, amount)
+        }
+        public popFront1(amount: number = 1) {
+            const { elements } = this
+
+            return elements.splice(0, amount)
+        }
 
         public get2(key : Something) : Something {
             return this.elements[key.toNumber1()]
@@ -552,6 +613,9 @@ function createContext() : Context {
         }
         public pushBack2(values : Something[]) {
             this.elements.push(...values)
+        }
+        public pushFront2(values : Something[]) {
+            this.elements.unshift(...values)
         }
     }
     class Terminal_ extends Something_ {
@@ -656,6 +720,9 @@ function createContext() : Context {
     const get = new External_({ value : buffer => buffer.at(2).get(buffer) })
     const set = new External_({ value : buffer => buffer.at(2).set(buffer) })
     const push_back = new External_({ value : buffer => buffer.at(2).pushBack(buffer) })
+    const push_front = new External_({ value : buffer => buffer.at(2).pushFront(buffer) })
+    const pop_back = new External_({ value : buffer => buffer.at(2).popBack(buffer) })
+    const pop_front = new External_({ value : buffer => buffer.at(2).popFront(buffer) })
 
     const createNumber = (value : number) => new Number_({ value })
     const createString = (value : string) => new String_({ value })
@@ -720,6 +787,9 @@ function createContext() : Context {
         get,
         set,
         push_back,
+        push_front,
+        pop_back,
+        pop_front,
 
         createNumber,
         createString,
