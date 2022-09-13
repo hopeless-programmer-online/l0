@@ -114,6 +114,8 @@ type Context = {
     print : Something
 
     // programs
+    Internal : Something
+    External : Something
     bind : Something
     createTemplate : (targets : number[]) => Something
     createInstruction : (template : Something, buffer : Something[]) => Something
@@ -195,9 +197,11 @@ export class Filler extends TranslationFiller<Something, Something, Something> {
 
             case `print`: return context.print
 
-            case `type`: return context.type
             // case `bind`: return context.bind
+            case `Internal`: return context.Internal
+            case `External`: return context.External
 
+            case `type`: return context.type
             // case `super`: return context.super
         }
 
@@ -687,6 +691,10 @@ function createContext() : Context {
             return this === other
         }
 
+        public getType2() : Something {
+            return Internal
+        }
+
         public call(params : Buffer) {
             const buffer_ = params.slice(1)
 
@@ -712,6 +720,10 @@ function createContext() : Context {
         }
         public toString1(): string {
             return `${colorize(`[`, Colors.fgWhite)}${colorize(`external`, Colors.fgMagenta)}${colorize(`]`, Colors.fgWhite)} ${colorize(`program`, Colors.fgBlue)} ${colorize(this.name, Colors.fgGreen)}`
+        }
+
+        public getType2() : Something {
+            return External
         }
 
         public call(buffer : Buffer) : Buffer {
@@ -797,6 +809,8 @@ function createContext() : Context {
         return Buffer_.from([ next, next ])
     } })
 
+    const Internal = new External_({ name : `Internal`, value : () => { throw new Error } })
+    const External = new External_({ name : `External`, value : () => { throw new Error } })
     const bind = new External_({ name : `bind`, value : buffer => {
         const [ op, next, target ] = buffer
 
@@ -861,6 +875,8 @@ function createContext() : Context {
         createString,
         print,
 
+        Internal,
+        External,
         bind,
         createTemplate,
         createInstruction,
