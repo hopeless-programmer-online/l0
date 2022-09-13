@@ -37,21 +37,22 @@ interface Something {
     power2(other : Something) : Something
     root2(other : Something) : Something
     toString2() : Something
+    get2(key : Something) : Something
+    set2(key : Something, value : Something) : void
     pushBack2(values : Something[]) : void
     pushFront2(values : Something[]) : void
     popBack2(amount : Something) : Something[]
     popFront2(amount : Something) : Something[]
-    get2(key : Something) : Something
-    set2(key : Something, value : Something) : void
+    getType2() : Something
 
     // toNothing(buffer : Buffer) : Buffer
     toBoolean(buffer : Buffer) : Buffer
-    toNumber(buffer : Buffer) : Buffer
     isEqual(buffer : Buffer) : Buffer
     isNotEqual(buffer : Buffer) : Buffer
     not(buffer : Buffer) : Buffer
     and(buffer : Buffer) : Buffer
     or(buffer : Buffer) : Buffer
+    toNumber(buffer : Buffer) : Buffer
     add(buffer : Buffer) : Buffer
     subtract(buffer : Buffer) : Buffer
     multiply(buffer : Buffer) : Buffer
@@ -59,12 +60,14 @@ interface Something {
     wholeDivide(buffer : Buffer) : Buffer
     power(buffer : Buffer) : Buffer
     root(buffer : Buffer) : Buffer
+    toString(buffer : Buffer) : Buffer
     get(buffer : Buffer) : Buffer
     set(buffer : Buffer) : Buffer
     pushBack(buffer : Buffer) : Buffer
     pushFront(buffer : Buffer) : Buffer
     popBack(buffer : Buffer) : Buffer
     popFront(buffer : Buffer) : Buffer
+    getType(params : Buffer) : Buffer
     call(params : Buffer) : Buffer
 }
 
@@ -93,6 +96,9 @@ type Context = {
     [`**`] : Something
     [`//`] : Something
 
+    // text
+    String : Something
+
     // collections
     List : Something
     push_back : Something
@@ -113,6 +119,7 @@ type Context = {
     createInstruction : (template : Something, buffer : Something[]) => Something
 
     // other
+    type : Something
     terminal : Something
 
     createMachine : (buffer : Something[]) => Machine
@@ -176,6 +183,8 @@ export class Filler extends TranslationFiller<Something, Something, Something> {
             case `**`: return context[`**`]
             case `//`: return context[`//`]
 
+            case `String`: return context.String
+
             case `List`: return context.List
             case `get`: return context.get
             case `set`: return context.set
@@ -186,6 +195,7 @@ export class Filler extends TranslationFiller<Something, Something, Something> {
 
             case `print`: return context.print
 
+            case `type`: return context.type
             // case `bind`: return context.bind
 
             // case `super`: return context.super
@@ -333,6 +343,9 @@ function createContext() : Context {
 
             return this.popFront1(amount_)
         }
+        public getType2() : Something {
+            throw new Error // @todo
+        }
 
         public toBoolean(buffer : Buffer) : Buffer {
             const [ op, next ] = buffer
@@ -404,6 +417,11 @@ function createContext() : Context {
 
             return Buffer_.from([ next, next, this.root2(other) ])
         }
+        public toString(buffer : Buffer) : Buffer {
+            const [ op, next ] = buffer
+
+            return Buffer_.from([ next, next, this.toString2() ])
+        }
         public get(buffer : Buffer) : Buffer {
             const [ op, next, me, key ] = buffer
 
@@ -441,6 +459,11 @@ function createContext() : Context {
             const [ op, next, me, amount ] = buffer
 
             return Buffer_.from([ next, next, ...this.popFront2(amount) ])
+        }
+        public getType(buffer : Buffer) : Buffer {
+            const [ op, next ] = buffer
+
+            return Buffer_.from([ next, next, this.getType2() ])
         }
         public call(params : Buffer) : Buffer {
             throw new Error // @todo
@@ -498,6 +521,9 @@ function createContext() : Context {
 
             return new Boolean_({ value })
         }
+        public getType2() : Something {
+            return Boolean
+        }
     }
     class Number_ extends Primitive_<number> {
         public toBoolean1() {
@@ -550,6 +576,9 @@ function createContext() : Context {
 
             return new Number_({ value })
         }
+        public getType2() : Something {
+            return Number
+        }
     }
     class String_ extends Primitive_<string> {
         public toBoolean1() {
@@ -569,6 +598,9 @@ function createContext() : Context {
             const value = this.value + other.toString1()
 
             return new String_({ value })
+        }
+        public getType2() : Something {
+            return String
         }
     }
     class List_ extends Something_ {
@@ -617,9 +649,16 @@ function createContext() : Context {
         public pushFront2(values : Something[]) {
             this.elements.unshift(...values)
         }
+        public getType2() : Something {
+            return List
+        }
     }
     class Terminal_ extends Something_ {
         public halt = true
+
+        public toString1(): string {
+            return `${colorize(`[`, Colors.fgWhite)}${colorize(`terminal`, Colors.fgMagenta)}${colorize(`]`, Colors.fgWhite)} ${colorize(`program`, Colors.fgBlue)}`
+        }
     }
     class Template_ extends Something_ {
         public readonly targets : number[]
@@ -641,6 +680,13 @@ function createContext() : Context {
             this.template = template
         }
 
+        public toString1(): string {
+            return `${colorize(`[`, Colors.fgWhite)}${colorize(`internal`, Colors.fgMagenta)}${colorize(`]`, Colors.fgWhite)} ${colorize(`program`, Colors.fgBlue)}`
+        }
+        public isEqual1(other: Something) : boolean {
+            return this === other
+        }
+
         public call(params : Buffer) {
             const buffer_ = params.slice(1)
 
@@ -653,6 +699,21 @@ function createContext() : Context {
         }
     }
     class External_ extends Primitive_<(buffer : Buffer) => Buffer> {
+        public readonly name : string
+
+        public constructor({ name, value } : { name : string, value : (buffer : Buffer) => Buffer }) {
+            super({ value })
+
+            this.name = name
+        }
+
+        public isEqual1(other: Something) : boolean {
+            return this === other
+        }
+        public toString1(): string {
+            return `${colorize(`[`, Colors.fgWhite)}${colorize(`external`, Colors.fgMagenta)}${colorize(`]`, Colors.fgWhite)} ${colorize(`program`, Colors.fgBlue)} ${colorize(this.name, Colors.fgGreen)}`
+        }
+
         public call(buffer : Buffer) : Buffer {
             return this.value(buffer)
         }
@@ -693,40 +754,42 @@ function createContext() : Context {
     // const Nothing = new External_({ value : buffer => buffer.at(2).toNothing(buffer) })
     const nothing = new Nothing_
 
-    const Boolean = new External_({ value : buffer => buffer.at(2).toBoolean(buffer) })
+    const Boolean = new External_({ name : `Boolean`, value : buffer => buffer.at(2).toBoolean(buffer) })
     const true_ = new Boolean_({ value : true })
     const false_ = new Boolean_({ value : false })
-    const not = new External_({ value : buffer => buffer.at(2).not(buffer) })
-    const and = new External_({ value : buffer => buffer.at(2).and(buffer) })
-    const or = new External_({ value : buffer => buffer.at(2).or(buffer) })
+    const not = new External_({ name : `not`, value : buffer => buffer.at(2).not(buffer) })
+    const and = new External_({ name : `and`, value : buffer => buffer.at(2).and(buffer) })
+    const or = new External_({ name : `or`, value : buffer => buffer.at(2).or(buffer) })
     // @todo: if
-    const isEqual = new External_({ value : buffer => buffer.at(2).isEqual(buffer) })
-    const isNotEqual = new External_({ value : buffer => buffer.at(2).isNotEqual(buffer) })
+    const isEqual = new External_({ name : `==`, value : buffer => buffer.at(2).isEqual(buffer) })
+    const isNotEqual = new External_({ name : `!=`, value : buffer => buffer.at(2).isNotEqual(buffer) })
 
-    const Number = new External_({ value : buffer => buffer.at(2).toNumber(buffer) })
-    const add = new External_({ value : buffer => buffer.at(2).add(buffer) })
-    const subtract = new External_({ value : buffer => buffer.at(2).subtract(buffer) })
-    const multiply = new External_({ value : buffer => buffer.at(2).multiply(buffer) })
-    const divide = new External_({ value : buffer => buffer.at(2).divide(buffer) })
-    const wholeDivide = new External_({ value : buffer => buffer.at(2).wholeDivide(buffer) })
-    const power = new External_({ value : buffer => buffer.at(2).power(buffer) })
-    const root = new External_({ value : buffer => buffer.at(2).root(buffer) })
+    const Number = new External_({ name : `Number`, value : buffer => buffer.at(2).toNumber(buffer) })
+    const add = new External_({ name : `+`, value : buffer => buffer.at(2).add(buffer) })
+    const subtract = new External_({ name : `-`, value : buffer => buffer.at(2).subtract(buffer) })
+    const multiply = new External_({ name : `*`, value : buffer => buffer.at(2).multiply(buffer) })
+    const divide = new External_({ name : `/`, value : buffer => buffer.at(2).divide(buffer) })
+    const wholeDivide = new External_({ name : `%`, value : buffer => buffer.at(2).wholeDivide(buffer) })
+    const power = new External_({ name : `**`, value : buffer => buffer.at(2).power(buffer) })
+    const root = new External_({ name : `//`, value : buffer => buffer.at(2).root(buffer) })
 
-    const List = new External_({ value : buffer => {
+    const String = new External_({ name : `String`, value : buffer => buffer.at(2).toString(buffer) })
+
+    const List = new External_({ name : `List`, value : buffer => {
         const [ op, next ] = buffer
 
         return Buffer_.from([ next, next, new List_ ])
     } })
-    const get = new External_({ value : buffer => buffer.at(2).get(buffer) })
-    const set = new External_({ value : buffer => buffer.at(2).set(buffer) })
-    const push_back = new External_({ value : buffer => buffer.at(2).pushBack(buffer) })
-    const push_front = new External_({ value : buffer => buffer.at(2).pushFront(buffer) })
-    const pop_back = new External_({ value : buffer => buffer.at(2).popBack(buffer) })
-    const pop_front = new External_({ value : buffer => buffer.at(2).popFront(buffer) })
+    const get = new External_({ name : `get`, value : buffer => buffer.at(2).get(buffer) })
+    const set = new External_({ name : `set`, value : buffer => buffer.at(2).set(buffer) })
+    const push_back = new External_({ name : `push_back`, value : buffer => buffer.at(2).pushBack(buffer) })
+    const push_front = new External_({ name : `push_front`, value : buffer => buffer.at(2).pushFront(buffer) })
+    const pop_back = new External_({ name : `pop_back`, value : buffer => buffer.at(2).popBack(buffer) })
+    const pop_front = new External_({ name : `pop_front`, value : buffer => buffer.at(2).popFront(buffer) })
 
     const createNumber = (value : number) => new Number_({ value })
     const createString = (value : string) => new String_({ value })
-    const print = new External_({ value : buffer => {
+    const print = new External_({ name : `print`, value : buffer => {
         const [ op, next ] = buffer
 
         console.log(...buffer.array.slice(2).map(x => x.toString1()))
@@ -734,7 +797,7 @@ function createContext() : Context {
         return Buffer_.from([ next, next ])
     } })
 
-    const bind = new External_({ value : buffer => {
+    const bind = new External_({ name : `bind`, value : buffer => {
         const [ op, next, target ] = buffer
 
         if (!(next instanceof Template_)) throw new Error // @todo
@@ -757,6 +820,7 @@ function createContext() : Context {
         return new Internal_({ template, buffer : buffer_ })
     }
 
+    const type = new External_({ name : `type`, value : buffer => buffer.at(2).getType(buffer) })
     const terminal = new Terminal_
 
     const createMachine = (buffer : Something[]) => new Machine_({ buffer : Buffer_.from(buffer) })
@@ -783,6 +847,8 @@ function createContext() : Context {
         [`**`] : power,
         [`//`] : root,
 
+        String,
+
         List,
         get,
         set,
@@ -799,6 +865,7 @@ function createContext() : Context {
         createTemplate,
         createInstruction,
 
+        type,
         terminal,
 
         createMachine,
