@@ -44,6 +44,7 @@ interface Something {
     popBack2(amount : Something) : Something[]
     popFront2(amount : Something) : Something[]
     getType2() : Something
+    getTemplate2() : Something
 
     // toNothing(buffer : Buffer) : Buffer
     toBoolean(buffer : Buffer) : Buffer
@@ -68,6 +69,7 @@ interface Something {
     popBack(buffer : Buffer) : Buffer
     popFront(buffer : Buffer) : Buffer
     getType(params : Buffer) : Buffer
+    getTemplate(params : Buffer) : Buffer
     call(params : Buffer) : Buffer
 }
 
@@ -116,6 +118,9 @@ type Context = {
     // programs
     Internal : Something
     External : Something
+    get_template : Something
+    get_targets : Something
+    get_buffer : Something
     bind : Something
     createTemplate : (targets : number[]) => Something
     createInstruction : (template : Something, buffer : Something[]) => Something
@@ -200,6 +205,9 @@ export class Filler extends TranslationFiller<Something, Something, Something> {
             // case `bind`: return context.bind
             case `Internal`: return context.Internal
             case `External`: return context.External
+            case `get_template`: return context.get_template
+            case `get_targets`: return context.get_targets
+            case `get_buffer`: return context.get_buffer
 
             case `type`: return context.type
             // case `super`: return context.super
@@ -213,40 +221,6 @@ export class Filler extends TranslationFiller<Something, Something, Something> {
 }
 
 function createContext() : Context {
-    class Buffer_ implements Buffer {
-        public static from(array : Something[]) {
-            return new Buffer_({ array })
-        }
-
-        private _array : Something[]
-
-        public constructor({ array } : { array : Something[] }) {
-            this._array = array
-        }
-
-        public get array() {
-            return this._array
-        }
-
-        public * [Symbol.iterator]() : Generator<Something> {
-            for (const parameter of this._array) yield parameter
-
-            while (true) yield nothing
-        }
-
-        public at(index : number) {
-            return this._array[index] || nothing
-        }
-        public slice(begin : number) {
-            return Buffer_.from(this._array.slice(begin))
-        }
-        public push(...values: Something[]) {
-            this._array.push(...values)
-        }
-        public unshift(...values: Something[]) {
-            this._array.unshift(...values)
-        }
-    }
     class Something_ implements Something {
         public halt = false
 
@@ -348,6 +322,9 @@ function createContext() : Context {
             return this.popFront1(amount_)
         }
         public getType2() : Something {
+            throw new Error // @todo
+        }
+        public getTemplate2() : Something {
             throw new Error // @todo
         }
 
@@ -468,6 +445,11 @@ function createContext() : Context {
             const [ op, next ] = buffer
 
             return Buffer_.from([ next, next, this.getType2() ])
+        }
+        public getTemplate(buffer : Buffer) : Buffer {
+            const [ op, next ] = buffer
+
+            return Buffer_.from([ next, next, this.getTemplate2() ])
         }
         public call(params : Buffer) : Buffer {
             throw new Error // @todo
@@ -608,7 +590,13 @@ function createContext() : Context {
         }
     }
     class List_ extends Something_ {
-        private elements : Something[] = []
+        protected elements : Something[] = []
+
+        public constructor({ elements = [] } : { elements? : Something[] } = {}) {
+            super()
+
+            this.elements = elements
+        }
 
         public toBoolean1() {
             return this.elements.length > 0 ? true : false
@@ -657,11 +645,39 @@ function createContext() : Context {
             return List
         }
     }
+    class Buffer_ extends List_ implements Buffer {
+        public static from(elements : Something[]) {
+            return new Buffer_({ elements })
+        }
+
+        public get array() {
+            return this.elements
+        }
+
+        public * [Symbol.iterator]() : Generator<Something> {
+            for (const parameter of this.elements) yield parameter
+
+            while (true) yield nothing
+        }
+
+        public at(index : number) {
+            return this.elements[index] || nothing
+        }
+        public slice(begin : number) {
+            return Buffer_.from(this.elements.slice(begin))
+        }
+        public push(...values: Something[]) {
+            this.elements.push(...values)
+        }
+        public unshift(...values: Something[]) {
+            this.elements.unshift(...values)
+        }
+    }
     class Terminal_ extends Something_ {
         public halt = true
 
         public toString1(): string {
-            return `${colorize(`[`, Colors.fgWhite)}${colorize(`terminal`, Colors.fgMagenta)}${colorize(`]`, Colors.fgWhite)} ${colorize(`program`, Colors.fgBlue)}`
+            return `${colorize(`<`, Colors.fgWhite)}${colorize(`terminal`, Colors.fgMagenta)}${colorize(`>`, Colors.fgWhite)} ${colorize(`program`, Colors.fgBlue)}`
         }
     }
     class Template_ extends Something_ {
@@ -671,6 +687,14 @@ function createContext() : Context {
             super()
 
             this.targets = targets
+        }
+
+        public get targetsAsList() {
+            return new List_({ elements : this.targets.map(value => new Number_({ value })) })
+        }
+
+        public toString1(): string {
+            return `${colorize(`template`, Colors.fgBlue)}`
         }
     }
     class Internal_ extends Something_ {
@@ -684,8 +708,12 @@ function createContext() : Context {
             this.template = template
         }
 
+        public get bufferAsList() {
+            return new List_({  elements : this.buffer.array.slice() })
+        }
+
         public toString1(): string {
-            return `${colorize(`[`, Colors.fgWhite)}${colorize(`internal`, Colors.fgMagenta)}${colorize(`]`, Colors.fgWhite)} ${colorize(`program`, Colors.fgBlue)}`
+            return `${colorize(`<`, Colors.fgWhite)}${colorize(`internal`, Colors.fgMagenta)}${colorize(`>`, Colors.fgWhite)} ${colorize(`program`, Colors.fgBlue)}`
         }
         public isEqual1(other: Something) : boolean {
             return this === other
@@ -693,6 +721,9 @@ function createContext() : Context {
 
         public getType2() : Something {
             return Internal
+        }
+        public getTemplate2(): Something {
+            return this.template
         }
 
         public call(params : Buffer) {
@@ -719,7 +750,7 @@ function createContext() : Context {
             return this === other
         }
         public toString1(): string {
-            return `${colorize(`[`, Colors.fgWhite)}${colorize(`external`, Colors.fgMagenta)}${colorize(`]`, Colors.fgWhite)} ${colorize(`program`, Colors.fgBlue)} ${colorize(this.name, Colors.fgGreen)}`
+            return `${colorize(`<`, Colors.fgWhite)}${colorize(`external`, Colors.fgMagenta)}${colorize(`>`, Colors.fgWhite)} ${colorize(`program`, Colors.fgBlue)} ${colorize(this.name, Colors.fgGreen)}`
         }
 
         public getType2() : Something {
@@ -811,6 +842,21 @@ function createContext() : Context {
 
     const Internal = new External_({ name : `Internal`, value : () => { throw new Error } })
     const External = new External_({ name : `External`, value : () => { throw new Error } })
+    const get_template = new External_({ name : `get_template`, value : buffer => buffer.at(2).getTemplate(buffer) })
+    const get_targets = new External_({ name : `get_targets`, value : buffer => {
+        const [ op, next, target ] = buffer
+
+        if (!(target instanceof Template_)) throw new Error // @todo
+
+        return Buffer_.from([ next, next, target.targetsAsList ])
+    } })
+    const get_buffer = new External_({ name : `get_buffer`, value : buffer => {
+        const [ op, next, target ] = buffer
+
+        if (!(target instanceof Internal_)) throw new Error // @todo
+
+        return Buffer_.from([ next, next, target.bufferAsList ])
+    } })
     const bind = new External_({ name : `bind`, value : buffer => {
         const [ op, next, target ] = buffer
 
@@ -877,6 +923,9 @@ function createContext() : Context {
 
         Internal,
         External,
+        get_template,
+        get_targets,
+        get_buffer,
         bind,
         createTemplate,
         createInstruction,
