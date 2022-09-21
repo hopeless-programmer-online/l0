@@ -151,7 +151,7 @@ export class Filler extends TranslationFiller<Something, Something, Something> {
         const { text } = name
         const { context } = this
 
-        const number = text.match(/^(?:\d|\s)+(?:\.(?:\d|\s)+)?$/)
+        const number = text.match(/^-?(?:\d|\s)+(?:\.(?:\d|\s)+)?(?:e(?:\s)*-?(?:\d|\s)+(?:\.(?:\d|\s)+)?)?$/)
 
         if (number) {
             const value = Number(text.replace(/\s/g, ``))
@@ -630,10 +630,23 @@ function createContext() : Context {
         }
 
         public get2(key : Something) : Something {
-            return this.elements[key.toNumber1()]
+            const { elements } = this
+
+            let index = key.toNumber1()
+
+            if (index < 0) index = elements.length + index
+            if (index < 0 || index > elements.length - 1) return nothing
+
+            return elements[index]
         }
         public set2(key : Something, value : Something) : void {
-            this.elements[key.toNumber1()] = value
+            const { elements } = this
+
+            let index = key.toNumber1()
+
+            if (index < 0) index = elements.length + index
+
+            elements[index] = value
         }
         public pushBack2(values : Something[]) {
             this.elements.push(...values)
