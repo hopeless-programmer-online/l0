@@ -122,7 +122,7 @@ type Context = {
     get_targets : Something
     get_buffer : Something
     bind : Something
-    createTemplate : (targets : number[]) => Something
+    createTemplate : (targets : number[], comment? : string) => Something
     createInstruction : (template : Something, buffer : Something[]) => Something
 
     // other
@@ -141,8 +141,8 @@ export class Filler extends TranslationFiller<Something, Something, Something> {
     public get terminal() {
         return this.context.terminal
     }
-    public createTemplate({ targets } : { comment: string; targets: number[] }) : Something {
-        return this.context.createTemplate(targets)
+    public createTemplate({ targets, comment } : { comment: string; targets: number[] }) : Something {
+        return this.context.createTemplate(targets, comment)
     }
     public createInstruction({ template, buffer } : { template: Something; buffer: Something[] }) : Something {
         return this.context.createInstruction(template, buffer)
@@ -695,11 +695,13 @@ function createContext() : Context {
     }
     class Template_ extends Something_ {
         public readonly targets : number[]
+        public readonly comment? : string
 
-        public constructor({ targets } : { targets : number[] }) {
+        public constructor({ targets, comment } : { targets : number[], comment? : string }) {
             super()
 
             this.targets = targets
+            this.comment = comment
         }
 
         public get targetsAsList() {
@@ -707,7 +709,7 @@ function createContext() : Context {
         }
 
         public toString1(): string {
-            return `${colorize(`template`, Colors.fgBlue)}`
+            return `${colorize(`template`, Colors.fgBlue)} ${this.comment ? colorize(`(${this.comment})`, Colors.fgWhite) : ``}`
         }
     }
     class Internal_ extends Something_ {
@@ -884,7 +886,7 @@ function createContext() : Context {
 
         return next_.call(Buffer_.from([]))
     } })
-    const createTemplate = (targets : number[]) => new Template_({ targets })
+    const createTemplate = (targets : number[], comment? : string) => new Template_({ targets, comment })
     const createInstruction = (template : Something, buffer : Something[]) => {
         if (!(template instanceof Template_)) throw new Error // @todo
 
