@@ -1,3 +1,45 @@
-x : Number(true)
+throw() {}
+f() {
+    throw()
+}
 
-print(x)
+; dummy super
+terminator() {}
+
+; restore buffer of internal instruction at the call time
+restore_buffer(internal, params) {
+    ; original buffer
+    buffer : get_buffer(internal)
+
+    push_front(buffer, internal) ; add self at 0
+
+    ; add params
+    callback(param) {
+        push_back(buffer, param)
+    }
+
+    map(params, callback)
+
+    ; transform buffer according to template
+    template : get_template(internal)
+    targets : get_targets(template)
+
+    callback(index) {
+        value : get(buffer, index)
+
+        super(value)
+    }
+
+    next : map(targets, callback)
+
+    super(next)
+}
+
+params : List()
+
+push_back(params, terminator)
+
+next : restore_buffer(f, params)
+op : get(next, 0)
+
+print(op)
