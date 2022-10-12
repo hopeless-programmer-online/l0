@@ -109,6 +109,7 @@ type Context = {
     pop_front : Something
     get : Something
     set : Something
+    map : Something
 
     // io
     createNumber(value : number) : Something
@@ -199,6 +200,7 @@ export class Filler extends TranslationFiller<Something, Something, Something> {
             case `push_front`: return context.push_front
             case `pop_back`: return context.pop_back
             case `pop_front`: return context.pop_front
+            case `map`: return context.map
 
             case `print`: return context.print
 
@@ -590,7 +592,7 @@ function createContext() : Context {
         }
     }
     class List_ extends Something_ {
-        protected elements : Something[] = []
+        public elements : Something[] = []
 
         public constructor({ elements = [] } : { elements? : Something[] } = {}) {
             super()
@@ -844,6 +846,30 @@ function createContext() : Context {
     const push_front = new External_({ name : `push_front`, value : buffer => buffer.at(2).pushFront(buffer) })
     const pop_back = new External_({ name : `pop_back`, value : buffer => buffer.at(2).popBack(buffer) })
     const pop_front = new External_({ name : `pop_front`, value : buffer => buffer.at(2).popFront(buffer) })
+    const map = new External_({ name : `map`, value : buffer => {
+        const [ op, super_, target, callback ] = buffer
+
+        if (!(target instanceof List_)) throw new Error // @todo
+
+        const { elements } = target
+        const results : Something[] = []
+        let i = 0
+
+        const iterator = new External_({ name : `map iterator`, value : buffer => {
+            const result = buffer.at(2)
+
+            if (i > 0) results.push(result)
+            if (i >= elements.length) return Buffer_.from([ super_, super_, new List_({ elements : results }) ])
+
+            const nextBuffer = Buffer_.from([ callback, iterator, elements[i], new Number_({ value : i }) ])
+
+            ++i
+
+            return nextBuffer
+        } })
+
+        return Buffer_.from([ iterator ])
+    }})
 
     const createNumber = (value : number) => new Number_({ value })
     const createString = (value : string) => new String_({ value })
@@ -931,6 +957,7 @@ function createContext() : Context {
         push_front,
         pop_back,
         pop_front,
+        map,
 
         createNumber,
         createString,
