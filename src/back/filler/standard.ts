@@ -204,7 +204,7 @@ export class Filler extends TranslationFiller<Something, Something, Something> {
 
             case `print`: return context.print
 
-            // case `bind`: return context.bind
+            case `bind`: return context.bind
             case `Internal`: return context.Internal
             case `External`: return context.External
             case `get_template`: return context.get_template
@@ -820,6 +820,13 @@ function createContext() : Context {
     const not = new External_({ name : `not`, value : buffer => buffer.at(2).not(buffer) })
     const and = new External_({ name : `and`, value : buffer => buffer.at(2).and(buffer) })
     const or = new External_({ name : `or`, value : buffer => buffer.at(2).or(buffer) })
+    const if_ = new External_({ name : `if`, value : buffer => {
+        const [ op, next, condition, then ] = buffer
+
+        if (condition.toBoolean1()) return Buffer_.from([])
+
+        return Buffer_.from([ next, next ])
+    } })
     // @todo: if
     const isEqual = new External_({ name : `==`, value : buffer => buffer.at(2).isEqual(buffer) })
     const isNotEqual = new External_({ name : `!=`, value : buffer => buffer.at(2).isNotEqual(buffer) })
