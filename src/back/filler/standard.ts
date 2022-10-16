@@ -87,6 +87,7 @@ type Context = {
     not : Something
     and : Something
     or : Something
+    if : Something
 
     // arithmetic
     Number : Something
@@ -181,6 +182,7 @@ export class Filler extends TranslationFiller<Something, Something, Something> {
             case `or`: return context.or
             case `==`: return context['==']
             case `!=`: return context['!=']
+            case `if`: return context.if
 
             case `Number`: return context.Number
             case `+`: return context[`+`]
@@ -945,6 +947,7 @@ function createContext() : Context {
         not,
         and,
         or,
+        if : if_,
 
         Number,
         [`+`] : add,
