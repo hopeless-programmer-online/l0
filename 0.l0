@@ -1,16 +1,52 @@
-throw() {}
+throw(message) {
+    print(message)
+
+    /super()
+}
 f() {
     throw()
 }
+
+; @class
+; @param value: something
+Immediate_Value(value) {
+    object : List()
+
+    ; #0
+    push_back(object, "immediate value")
+    ; #1
+    push_back(object, value)
+
+    super(object)
+}
+
+; @class
+; @param targets: List(Value)
+; @param buffer: List(Value)
+Instruction_Value(targets, buffer) {
+    object : List()
+
+    ; #0
+    push_back(object, "instruction value")
+    ; #1
+    push_back(object, targets)
+    ; #2
+    push_back(object, buffer)
+
+    super(object)
+}
+; @type Value: Or(Immediate_Value, Instruction_Value)
 
 ; dummy super
 terminator() {}
 
 ; restore buffer of internal instruction at the call time
+; @param params: List(Value)
 restore_buffer(internal, params) {
     ; original buffer
     buffer : get_buffer(internal)
 
+    internal : Immediate_Value(internal)
     push_front(buffer, internal) ; add self at 0
 
     ; add params
@@ -21,11 +57,12 @@ restore_buffer(internal, params) {
     map(params, callback)
 
     ; transform buffer according to template
-    template : get_template(internal)
+    template : get_template(/internal)
     targets : get_targets(template)
 
     callback(index) {
         value : get(buffer, index)
+        value : Immediate_Value(value)
 
         super(value)
     }
@@ -35,11 +72,96 @@ restore_buffer(internal, params) {
     super(next)
 }
 
+; @param instruction: Value
+; @returns List(Value)
+extract_targets(instruction) {
+    type : get(instruction, 0)
+
+    check_immediate() {
+        is_not_immediate : !=(type, "immediate value")
+
+        if (is_not_immediate, super)
+
+        print("immmediate")
+
+        value : get(instruction, 1)
+
+        ; assumes that value is internal instruction
+        targets : get_targets(value)
+        targets : map(targets, Immediate_Value)
+
+        /super(targets)
+    }
+
+    check_immediate()
+
+    throw("cannot extract targets")
+}
+
+; @param buffer: List(Value)
+step(buffer) {
+    op : get(buffer, 0)
+
+    type : get(op, 0)
+
+    check_immediate() {
+        is_not_immediate : !=(type, "immediate value")
+
+        if (is_not_immediate, super)
+
+        print("immediate")
+
+        value : get(op, 1)
+
+        check_bind() {
+            is_not_bind : !=(value, bind)
+
+            if (is_not_bind, super)
+
+            print("bind")
+
+            ; slice params for next & target
+            params : slice(buffer, 3)
+
+            ; create contonuation instruction
+            next : get(buffer, 1)
+            next : extract_targets(next)
+            next : Instruction_Value(next, params)
+
+            ; create target instruction
+            target : get(buffer, 2)
+            target : extract_targets(target)
+            target : Instruction_Value(target, params)
+
+            push_back(params, target)
+
+            ; fill next buffer
+            buffer : List()
+
+            push_back(buffer, next) ; next as currect program
+            push_back(buffer, next) ; next as super (is this even needed?)
+
+            //super(buffer)
+        }
+
+        check_bind()
+
+        throw("cannot check over immediate")
+    }
+
+    check_immediate()
+
+    throw("cannot step")
+}
+
 params : List()
 
+; add terminator as super
 push_back(params, terminator)
 
-next : restore_buffer(f, params)
-op : get(next, 0)
+params : map(params, Immediate_Value)
+buffer : restore_buffer(f, params)
 
-print(op)
+buffer : step(buffer)
+
+print(buffer)
