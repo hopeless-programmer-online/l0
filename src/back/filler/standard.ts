@@ -111,6 +111,7 @@ type Context = {
     get : Something
     set : Something
     map : Something
+    slice : Something
 
     // io
     createNumber(value : number) : Something
@@ -203,6 +204,7 @@ export class Filler extends TranslationFiller<Something, Something, Something> {
             case `pop_back`: return context.pop_back
             case `pop_front`: return context.pop_front
             case `map`: return context.map
+            case `slice`: return context.slice
 
             case `print`: return context.print
 
@@ -879,6 +881,17 @@ function createContext() : Context {
 
         return Buffer_.from([ iterator ])
     }})
+    const slice = new External_({ name : `slice`, value : buffer => {
+        let [ op, next, target, begin_, end_ ] = buffer
+
+        if (!(target instanceof List_)) throw new Error // @todo
+
+        const begin = begin_ instanceof Nothing_ ? undefined : begin_.toNumber1()
+        const end = end_ instanceof Nothing_ ? undefined : end_.toNumber1()
+        const elements = target.elements.slice(begin, end)
+
+        return Buffer_.from([ next, next, new List_({ elements }) ])
+    }})
 
     const createNumber = (value : number) => new Number_({ value })
     const createString = (value : string) => new String_({ value })
@@ -968,6 +981,7 @@ function createContext() : Context {
         pop_back,
         pop_front,
         map,
+        slice,
 
         createNumber,
         createString,
