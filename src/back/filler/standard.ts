@@ -827,7 +827,7 @@ function createContext() : Context {
     const if_ = new External_({ name : `if`, value : buffer => {
         const [ op, next, condition, then ] = buffer
 
-        if (condition.toBoolean1()) return Buffer_.from([])
+        if (condition.toBoolean1()) return Buffer_.from([ then, next ])
 
         return Buffer_.from([ next, next ])
     } })
