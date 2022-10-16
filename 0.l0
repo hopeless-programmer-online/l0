@@ -148,8 +148,18 @@ step(buffer) {
 
         throw("cannot check over immediate")
     }
+    check_instruction() {
+        is_not_immediate : !=(type, "instruction value")
+
+        if (is_not_immediate, super)
+
+        print("instruction")
+
+        throw("cannot check over instruction")
+    }
 
     check_immediate()
+    check_instruction()
 
     throw("cannot step")
 }
@@ -163,5 +173,4 @@ params : map(params, Immediate_Value)
 buffer : restore_buffer(f, params)
 
 buffer : step(buffer)
-
-print(buffer)
+buffer : step(buffer)
