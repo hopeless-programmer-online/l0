@@ -705,6 +705,11 @@ function createContext() : Context {
         public getType2() : Something {
             return List
         }
+        public add2(other: Something) : Something {
+            if (!(other instanceof List_)) throw new Error
+
+            return new List_({ elements : [ ...this.elements, ...other.elements ] })
+        }
     }
     class Buffer_ extends List_ implements Buffer {
         public static from(elements : Something[]) {
