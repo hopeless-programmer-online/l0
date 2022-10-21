@@ -82,7 +82,7 @@ extract_targets(instruction) {
 
         if (is_not_immediate, super)
 
-        print("immmediate")
+        ; print("immmediate")
 
         value : get(instruction, 1)
 
@@ -102,6 +102,8 @@ extract_targets(instruction) {
 step(buffer) {
     op : get(buffer, 0)
 
+    ; print("op: ", op)
+
     type : get(op, 0)
 
     check_immediate() {
@@ -112,6 +114,8 @@ step(buffer) {
         print("immediate")
 
         value : get(op, 1)
+
+        ; print(value)
 
         check_bind() {
             is_not_bind : !=(value, bind)
@@ -143,19 +147,60 @@ step(buffer) {
 
             //super(buffer)
         }
+        check_throw() {
+            is_not_throw : !=(value, throw)
+
+            if (is_not_throw, super)
+
+            print("throw")
+
+            throw("throw reached")
+        }
 
         check_bind()
+        check_throw()
 
         throw("cannot check over immediate")
     }
     check_instruction() {
-        is_not_immediate : !=(type, "instruction value")
+        is_not_instruction : !=(type, "instruction value")
 
-        if (is_not_immediate, super)
+        if (is_not_instruction, super)
 
         print("instruction")
 
-        throw("cannot check over instruction")
+        targets : get(op, 1)
+        buffer : get(op, 2)
+        params : slice(buffer, 1)
+
+        buffer : slice(buffer) ; copy buffer
+        push_front(buffer, op)
+        buffer : +(buffer, params)
+
+        callback(target) {
+            type : get(target, 0)
+
+            check_immediate() {
+                is_not_immediate : !=(type, "immediate value")
+
+                if (is_not_immediate, super)
+
+                ; print("immediate")
+
+                value : get(op, 1)
+                value : get(buffer, value)
+
+                /super(value)
+            }
+
+            check_immediate()
+
+            throw("cannot process target")
+        }
+
+        buffer : map(targets, callback)
+
+        /super(buffer)
     }
 
     check_immediate()
@@ -172,5 +217,6 @@ push_back(params, terminator)
 params : map(params, Immediate_Value)
 buffer : restore_buffer(f, params)
 
+buffer : step(buffer)
 buffer : step(buffer)
 buffer : step(buffer)
