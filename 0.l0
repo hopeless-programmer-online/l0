@@ -84,10 +84,12 @@ extract_targets(instruction) {
 
         ; print("immmediate")
 
-        value : get(instruction, 1)
+        ; assumes that immediate value is template
+        template : get(instruction, 1)
 
-        ; assumes that value is internal instruction
-        targets : get_targets(value)
+        print(template)
+
+        targets : get_targets(template)
         targets : map(targets, Immediate_Value)
 
         /super(targets)
@@ -115,7 +117,7 @@ step(buffer) {
 
         value : get(op, 1)
 
-        ; print(value)
+        print(value)
 
         check_bind() {
             is_not_bind : !=(value, bind)
@@ -139,11 +141,11 @@ step(buffer) {
 
             push_back(params, target)
 
-            ; fill next buffer
+            ; fill result buffer
             buffer : List()
 
             push_back(buffer, next) ; next as currect program
-            push_back(buffer, next) ; next as super (is this even needed?)
+            ; push_back(buffer, next) ; next as super (is this even needed?)
 
             //super(buffer)
         }
@@ -170,12 +172,13 @@ step(buffer) {
         print("instruction")
 
         targets : get(op, 1)
-        buffer : get(op, 2)
+        storage : get(op, 2)
         params : slice(buffer, 1)
 
-        buffer : slice(buffer) ; copy buffer
+        ; print(params)
+
+        buffer : +(storage, params)
         push_front(buffer, op)
-        buffer : +(buffer, params)
 
         callback(target) {
             type : get(target, 0)
@@ -187,7 +190,7 @@ step(buffer) {
 
                 ; print("immediate")
 
-                value : get(op, 1)
+                value : get(target, 1)
                 value : get(buffer, value)
 
                 /super(value)
@@ -218,5 +221,13 @@ params : map(params, Immediate_Value)
 buffer : restore_buffer(f, params)
 
 buffer : step(buffer)
+
+; x : get(buffer, 0)
+; x : get(x, 2)
+; x : get(x, -1)
+; x : ==(x, terminator)
+;
+; print(x)
+
 buffer : step(buffer)
 buffer : step(buffer)
