@@ -128,14 +128,15 @@ type Context = {
     get_targets : Something
     get_buffer : Something
     bind : Something
-    createTemplate : (targets : number[], comment? : string) => Something
-    createInstruction : (template : Something, buffer : Something[]) => Something
+    createTemplate(targets : number[], comment? : string) : Something
+    createInstruction(template : Something, buffer : Something[]) : Something
 
     // other
     type : Something
     terminal : Something
 
-    createMachine : (buffer : Something[]) => Machine
+    createNamed(name : Name) : Something
+    createMachine(buffer : Something[]) : Machine
 }
 
 export class Filler extends TranslationFiller<Something, Something, Something> {
@@ -154,76 +155,7 @@ export class Filler extends TranslationFiller<Something, Something, Something> {
         return this.context.createInstruction(template, buffer)
     }
     public createNamed(name : Name) : Something {
-        const { text } = name
-        const { context } = this
-
-        const number = text.match(/^-?(?:\d|\s)+(?:\.(?:\d|\s)+)?(?:e(?:\s)*-?(?:\d|\s)+(?:\.(?:\d|\s)+)?)?$/)
-
-        if (number) {
-            const value = Number(text.replace(/\s/g, ``))
-
-            return context.createNumber(value)
-        }
-
-        try {
-            const string = JSON.parse(text)
-
-            if (typeof string === `string`) return context.createString(string)
-        }
-        catch(error) {
-            // do nothing
-        }
-
-        switch (text) {
-            // case `Nothing`: return context.Nothing
-            case `nothing`: return context.nothing
-
-            case `Boolean`: return context.Boolean
-            case `true`: return context.true
-            case `false`: return context.false
-            case `not`: return context.not
-            case `and`: return context.and
-            case `or`: return context.or
-            case `==`: return context['==']
-            case `!=`: return context['!=']
-            case `if`: return context.if
-
-            case `Number`: return context.Number
-            case `+`: return context[`+`]
-            case `-`: return context[`-`]
-            case `*`: return context[`*`]
-            case `/`: return context[`/`]
-            case `%`: return context[`%`]
-            case `**`: return context[`**`]
-            case `//`: return context[`//`]
-
-            case `String`: return context.String
-
-            case `List`: return context.List
-            case `get`: return context.get
-            case `set`: return context.set
-            case `push_back`: return context.push_back
-            case `push_front`: return context.push_front
-            case `pop_back`: return context.pop_back
-            case `pop_front`: return context.pop_front
-            case `map`: return context.map
-            case `slice`: return context.slice
-
-            case `print`: return context.print
-
-            case `bind`: return context.bind
-            case `Internal`: return context.Internal
-            case `External`: return context.External
-            case `is_internal`: return context.is_internal
-            case `get_template`: return context.get_template
-            case `get_targets`: return context.get_targets
-            case `get_buffer`: return context.get_buffer
-
-            case `type`: return context.type
-            // case `super`: return context.super
-        }
-
-        throw new Error(`Can't fill name with text "${text}"`)
+        return this.context.createNamed(name)
     }
     public createMachine({ buffer }: { buffer: Something[] }) {
         return this.context.createMachine(buffer)
@@ -1058,6 +990,77 @@ function createContext() : Context {
         terminal,
 
         createMachine,
+        createNamed(name : Name) : Something {
+            const { text } = name
+
+            const number = text.match(/^-?(?:\d|\s)+(?:\.(?:\d|\s)+)?(?:e(?:\s)*-?(?:\d|\s)+(?:\.(?:\d|\s)+)?)?$/)
+
+            if (number) {
+                const value = global.Number(text.replace(/\s/g, ``))
+
+                return createNumber(value)
+            }
+
+            try {
+                const string = JSON.parse(text)
+
+                if (typeof string === `string`) return createString(string)
+            }
+            catch(error) {
+                // do nothing
+            }
+
+            switch (text) {
+                // case `Nothing`: return Nothing
+                case `nothing`: return nothing
+
+                case `Boolean`: return Boolean
+                case `true`: return true_
+                case `false`: return false_
+                case `not`: return not
+                case `and`: return and
+                case `or`: return or
+                case `==`: return isEqual
+                case `!=`: return isNotEqual
+                case `if`: return if_
+
+                case `Number`: return Number
+                case `+`: return add
+                case `-`: return subtract
+                case `*`: return multiply
+                case `/`: return divide
+                case `%`: return wholeDivide
+                case `**`: return power
+                case `//`: return root
+
+                case `String`: return String
+
+                case `List`: return List
+                case `get`: return get
+                case `set`: return set
+                case `push_back`: return push_back
+                case `push_front`: return push_front
+                case `pop_back`: return pop_back
+                case `pop_front`: return pop_front
+                case `map`: return map
+                case `slice`: return slice
+
+                case `print`: return print
+
+                case `bind`: return bind
+                case `Internal`: return Internal
+                case `External`: return External
+                case `is_internal`: return is_internal
+                case `get_template`: return get_template
+                case `get_targets`: return get_targets
+                case `get_buffer`: return get_buffer
+
+                case `type`: return type
+                // case `super`: return super
+            }
+
+            throw new Error(`Can't fill name with text "${text}"`)
+        },
     }
 }
 
