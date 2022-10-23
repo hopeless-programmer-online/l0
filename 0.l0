@@ -7,8 +7,7 @@ g() {
     throw()
 }
 f() {
-    super()
-    ; g()
+    g()
 }
 
 ; @class
@@ -117,6 +116,38 @@ step(buffer) {
 
         print(value)
 
+        check_internal() {
+            is : is_internal(value)
+            is : not(is)
+
+            if (is, super)
+
+            print("internal")
+
+            check_throw() {
+                is_not_throw : !=(value, throw)
+
+                if (is_not_throw, super)
+
+                print("throw")
+
+                throw("throw reached")
+            }
+            check_terminator() {
+                is_not_terminator : !=(value, terminator)
+
+                if (is_not_terminator, super)
+
+                print("terminator")
+
+                throw("terminator reached")
+            }
+
+            check_throw()
+            check_terminator()
+
+            throw("cannot check over internal")
+        }
         check_bind() {
             is_not_bind : !=(value, bind)
 
@@ -147,28 +178,9 @@ step(buffer) {
 
             //super(buffer)
         }
-        check_throw() {
-            is_not_throw : !=(value, throw)
 
-            if (is_not_throw, super)
-
-            print("throw")
-
-            throw("throw reached")
-        }
-        check_terminator() {
-            is_not_terminator : !=(value, terminator)
-
-            if (is_not_terminator, super)
-
-            print("terminator")
-
-            throw("terminator reached")
-        }
-
+        check_internal()
         check_bind()
-        check_throw()
-        check_terminator()
 
         throw("cannot check over immediate")
     }
