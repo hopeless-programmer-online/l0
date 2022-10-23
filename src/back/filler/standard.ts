@@ -123,6 +123,7 @@ type Context = {
     // programs
     Internal : Something
     External : Something
+    is_internal : Something
     get_template : Something
     get_targets : Something
     get_buffer : Something
@@ -213,6 +214,7 @@ export class Filler extends TranslationFiller<Something, Something, Something> {
             case `bind`: return context.bind
             case `Internal`: return context.Internal
             case `External`: return context.External
+            case `is_internal`: return context.is_internal
             case `get_template`: return context.get_template
             case `get_targets`: return context.get_targets
             case `get_buffer`: return context.get_buffer
@@ -955,6 +957,11 @@ function createContext() : Context {
 
     const Internal = new External_({ name : `Internal`, value : () => { throw new Error } })
     const External = new External_({ name : `External`, value : () => { throw new Error } })
+    const is_internal = new External_({ name : `is_internal`, value : buffer => {
+        const [ op, next, target ] = buffer
+
+        return Buffer_.from([ next, next, target instanceof Internal_ ? true_ : false_ ])
+    } })
     const get_template = new External_({ name : `get_template`, value : buffer => buffer.at(2).getTemplate(buffer) })
     const get_targets = new External_({ name : `get_targets`, value : buffer => {
         const [ op, next, target ] = buffer
@@ -1039,6 +1046,7 @@ function createContext() : Context {
 
         Internal,
         External,
+        is_internal,
         get_template,
         get_targets,
         get_buffer,
