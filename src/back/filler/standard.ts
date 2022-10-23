@@ -74,65 +74,10 @@ interface Something {
 }
 
 type Context = {
-    // nothing
-    // Nothing : Table
-    nothing : Something
-
-    // logic
-    Boolean : Something
-    true : Something
-    false : Something
-    [`==`] : Something
-    [`!=`] : Something
-    not : Something
-    and : Something
-    or : Something
-    if : Something
-
-    // arithmetic
-    Number : Something
-    [`+`] : Something
-    [`-`] : Something
-    [`*`] : Something
-    [`/`] : Something
-    [`%`] : Something
-    [`**`] : Something
-    [`//`] : Something
-
-    // text
-    String : Something
-
-    // collections
-    List : Something
-    push_back : Something
-    push_front : Something
-    pop_back : Something
-    pop_front : Something
-    get : Something
-    set : Something
-    map : Something
-    slice : Something
-
-    // io
-    createNumber(value : number) : Something
-    createString(value : string) : Something
-    print : Something
-
-    // programs
-    Internal : Something
-    External : Something
-    is_internal : Something
-    get_template : Something
-    get_targets : Something
-    get_buffer : Something
     bind : Something
+    terminal : Something
     createTemplate(targets : number[], comment? : string) : Something
     createInstruction(template : Something, buffer : Something[]) : Something
-
-    // other
-    type : Something
-    terminal : Something
-
     createNamed(name : Name) : Something
     createMachine(buffer : Something[]) : Machine
 }
@@ -934,131 +879,85 @@ function createContext() : Context {
     const terminal = new Terminal_
 
     const createMachine = (buffer : Something[]) => new Machine_({ buffer : Buffer_.from(buffer) })
+    const createNamed = (name : Name) : Something => {
+        const { text } = name
+
+        const number = text.match(/^-?(?:\d|\s)+(?:\.(?:\d|\s)+)?(?:e(?:\s)*-?(?:\d|\s)+(?:\.(?:\d|\s)+)?)?$/)
+
+        if (number) {
+            const value = global.Number(text.replace(/\s/g, ``))
+
+            return createNumber(value)
+        }
+
+        try {
+            const string = JSON.parse(text)
+
+            if (typeof string === `string`) return createString(string)
+        }
+        catch(error) {
+            // do nothing
+        }
+
+        switch (text) {
+            // case `Nothing`: return Nothing
+            case `nothing`: return nothing
+
+            case `Boolean`: return Boolean
+            case `true`: return true_
+            case `false`: return false_
+            case `not`: return not
+            case `and`: return and
+            case `or`: return or
+            case `==`: return isEqual
+            case `!=`: return isNotEqual
+            case `if`: return if_
+
+            case `Number`: return Number
+            case `+`: return add
+            case `-`: return subtract
+            case `*`: return multiply
+            case `/`: return divide
+            case `%`: return wholeDivide
+            case `**`: return power
+            case `//`: return root
+
+            case `String`: return String
+
+            case `List`: return List
+            case `get`: return get
+            case `set`: return set
+            case `push_back`: return push_back
+            case `push_front`: return push_front
+            case `pop_back`: return pop_back
+            case `pop_front`: return pop_front
+            case `map`: return map
+            case `slice`: return slice
+
+            case `print`: return print
+
+            case `bind`: return bind
+            case `Internal`: return Internal
+            case `External`: return External
+            case `is_internal`: return is_internal
+            case `get_template`: return get_template
+            case `get_targets`: return get_targets
+            case `get_buffer`: return get_buffer
+
+            case `type`: return type
+            // case `super`: return super
+        }
+
+        throw new Error(`Can't fill name with text "${text}"`)
+    }
 
     return {
-        // Nothing,
-        nothing,
-
-        Boolean,
-        true : true_,
-        false : false_,
-        [`==`] : isEqual,
-        [`!=`] : isNotEqual,
-        not,
-        and,
-        or,
-        if : if_,
-
-        Number,
-        [`+`] : add,
-        [`-`] : subtract,
-        [`*`] : multiply,
-        [`/`] : divide,
-        [`%`] : wholeDivide,
-        [`**`] : power,
-        [`//`] : root,
-
-        String,
-
-        List,
-        get,
-        set,
-        push_back,
-        push_front,
-        pop_back,
-        pop_front,
-        map,
-        slice,
-
-        createNumber,
-        createString,
-        print,
-
-        Internal,
-        External,
-        is_internal,
-        get_template,
-        get_targets,
-        get_buffer,
         bind,
+        terminal,
         createTemplate,
         createInstruction,
-
-        type,
-        terminal,
-
         createMachine,
-        createNamed(name : Name) : Something {
-            const { text } = name
-
-            const number = text.match(/^-?(?:\d|\s)+(?:\.(?:\d|\s)+)?(?:e(?:\s)*-?(?:\d|\s)+(?:\.(?:\d|\s)+)?)?$/)
-
-            if (number) {
-                const value = global.Number(text.replace(/\s/g, ``))
-
-                return createNumber(value)
-            }
-
-            try {
-                const string = JSON.parse(text)
-
-                if (typeof string === `string`) return createString(string)
-            }
-            catch(error) {
-                // do nothing
-            }
-
-            switch (text) {
-                // case `Nothing`: return Nothing
-                case `nothing`: return nothing
-
-                case `Boolean`: return Boolean
-                case `true`: return true_
-                case `false`: return false_
-                case `not`: return not
-                case `and`: return and
-                case `or`: return or
-                case `==`: return isEqual
-                case `!=`: return isNotEqual
-                case `if`: return if_
-
-                case `Number`: return Number
-                case `+`: return add
-                case `-`: return subtract
-                case `*`: return multiply
-                case `/`: return divide
-                case `%`: return wholeDivide
-                case `**`: return power
-                case `//`: return root
-
-                case `String`: return String
-
-                case `List`: return List
-                case `get`: return get
-                case `set`: return set
-                case `push_back`: return push_back
-                case `push_front`: return push_front
-                case `pop_back`: return pop_back
-                case `pop_front`: return pop_front
-                case `map`: return map
-                case `slice`: return slice
-
-                case `print`: return print
-
-                case `bind`: return bind
-                case `Internal`: return Internal
-                case `External`: return External
-                case `is_internal`: return is_internal
-                case `get_template`: return get_template
-                case `get_targets`: return get_targets
-                case `get_buffer`: return get_buffer
-
-                case `type`: return type
-                // case `super`: return super
-            }
-
-            throw new Error(`Can't fill name with text "${text}"`)
-        },
+        createNamed,
     }
 }
 
