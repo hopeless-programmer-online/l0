@@ -14,8 +14,6 @@ interface Buffer {
 interface Something {
     halt : boolean
 
-    toJson() : string
-
     toBoolean1() : boolean
     isEqual1(other : Something) : boolean
     isNotEqual1(other : Something) : boolean
@@ -165,49 +163,6 @@ export class Filler extends TranslationFiller<Something, Something, Something> {
 function createContext() : Context {
     class Something_ implements Something {
         public halt = false
-
-        public toJson() : string {
-            const all = new Set<Something>()
-            const ids = new Map<Something, string>()
-
-            const stringify = (something : Something) : string => {
-                let id = ids.get(something)
-
-                if (id !== undefined) return id
-
-                if (all.has(something)) {
-                    const id = colorize(colorize(`<ref ${ids.size + 1}>`, Colors.fgBlack), Colors.bgRed)
-
-                    ids.set(something, id)
-
-                    return id
-                }
-                else all.add(something)
-
-                let text = ``;
-
-                if (something instanceof List_) {
-                    let elements = something.elements.map(stringify).join(colorize(`, `, Colors.fgWhite))
-
-                    if (elements.length > 0) elements = ` ${elements} `
-
-                    text = colorize(`[`, Colors.fgWhite) + elements + colorize(`]`, Colors.fgWhite)
-                }
-                else if (something instanceof String_) {
-                    text = colorize(`${JSON.stringify(something.value)}`, Colors.fgRed)
-                }
-                else text = something.toString1()
-
-                // get id again as it might have changed during nested stringify()
-                id = ids.get(something)
-
-                id = id !== undefined ? `${id} ` : ``
-
-                return `${id}${text}`
-            }
-
-            return stringify(this)
-        }
 
         public toBoolean1() : boolean {
             throw new Error // @todo
@@ -799,6 +754,49 @@ function createContext() : Context {
         }
     }
 
+    const toJson = (something : Something) : string => {
+        const all = new Set<Something>()
+        const ids = new Map<Something, string>()
+
+        const stringify = (something : Something) : string => {
+            let id = ids.get(something)
+
+            if (id !== undefined) return id
+
+            if (all.has(something)) {
+                const id = colorize(colorize(`<ref ${ids.size + 1}>`, Colors.fgBlack), Colors.bgRed)
+
+                ids.set(something, id)
+
+                return id
+            }
+            else all.add(something)
+
+            let text = ``;
+
+            if (something instanceof List_) {
+                let elements = something.elements.map(stringify).join(colorize(`, `, Colors.fgWhite))
+
+                if (elements.length > 0) elements = ` ${elements} `
+
+                text = colorize(`[`, Colors.fgWhite) + elements + colorize(`]`, Colors.fgWhite)
+            }
+            else if (something instanceof String_) {
+                text = colorize(`${JSON.stringify(something.value)}`, Colors.fgRed)
+            }
+            else text = something.toString1()
+
+            // get id again as it might have changed during nested stringify()
+            id = ids.get(something)
+
+            id = id !== undefined ? `${id} ` : ``
+
+            return `${id}${text}`
+        }
+
+        return stringify(something)
+    }
+
     // const Nothing = new External_({ value : buffer => buffer.at(2).toNothing(buffer) })
     const nothing = new Nothing_
 
@@ -882,7 +880,7 @@ function createContext() : Context {
     const print = new External_({ name : `print`, value : buffer => {
         const [ op, next ] = buffer
 
-        console.log(...buffer.array.slice(2).map(x => x.toJson()))
+        console.log(...buffer.array.slice(2).map(toJson))
 
         return Buffer_.from([ next, next ])
     } })
