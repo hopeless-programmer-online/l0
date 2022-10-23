@@ -276,7 +276,7 @@ function createContext() : Context {
             throw new Error // @todo
         }
         public isEqual1(other: Something): boolean {
-            throw new Error // @todo
+            return this === other
         }
         public isNotEqual1(other: Something): boolean {
             return !this.isEqual1(other)
