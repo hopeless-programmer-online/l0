@@ -259,6 +259,9 @@ function createContext() : Context {
 
                     text = colorize(`[`, Colors.fgWhite) + elements + colorize(`]`, Colors.fgWhite)
                 }
+                else if (something instanceof String_) {
+                    text = colorize(`${JSON.stringify(something.value)}`, Colors.fgRed)
+                }
                 else text = something.toString1()
 
                 // get id again as it might have changed during nested stringify()
