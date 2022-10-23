@@ -3,8 +3,12 @@ throw(message) {
 
     /super()
 }
-f() {
+g() {
     throw()
+}
+f() {
+    super()
+    ; g()
 }
 
 ; @class
@@ -41,28 +45,22 @@ Instruction_Value(targets, buffer) {
 terminator() {}
 
 ; restore buffer of internal instruction at the call time
+; @param internal: internal instruction
 ; @param params: List(Value)
 restore_buffer(internal, params) {
-    ; original buffer
-    buffer : get_buffer(internal)
+    buffer : get_buffer(internal) ; original buffer
 
-    internal : Immediate_Value(internal)
     push_front(buffer, internal) ; add self at 0
 
-    ; add params
-    callback(param) {
-        push_back(buffer, param)
-    }
-
-    map(params, callback)
+    buffer : map(buffer, Immediate_Value) ; make all values immediates
+    buffer : +(buffer, params) ; concat with params
 
     ; transform buffer according to template
-    template : get_template(/internal)
+    template : get_template(internal)
     targets : get_targets(template)
 
     callback(index) {
         value : get(buffer, index)
-        value : Immediate_Value(value)
 
         super(value)
     }
@@ -158,9 +156,19 @@ step(buffer) {
 
             throw("throw reached")
         }
+        check_terminator() {
+            is_not_terminator : !=(value, terminator)
+
+            if (is_not_terminator, super)
+
+            print("terminator")
+
+            throw("terminator reached")
+        }
 
         check_bind()
         check_throw()
+        check_terminator()
 
         throw("cannot check over immediate")
     }
@@ -221,13 +229,5 @@ params : map(params, Immediate_Value)
 buffer : restore_buffer(f, params)
 
 buffer : step(buffer)
-
-; x : get(buffer, 0)
-; x : get(x, 2)
-; x : get(x, -1)
-; x : ==(x, terminator)
-;
-; print(x)
-
 buffer : step(buffer)
 buffer : step(buffer)
