@@ -3,10 +3,15 @@ throw(message) {
 
     /super()
 }
+h() {
+}
 g() {
     throw()
 }
 f() {
+    h()
+    ; print("ololo")
+
     g()
 }
 
@@ -146,7 +151,10 @@ step(buffer) {
             check_throw()
             check_terminator()
 
-            throw("cannot check over internal")
+            params : slice(buffer, 1)
+            next : restore_buffer(value, params)
+
+            //super(next)
         }
         check_bind() {
             is_not_bind : !=(value, bind)
@@ -240,6 +248,9 @@ push_back(params, terminator)
 params : map(params, Immediate_Value)
 buffer : restore_buffer(f, params)
 
-buffer : step(buffer)
-buffer : step(buffer)
-buffer : step(buffer)
+loop(buffer) {
+    buffer : step(buffer)
+    loop(buffer)
+}
+
+loop(buffer)
