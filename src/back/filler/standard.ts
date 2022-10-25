@@ -837,6 +837,11 @@ function createContext() : Context {
 
         return Buffer_.from([ next, next, target instanceof Internal_ ? true_ : false_ ])
     } })
+    const is_external = new External_({ name : `is_external`, value : buffer => {
+        const [ op, next, target ] = buffer
+
+        return Buffer_.from([ next, next, target instanceof External_ ? true_ : false_ ])
+    } })
     const get_template = new External_({ name : `get_template`, value : buffer => buffer.at(2).getTemplate(buffer) })
     const get_targets = new External_({ name : `get_targets`, value : buffer => {
         const [ op, next, target ] = buffer
@@ -940,6 +945,7 @@ function createContext() : Context {
             case `Internal`: return Internal
             case `External`: return External
             case `is_internal`: return is_internal
+            case `is_external`: return is_external
             case `get_template`: return get_template
             case `get_targets`: return get_targets
             case `get_buffer`: return get_buffer
