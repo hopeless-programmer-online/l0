@@ -96,6 +96,8 @@ extract_targets(instruction) {
 
 ; @param buffer: List(Value)
 step(buffer) {
+    print("step")
+
     op : get(buffer, 0)
 
     ; print("op: ", op)
@@ -186,8 +188,56 @@ step(buffer) {
 
                 ///super(buffer)
             }
+            check_if() {
+                is_not_if : !=(value, if)
+
+                if (is_not_if, super)
+
+                print("if")
+
+                next : get(buffer, 1)
+                condition : get(buffer, 2)
+                then : get(buffer, 3)
+
+                ; print(condition)
+
+                condition_type : get(condition, 0)
+
+                check_immediate_condition() {
+                    is_not_immediate : !=(condition_type, "immediate value")
+
+                    if (is_not_immediate, super)
+
+                    print("immediate condition")
+
+                    condition_value : get(condition, 1)
+
+                    then_branch() {
+                        buffer : List()
+
+                        push_back(buffer, then, next)
+
+                        /////super(buffer)
+                    }
+
+                    if (condition_value, then_branch)
+
+                    buffer : List()
+
+                    push_back(buffer, next, next)
+
+                    ////super(buffer)
+
+                    throw("cannot check over immediate condition")
+                }
+
+                check_immediate_condition()
+
+                throw("cannot check over if")
+            }
 
             check_bind()
+            check_if()
 
             throw("cannot check over external")
         }
