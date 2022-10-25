@@ -3,16 +3,8 @@ throw(message) {
 
     /super()
 }
-h() {
-}
-g() {
-    throw()
-}
 f() {
-    h()
-    ; print("ololo")
-
-    g()
+    if (true, throw)
 }
 
 ; @class
@@ -156,39 +148,52 @@ step(buffer) {
 
             //super(next)
         }
-        check_bind() {
-            is_not_bind : !=(value, bind)
+        check_external() {
+            is : is_external(value)
+            is : not(is)
 
-            if (is_not_bind, super)
+            if (is, super)
 
-            print("bind")
+            print("external")
 
-            ; slice params for next & target
-            params : slice(buffer, 3)
+            check_bind() {
+                is_not_bind : !=(value, bind)
 
-            ; create contonuation instruction
-            next : get(buffer, 1)
-            next : extract_targets(next)
-            next : Instruction_Value(next, params)
+                if (is_not_bind, super)
 
-            ; create target instruction
-            target : get(buffer, 2)
-            target : extract_targets(target)
-            target : Instruction_Value(target, params)
+                print("bind")
 
-            push_back(params, target)
+                ; slice params for next & target
+                params : slice(buffer, 3)
 
-            ; fill result buffer
-            buffer : List()
+                ; create contonuation instruction
+                next : get(buffer, 1)
+                next : extract_targets(next)
+                next : Instruction_Value(next, params)
 
-            push_back(buffer, next) ; next as currect program
-            ; push_back(buffer, next) ; next as super (is this even needed?)
+                ; create target instruction
+                target : get(buffer, 2)
+                target : extract_targets(target)
+                target : Instruction_Value(target, params)
 
-            //super(buffer)
+                push_back(params, target)
+
+                ; fill result buffer
+                buffer : List()
+
+                push_back(buffer, next) ; next as currect program
+                ; push_back(buffer, next) ; next as super (is this even needed?)
+
+                ///super(buffer)
+            }
+
+            check_bind()
+
+            throw("cannot check over external")
         }
 
         check_internal()
-        check_bind()
+        check_external()
 
         throw("cannot check over immediate")
     }
