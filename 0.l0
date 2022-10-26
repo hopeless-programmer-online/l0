@@ -252,21 +252,73 @@ step(buffer) {
 
                 print("type_of")
 
+                next : get(buffer, 1)
                 target : get(buffer, 2)
                 target_type : get(target, 0)
 
                 check_immediate_target() {
                     is_not : !=(target_type, "immediate value")
+
+                    if (is_not, super)
+
+                    print("immediate argument")
+
+                    value : get(target, 1)
+                    type : type_of(value)
+                    type : Immediate_Value(type)
+                    buffer : List()
+
+                    push_back(buffer, next, next, type)
+
+                    ////super(buffer)
                 }
 
                 check_immediate_target()
 
                 throw("cannot check over type_of")
             }
+            check_type_not_equal() {
+                is_not : !=(value, !=)
+
+                if (is_not, super)
+
+                print("!=")
+
+                next : get(buffer, 1)
+                left : get(buffer, 2)
+                right : get(buffer, 3)
+                left_type : get(left, 0)
+                right_type : get(right, 0)
+
+                check_immediate_targets() {
+                    is_not_left : !=(left_type, "immediate value")
+                    is_not_right : !=(right_type, "immediate value")
+                    is_not : or(is_not_left, is_not_right)
+
+                    if (is_not, super)
+
+                    print("immediate arguments")
+
+                    left_value : get(left, 1)
+                    right_value : get(right, 1)
+                    result : !=(left, right)
+                    result : Immediate_Value(result)
+                    buffer : List()
+
+                    push_back(buffer, next, next, result)
+
+                    ////super(buffer)
+                }
+
+                check_immediate_targets()
+
+                throw("cannot check over !=")
+            }
 
             check_bind()
             check_if()
             check_type_of()
+            check_type_not_equal()
 
             throw("cannot check over external")
         }
