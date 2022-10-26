@@ -3,8 +3,18 @@ throw(message) {
 
     /super()
 }
+assert_type(target, expected_type) {
+    actual_type : type_of(target)
+    is_not : !=(actual_type, expected_type)
+
+    then() {
+        throw("type mismatch")
+    }
+
+    if (is_not, then)
+}
 f() {
-    if (true, throw)
+    assert_type(true, Boolean)
 }
 
 ; @class
@@ -235,9 +245,28 @@ step(buffer) {
 
                 throw("cannot check over if")
             }
+            check_type_of() {
+                is_not : !=(value, type_of)
+
+                if (is_not, super)
+
+                print("type_of")
+
+                target : get(buffer, 2)
+                target_type : get(target, 0)
+
+                check_immediate_target() {
+                    is_not : !=(target_type, "immediate value")
+                }
+
+                check_immediate_target()
+
+                throw("cannot check over type_of")
+            }
 
             check_bind()
             check_if()
+            check_type_of()
 
             throw("cannot check over external")
         }
