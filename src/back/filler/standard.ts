@@ -880,7 +880,7 @@ function createContext() : Context {
         return new Internal_({ template, buffer : buffer_ })
     }
 
-    const type = new External_({ name : `type`, value : buffer => buffer.at(2).getType(buffer) })
+    const type_of = new External_({ name : `type_of`, value : buffer => buffer.at(2).getType(buffer) })
     const terminal = new Terminal_
 
     const createMachine = (buffer : Something[]) => new Machine_({ buffer : Buffer_.from(buffer) })
@@ -950,7 +950,7 @@ function createContext() : Context {
             case `get_targets`: return get_targets
             case `get_buffer`: return get_buffer
 
-            case `type`: return type
+            case `type_of`: return type_of
             // case `super`: return super
         }
 
