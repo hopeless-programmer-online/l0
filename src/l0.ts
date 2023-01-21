@@ -1,1 +1,1 @@
-export {}
+export * as text from './text'
