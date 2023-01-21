@@ -299,3 +299,51 @@ export class Name extends Token {
         return this.words.join(` `)
     }
 }
+
+export class Locator {
+    private offset : Offset = 0
+    private row : Row = 0
+    private column : Column = 0
+    private text : Text
+
+    public constructor({
+        text,
+    } : {
+        text : Text
+    }) {
+        this.text = text
+    }
+
+    public get character() {
+        const { offset, text } = this
+
+        if (offset >= text.length) return null
+
+        return text[offset]
+    }
+    public get location() {
+        const { offset, row, column } = this
+
+        return new Location({ offset, row, column })
+    }
+
+    public next() : IteratorResult<Text, void> {
+        const current = this.character
+
+        if (current === null) return { done : true, value : undefined }
+
+        this.offset++
+        this.column++
+
+        if (current === `\n`) {
+            this.row++
+            this.column = 0
+        }
+
+        if (this.offset >= this.text.length) return { done : true, value : undefined }
+
+        const value = this.text[this.offset]
+
+        return { value }
+    }
+}
