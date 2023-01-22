@@ -1,4 +1,4 @@
-import { Space, Comment, Delimiter, Name, Block, Locator } from './lexis'
+import { Space, Comment, Delimiter, Name, Block, Locator, Processor } from './lexis'
 
 test(`Check export`, () => {
     expect(Space).toBeDefined()
@@ -38,4 +38,27 @@ test(`Check Locator`, () => {
     expect(locator.next).toBe(null)
     expect(locator.character).toBe(null)
     expect(locator.location).toMatchObject({ offset : 5, row : 1, column : 3 })
+})
+
+describe(`Check processor`, () => {
+    const process = (text : string) => {
+        const processor = new Processor
+
+        return processor.process(text)
+    }
+
+    test(`Check empty string`, () => {
+        expect(process(``)).toMatchObject([])
+    })
+    test(`Check spaces`, () => {
+        expect(process(` \n\r`)).toMatchObject([
+            {   symbol : Space.symbol,
+                span : {
+                    begin : { offset : 0, row : 0, column : 0 },
+                    end : { offset : 3, row : 1, column : 1 },
+                },
+                text : ` \n\r`,
+            },
+        ])
+    })
 })

@@ -342,3 +342,33 @@ export class Locator {
         return this.character
     }
 }
+
+export class Processor {
+    public process(text : Text) : Children {
+        const children : Children = []
+        const locator = new Locator({ text })
+
+        while (true) {
+            const begin = locator.location
+            const character = locator.character
+
+            if (character === null) break
+            else if (character.match(emptyCharacter)) {
+                while (locator.next?.match(emptyCharacter));
+
+                const end = locator.location
+                const span = new Span({ begin, end })
+                const space = new Space({ span, text : text.substring(span.begin.offset, span.end.offset) })
+
+                children.push(space)
+            }
+            else {
+                throw new Error // @todo
+            }
+        }
+
+        return children
+    }
+}
+
+const emptyCharacter = /^\s$/
