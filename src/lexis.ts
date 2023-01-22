@@ -326,11 +326,10 @@ export class Locator {
 
         return new Location({ offset, row, column })
     }
-
-    public next() : IteratorResult<Text, void> {
+    public get next() : string | null {
         const current = this.character
 
-        if (current === null) return { done : true, value : undefined }
+        if (current === null) return null
 
         this.offset++
         this.column++
@@ -340,10 +339,6 @@ export class Locator {
             this.column = 0
         }
 
-        if (this.offset >= this.text.length) return { done : true, value : undefined }
-
-        const value = this.text[this.offset]
-
-        return { value }
+        return this.character
     }
 }
