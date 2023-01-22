@@ -1,4 +1,4 @@
-import { Space, Comment, Delimiter, Name, Block, Locator } from './text'
+import { Space, Comment, Delimiter, Name, Block, Locator } from './lexis'
 
 test(`Check export`, () => {
     expect(Space).toBeDefined()

@@ -1,1 +1,1 @@
-export * as text from './text'
+export * as lexis from './lexis'

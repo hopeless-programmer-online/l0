@@ -40,7 +40,7 @@ export class Span {
 
 export type Text = string
 
-export abstract class Token {
+export abstract class Lexeme {
     public abstract readonly span : Span
     /** Raw text */
     public abstract readonly text : Text
@@ -50,7 +50,7 @@ export abstract class Token {
     }
 }
 
-export abstract class Leaf extends Token {
+export abstract class Leaf extends Lexeme {
     public readonly span : Span
     /** Raw text */
     public readonly text : Text
@@ -150,29 +150,29 @@ export class Closing extends Leaf {
     public readonly direction = BraceDirection.Opening
 }
 
-export type ContentToken = Space | Comment | Delimiter | Name | Block
-export type Content = ContentToken[]
+export type Child = Space | Comment | Delimiter | Name | Block
+export type Children = Child[]
 
-export class Block extends Token {
+export class Block extends Lexeme {
     public static readonly symbol : unique symbol = Symbol(`l0.text.Block`)
 
     public readonly symbol : typeof Block.symbol = Block.symbol
     public readonly opening : Opening
     public readonly closing : Closing
-    public readonly content : Content
+    public readonly children : Children
 
     public constructor({
-        content,
+        children,
         opening,
         closing,
     } : {
-        content : Content
+        children : Children
         opening : Opening
         closing : Closing
     }) {
         super()
 
-        this.content = content
+        this.children = children
         this.opening = opening
         this.closing = closing
     }
@@ -184,8 +184,8 @@ export class Block extends Token {
         })
     }
     public get text() : Text {
-        return [ this.opening, ...this.content, this.closing ]
-            .map(token => token.text)
+        return [ this.opening, ...this.children, this.closing ]
+            .map(lexeme => lexeme.text)
             .join(``)
     }
 }
@@ -242,7 +242,7 @@ export class QuotedWord extends Word {
 export type AnyWord = BareWord | QuotedWord
 export type NamePart = Space | AnyWord
 
-export class Name extends Token {
+export class Name extends Lexeme {
     public static readonly symbol : unique symbol = Symbol(`l0.text.Name`)
 
     public static isPartWord(part : NamePart) : part is AnyWord {
@@ -282,7 +282,7 @@ export class Name extends Token {
     }
     public get text() {
         return this.parts
-            .map(token => token.text)
+            .map(lexeme => lexeme.text)
             .join(``)
     }
     public get words() {
