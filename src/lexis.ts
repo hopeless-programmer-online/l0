@@ -304,7 +304,7 @@ export class Locator {
     private offset : Offset = 0
     private row : Row = 0
     private column : Column = 0
-    private text : Text
+    public readonly text : Text
 
     public constructor({
         text,
@@ -343,22 +343,42 @@ export class Locator {
     }
 }
 
+class Slicer {
+    private readonly locator : Locator
+    private begin : Location
+
+    public constructor({ locator } : { locator : Locator }) {
+        this.locator = locator
+        this.begin = locator.location
+    }
+
+    public slice<T>(factory : (params : { span : Span, text : Text }) => T) {
+        const end = this.locator.location
+        const span = new Span({ begin : this.begin, end })
+        const text = this.locator.text.substring(span.begin.offset, span.end.offset)
+
+        this.begin = end
+
+        const lexeme = factory({ span, text })
+
+        return lexeme
+    }
+}
+
 export class Processor {
     public process(text : Text) : Children {
         const children : Children = []
         const locator = new Locator({ text })
+        const slicer = new Slicer({ locator })
 
         while (true) {
-            const begin = locator.location
             const character = locator.character
 
             if (character === null) break
             else if (character.match(emptyCharacter)) {
                 while (locator.next?.match(emptyCharacter));
 
-                const end = locator.location
-                const span = new Span({ begin, end })
-                const space = new Space({ span, text : text.substring(span.begin.offset, span.end.offset) })
+                const space = slicer.slice(params => new Space(params))
 
                 children.push(space)
             }
@@ -373,11 +393,23 @@ export class Processor {
                     }
                 }
 
-                const end = locator.location
-                const span = new Span({ begin, end })
-                const comment = new Comment({ span, text : text.substring(span.begin.offset, span.end.offset) })
+                const comment = slicer.slice(params => new Comment(params))
 
                 children.push(comment)
+            }
+            else if (character === `,`) {
+                locator.next
+
+                const delimiter = slicer.slice(params => new Delimiter({ type : DelimiterType.Comma, ...params }))
+
+                children.push(delimiter)
+            }
+            else if (character === `:`) {
+                locator.next
+
+                const delimiter = slicer.slice(params => new Delimiter({ type : DelimiterType.Colon, ...params }))
+
+                children.push(delimiter)
             }
             else {
                 throw new Error // @todo

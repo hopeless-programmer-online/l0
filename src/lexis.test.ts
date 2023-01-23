@@ -1,4 +1,4 @@
-import { Space, Comment, Delimiter, Name, Block, Locator, Processor } from './lexis'
+import { Space, Comment, Delimiter, Name, Block, Locator, Processor, DelimiterType } from './lexis'
 
 test(`Check export`, () => {
     expect(Space).toBeDefined()
@@ -85,6 +85,30 @@ describe(`Check processor`, () => {
             ])
         })
     })
+    describe(`Check delimiters`, () => {
+        test(`Check ,`, () => {
+            expect(process(`,`)).toMatchObject([
+                {   symbol : Delimiter.symbol, type : DelimiterType.Comma,
+                    span : {
+                        begin : { offset : 0, row : 0, column : 0 },
+                        end : { offset : 1, row : 0, column : 1 },
+                    },
+                    text : `,`,
+                },
+            ])
+        })
+        test(`Check :`, () => {
+            expect(process(`:`)).toMatchObject([
+                {   symbol : Delimiter.symbol, type : DelimiterType.Colon,
+                    span : {
+                        begin : { offset : 0, row : 0, column : 0 },
+                        end : { offset : 1, row : 0, column : 1 },
+                    },
+                    text : `:`,
+                },
+            ])
+        })
+    })
     describe(`Check combinations`, () => {
         test(`Check whitespace + comment`, () => {
             expect(process(` \n\r;abc`)).toMatchObject([
@@ -104,6 +128,42 @@ describe(`Check processor`, () => {
                 },
             ])
         })
+        test(`Check whitespace + ,`, () => {
+            expect(process(` \n\r,`)).toMatchObject([
+                {   symbol : Space.symbol,
+                    span : {
+                        begin : { offset : 0, row : 0, column : 0 },
+                        end : { offset : 3, row : 1, column : 1 },
+                    },
+                    text : ` \n\r`,
+                },
+                {   symbol : Delimiter.symbol, type : DelimiterType.Comma,
+                    span : {
+                        begin : { offset : 3, row : 1, column : 1 },
+                        end : { offset : 4, row : 1, column : 2 },
+                    },
+                    text : `,`,
+                },
+            ])
+        })
+        test(`Check whitespace + :`, () => {
+            expect(process(` \n\r:`)).toMatchObject([
+                {   symbol : Space.symbol,
+                    span : {
+                        begin : { offset : 0, row : 0, column : 0 },
+                        end : { offset : 3, row : 1, column : 1 },
+                    },
+                    text : ` \n\r`,
+                },
+                {   symbol : Delimiter.symbol, type : DelimiterType.Colon,
+                    span : {
+                        begin : { offset : 3, row : 1, column : 1 },
+                        end : { offset : 4, row : 1, column : 2 },
+                    },
+                    text : `:`,
+                },
+            ])
+        })
         test(`Check comment + whitespace`, () => {
             expect(process(`;abc\n \n\r`)).toMatchObject([
                 {   symbol : Comment.symbol,
@@ -119,6 +179,42 @@ describe(`Check processor`, () => {
                         end : { offset : 8, row : 2, column : 1 },
                     },
                     text : ` \n\r`,
+                },
+            ])
+        })
+        test(`Check comment + ,`, () => {
+            expect(process(`;abc\n,`)).toMatchObject([
+                {   symbol : Comment.symbol,
+                    span : {
+                        begin : { offset : 0, row : 0, column : 0 },
+                        end : { offset : 5, row : 1, column : 0 },
+                    },
+                    text : `;abc\n`,
+                },
+                {   symbol : Delimiter.symbol, type : DelimiterType.Comma,
+                    span : {
+                        begin : { offset : 5, row : 1, column : 0 },
+                        end : { offset : 6, row : 1, column : 1 },
+                    },
+                    text : `,`,
+                },
+            ])
+        })
+        test(`Check comment + :`, () => {
+            expect(process(`;abc\n:`)).toMatchObject([
+                {   symbol : Comment.symbol,
+                    span : {
+                        begin : { offset : 0, row : 0, column : 0 },
+                        end : { offset : 5, row : 1, column : 0 },
+                    },
+                    text : `;abc\n`,
+                },
+                {   symbol : Delimiter.symbol, type : DelimiterType.Colon,
+                    span : {
+                        begin : { offset : 5, row : 1, column : 0 },
+                        end : { offset : 6, row : 1, column : 1 },
+                    },
+                    text : `:`,
                 },
             ])
         })
