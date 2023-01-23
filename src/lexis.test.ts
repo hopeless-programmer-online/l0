@@ -61,4 +61,28 @@ describe(`Check processor`, () => {
             },
         ])
     })
+    describe(`Check comments`, () => {
+        test(`Check newline`, () => {
+            expect(process(`;abc\n`)).toMatchObject([
+                {   symbol : Comment.symbol,
+                    span : {
+                        begin : { offset : 0, row : 0, column : 0 },
+                        end : { offset : 5, row : 1, column : 0 },
+                    },
+                    text : `;abc\n`,
+                },
+            ])
+        })
+        test(`Check end of text`, () => {
+            expect(process(`;abc`)).toMatchObject([
+                {   symbol : Comment.symbol,
+                    span : {
+                        begin : { offset : 0, row : 0, column : 0 },
+                        end : { offset : 4, row : 0, column : 4 },
+                    },
+                    text : `;abc`,
+                },
+            ])
+        })
+    })
 })

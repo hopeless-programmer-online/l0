@@ -362,6 +362,23 @@ export class Processor {
 
                 children.push(space)
             }
+            else if (character === `;`) {
+                while (true) {
+                    const character = locator.next
+
+                    if (character === null || character === `\n`) {
+                        locator.next // safe to call next on null
+
+                        break
+                    }
+                }
+
+                const end = locator.location
+                const span = new Span({ begin, end })
+                const comment = new Comment({ span, text : text.substring(span.begin.offset, span.end.offset) })
+
+                children.push(comment)
+            }
             else {
                 throw new Error // @todo
             }
