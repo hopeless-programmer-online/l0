@@ -85,4 +85,42 @@ describe(`Check processor`, () => {
             ])
         })
     })
+    describe(`Check combinations`, () => {
+        test(`Check whitespace + comment`, () => {
+            expect(process(` \n\r;abc`)).toMatchObject([
+                {   symbol : Space.symbol,
+                    span : {
+                        begin : { offset : 0, row : 0, column : 0 },
+                        end : { offset : 3, row : 1, column : 1 },
+                    },
+                    text : ` \n\r`,
+                },
+                {   symbol : Comment.symbol,
+                    span : {
+                        begin : { offset : 3, row : 1, column : 1 },
+                        end : { offset : 7, row : 1, column : 5 },
+                    },
+                    text : `;abc`,
+                },
+            ])
+        })
+        test(`Check comment + whitespace`, () => {
+            expect(process(`;abc\n \n\r`)).toMatchObject([
+                {   symbol : Comment.symbol,
+                    span : {
+                        begin : { offset : 0, row : 0, column : 0 },
+                        end : { offset : 5, row : 1, column : 0 },
+                    },
+                    text : `;abc\n`,
+                },
+                {   symbol : Space.symbol,
+                    span : {
+                        begin : { offset : 5, row : 1, column : 0 },
+                        end : { offset : 8, row : 2, column : 1 },
+                    },
+                    text : ` \n\r`,
+                },
+            ])
+        })
+    })
 })
