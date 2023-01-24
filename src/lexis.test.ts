@@ -1,4 +1,4 @@
-import { Space, Comment, Delimiter, Name, Block, Locator, Processor, DelimiterType } from './lexis'
+import { Space, Comment, Delimiter, Name, Block, Locator, Processor, DelimiterType, Opening, Brace, BraceType, BraceDirection, Closing } from './lexis'
 
 test(`Check export`, () => {
     expect(Space).toBeDefined()
@@ -105,6 +105,66 @@ describe(`Check processor`, () => {
                         end : { offset : 1, row : 0, column : 1 },
                     },
                     text : `:`,
+                },
+            ])
+        })
+    })
+    describe(`Check blocks`, () => {
+        test(`Check ()`, () => {
+            expect(process(`()`)).toMatchObject([
+                {   symbol : Block.symbol,
+                    opening : {
+                        symbol : Opening.symbol, type : BraceType.Round, direction : BraceDirection.Opening,
+                        span : {
+                            begin : { offset : 0, row : 0, column : 0 },
+                            end : { offset : 1, row : 0, column : 1 },
+                        },
+                        text : `(`,
+                    },
+                    closing : {
+                        symbol : Closing.symbol, type : BraceType.Round, direction : BraceDirection.Closing,
+                        span : {
+                            begin : { offset : 1, row : 0, column : 1 },
+                            end : { offset : 2, row : 0, column : 2 },
+                        },
+                        text : `)`,
+                    },
+                    children : [
+                    ],
+                    span : {
+                        begin : { offset : 0, row : 0, column : 0 },
+                        end : { offset : 2, row : 0, column : 2 },
+                    },
+                    text : `()`,
+                },
+            ])
+        })
+        test(`Check {}`, () => {
+            expect(process(`{}`)).toMatchObject([
+                {   symbol : Block.symbol,
+                    opening : {
+                        symbol : Opening.symbol, type : BraceType.Figure, direction : BraceDirection.Opening,
+                        span : {
+                            begin : { offset : 0, row : 0, column : 0 },
+                            end : { offset : 1, row : 0, column : 1 },
+                        },
+                        text : `{`,
+                    },
+                    closing : {
+                        symbol : Closing.symbol, type : BraceType.Figure, direction : BraceDirection.Closing,
+                        span : {
+                            begin : { offset : 1, row : 0, column : 1 },
+                            end : { offset : 2, row : 0, column : 2 },
+                        },
+                        text : `}`,
+                    },
+                    children : [
+                    ],
+                    span : {
+                        begin : { offset : 0, row : 0, column : 0 },
+                        end : { offset : 2, row : 0, column : 2 },
+                    },
+                    text : `{}`,
                 },
             ])
         })

@@ -137,17 +137,17 @@ export abstract class Brace extends Leaf {
     }
 }
 
-export class Opening extends Leaf {
+export class Opening extends Brace {
     public static readonly symbol : unique symbol = Symbol(`l0.text.OpeningBrace`)
 
     public readonly symbol : typeof Opening.symbol = Opening.symbol
     public readonly direction = BraceDirection.Opening
 }
-export class Closing extends Leaf {
+export class Closing extends Brace {
     public static readonly symbol : unique symbol = Symbol(`l0.text.ClosingBrace`)
 
     public readonly symbol : typeof Closing.symbol = Closing.symbol
-    public readonly direction = BraceDirection.Opening
+    public readonly direction = BraceDirection.Closing
 }
 
 export type Child = Space | Comment | Delimiter | Name | Block
@@ -367,9 +367,27 @@ class Slicer {
 
 export class Processor {
     public process(text : Text) : Children {
-        const children : Children = []
+        class Nesting {
+            public readonly opening : Opening
+            public readonly children : Children = []
+
+            public constructor({ opening } : { opening : Opening }) {
+                this.opening  = opening
+            }
+        }
+
         const locator = new Locator({ text })
         const slicer = new Slicer({ locator })
+        const children : Children = []
+        const nesting : Nesting[] = []
+
+        function append(child : Child) {
+            const top = nesting.length > 0
+                ? nesting[nesting.length - 1].children
+                : children
+
+            top.push(child)
+        }
 
         while (true) {
             const character = locator.character
@@ -380,7 +398,7 @@ export class Processor {
 
                 const space = slicer.slice(params => new Space(params))
 
-                children.push(space)
+                append(space)
             }
             else if (character === `;`) {
                 while (true) {
@@ -395,29 +413,66 @@ export class Processor {
 
                 const comment = slicer.slice(params => new Comment(params))
 
-                children.push(comment)
+                append(comment)
             }
-            else if (character === `,`) {
+            else if (character === `,` || character === `:`) {
+                const type =
+                    character === `,` ? DelimiterType.Comma :
+                    character === `:` ? DelimiterType.Colon :
+                    neverThrow(character, new Error(`Unexpected character ${character}.`))
+
                 locator.next
 
-                const delimiter = slicer.slice(params => new Delimiter({ type : DelimiterType.Comma, ...params }))
+                const delimiter = slicer.slice(params => new Delimiter({ type, ...params }))
 
-                children.push(delimiter)
+                append(delimiter)
             }
-            else if (character === `:`) {
+            else if (character === `(` || character === `{`) {
+                const type =
+                    character === `(` ? BraceType.Round :
+                    character === `{` ? BraceType.Figure :
+                    neverThrow(character, new Error(`Unexpected character ${character}.`))
+
                 locator.next
 
-                const delimiter = slicer.slice(params => new Delimiter({ type : DelimiterType.Colon, ...params }))
+                const opening = slicer.slice(params => new Opening({ type, ...params }))
 
-                children.push(delimiter)
+                nesting.push(new Nesting({ opening }))
+            }
+            else if (character === `)` || character === `}`) {
+                if (nesting.length < 1) throw new Error(`Closing unopened block.`)
+
+                const type =
+                    character === `)` ? BraceType.Round :
+                    character === `}` ? BraceType.Figure :
+                    neverThrow(character, new Error(`Unexpected character ${character}.`))
+
+                const { opening, children } = nesting[nesting.length - 1]
+
+                if (opening.type !== type) throw new Error(`Block braces doesn't match: ${opening.toString()} (${opening.type}) != ${character} ${type}.`)
+
+                locator.next
+
+                const closing = slicer.slice(params => new Closing({ type, ...params }))
+                const block = new Block({ opening, closing, children })
+
+                nesting.pop()
+
+                append(block)
             }
             else {
                 throw new Error // @todo
             }
         }
 
+        if (nesting.length > 0) throw new Error(`${nesting.length} unclosed blocks.`)
+
         return children
     }
 }
 
 const emptyCharacter = /^\s$/
+
+function neverThrow(never : never, error : Error) : never {
+    throw error
+}
