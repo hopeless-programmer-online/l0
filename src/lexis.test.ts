@@ -168,6 +168,170 @@ describe(`Check processor`, () => {
                 },
             ])
         })
+        describe(`Check children`, () => {
+            test(`Check space`, () => {
+                expect(process(`( \n\r)`)).toMatchObject([
+                    {   symbol : Block.symbol,
+                        opening : {
+                            symbol : Opening.symbol, type : BraceType.Round, direction : BraceDirection.Opening,
+                            span : {
+                                begin : { offset : 0, row : 0, column : 0 },
+                                end : { offset : 1, row : 0, column : 1 },
+                            },
+                            text : `(`,
+                        },
+                        closing : {
+                            symbol : Closing.symbol, type : BraceType.Round, direction : BraceDirection.Closing,
+                            span : {
+                                begin : { offset : 4, row : 1, column : 1 },
+                                end : { offset : 5, row : 1, column : 2 },
+                            },
+                            text : `)`,
+                        },
+                        children : [
+                            {   symbol : Space.symbol,
+                                span : {
+                                    begin : { offset : 1, row : 0, column : 1 },
+                                    end : { offset : 4, row : 1, column : 1 },
+                                },
+                                text : ` \n\r`,
+                            },
+                        ],
+                        span : {
+                            begin : { offset : 0, row : 0, column : 0 },
+                            end : { offset : 5, row : 1, column : 2 },
+                        },
+                        text : `( \n\r)`,
+                    },
+                ])
+            })
+            test(`Check comment`, () => {
+                expect(process(`(;a\n)`)).toMatchObject([
+                    {   symbol : Block.symbol,
+                        opening : {
+                            symbol : Opening.symbol, type : BraceType.Round, direction : BraceDirection.Opening,
+                            span : {
+                                begin : { offset : 0, row : 0, column : 0 },
+                                end : { offset : 1, row : 0, column : 1 },
+                            },
+                            text : `(`,
+                        },
+                        closing : {
+                            symbol : Closing.symbol, type : BraceType.Round, direction : BraceDirection.Closing,
+                            span : {
+                                begin : { offset : 4, row : 1, column : 0 },
+                                end : { offset : 5, row : 1, column : 1 },
+                            },
+                            text : `)`,
+                        },
+                        children : [
+                            {   symbol : Comment.symbol,
+                                span : {
+                                    begin : { offset : 1, row : 0, column : 1 },
+                                    end : { offset : 4, row : 1, column : 0 },
+                                },
+                                text : `;a\n`,
+                            },
+                        ],
+                        span : {
+                            begin : { offset : 0, row : 0, column : 0 },
+                            end : { offset : 5, row : 1, column : 1 },
+                        },
+                        text : `(;a\n)`,
+                    },
+                ])
+            })
+            test(`Check delimiter`, () => {
+                expect(process(`(,)`)).toMatchObject([
+                    {   symbol : Block.symbol,
+                        opening : {
+                            symbol : Opening.symbol, type : BraceType.Round, direction : BraceDirection.Opening,
+                            span : {
+                                begin : { offset : 0, row : 0, column : 0 },
+                                end : { offset : 1, row : 0, column : 1 },
+                            },
+                            text : `(`,
+                        },
+                        closing : {
+                            symbol : Closing.symbol, type : BraceType.Round, direction : BraceDirection.Closing,
+                            span : {
+                                begin : { offset : 2, row : 0, column : 2 },
+                                end : { offset : 3, row : 0, column : 3 },
+                            },
+                            text : `)`,
+                        },
+                        children : [
+                            {   symbol : Delimiter.symbol, type : DelimiterType.Comma,
+                                span : {
+                                    begin : { offset : 1, row : 0, column : 1 },
+                                    end : { offset : 2, row : 0, column : 2 },
+                                },
+                                text : `,`,
+                            },
+                        ],
+                        span : {
+                            begin : { offset : 0, row : 0, column : 0 },
+                            end : { offset : 3, row : 0, column : 3 },
+                        },
+                        text : `(,)`,
+                    },
+                ])
+            })
+            test(`Check block`, () => {
+                expect(process(`({})`)).toMatchObject([
+                    {   symbol : Block.symbol,
+                        opening : {
+                            symbol : Opening.symbol, type : BraceType.Round, direction : BraceDirection.Opening,
+                            span : {
+                                begin : { offset : 0, row : 0, column : 0 },
+                                end : { offset : 1, row : 0, column : 1 },
+                            },
+                            text : `(`,
+                        },
+                        closing : {
+                            symbol : Closing.symbol, type : BraceType.Round, direction : BraceDirection.Closing,
+                            span : {
+                                begin : { offset : 3, row : 0, column : 3 },
+                                end : { offset : 4, row : 0, column : 4 },
+                            },
+                            text : `)`,
+                        },
+                        children : [
+                            {   symbol : Block.symbol,
+                                opening : {
+                                    symbol : Opening.symbol, type : BraceType.Figure, direction : BraceDirection.Opening,
+                                    span : {
+                                        begin : { offset : 1, row : 0, column : 1 },
+                                        end : { offset : 2, row : 0, column : 2 },
+                                    },
+                                    text : `{`,
+                                },
+                                closing : {
+                                    symbol : Closing.symbol, type : BraceType.Figure, direction : BraceDirection.Closing,
+                                    span : {
+                                        begin : { offset : 2, row : 0, column : 2 },
+                                        end : { offset : 3, row : 0, column : 3 },
+                                    },
+                                    text : `}`,
+                                },
+                                children : [
+                                ],
+                                span : {
+                                    begin : { offset : 1, row : 0, column : 1 },
+                                    end : { offset : 3, row : 0, column : 3 },
+                                },
+                                text : `{}`,
+                            },
+                        ],
+                        span : {
+                            begin : { offset : 0, row : 0, column : 0 },
+                            end : { offset : 4, row : 0, column : 4 },
+                        },
+                        text : `({})`,
+                    },
+                ])
+            })
+        })
     })
     describe(`Check combinations`, () => {
         test(`Check whitespace + comment`, () => {

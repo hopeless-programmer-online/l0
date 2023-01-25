@@ -70,13 +70,13 @@ export abstract class Leaf extends Lexeme {
 }
 
 export class Space extends Leaf {
-    public static readonly symbol : unique symbol = Symbol(`l0.text.Space`)
+    public static readonly symbol : unique symbol = Symbol(`l0.lexeme.Space`)
 
     public readonly symbol : typeof Space.symbol = Space.symbol
 }
 
 export class Comment extends Leaf {
-    public static readonly symbol : unique symbol = Symbol(`l0.text.Comment`)
+    public static readonly symbol : unique symbol = Symbol(`l0.lexeme.Comment`)
 
     public readonly symbol : typeof Comment.symbol = Comment.symbol
 }
@@ -87,7 +87,7 @@ export enum DelimiterType {
 }
 
 export class Delimiter extends Leaf {
-    public static readonly symbol : unique symbol = Symbol(`l0.text.Delimiter`)
+    public static readonly symbol : unique symbol = Symbol(`l0.lexeme.Delimiter`)
 
     public readonly symbol : typeof Delimiter.symbol = Delimiter.symbol
     public readonly type : DelimiterType
@@ -109,7 +109,6 @@ export class Delimiter extends Leaf {
 
 export enum BraceType {
     Round = `round`,
-    Square = `square`,
     Figure = `figure`,
 }
 export enum BraceDirection {
@@ -138,13 +137,13 @@ export abstract class Brace extends Leaf {
 }
 
 export class Opening extends Brace {
-    public static readonly symbol : unique symbol = Symbol(`l0.text.OpeningBrace`)
+    public static readonly symbol : unique symbol = Symbol(`l0.lexeme.OpeningBrace`)
 
     public readonly symbol : typeof Opening.symbol = Opening.symbol
     public readonly direction = BraceDirection.Opening
 }
 export class Closing extends Brace {
-    public static readonly symbol : unique symbol = Symbol(`l0.text.ClosingBrace`)
+    public static readonly symbol : unique symbol = Symbol(`l0.lexeme.ClosingBrace`)
 
     public readonly symbol : typeof Closing.symbol = Closing.symbol
     public readonly direction = BraceDirection.Closing
@@ -154,7 +153,7 @@ export type Child = Space | Comment | Delimiter | Name | Block
 export type Children = Child[]
 
 export class Block extends Lexeme {
-    public static readonly symbol : unique symbol = Symbol(`l0.text.Block`)
+    public static readonly symbol : unique symbol = Symbol(`l0.lexeme.Block`)
 
     public readonly symbol : typeof Block.symbol = Block.symbol
     public readonly opening : Opening
@@ -195,7 +194,7 @@ export abstract class Word extends Leaf {
 }
 
 export class BareWord extends Word {
-    public static readonly symbol : unique symbol = Symbol(`l0.text.BareWord`)
+    public static readonly symbol : unique symbol = Symbol(`l0.lexeme.BareWord`)
 
     public readonly symbol : typeof BareWord.symbol = BareWord.symbol
 
@@ -210,7 +209,7 @@ export enum Quote {
 }
 
 export class QuotedWord extends Word {
-    public static readonly symbol : unique symbol = Symbol(`l0.text.QuotedWord`)
+    public static readonly symbol : unique symbol = Symbol(`l0.lexeme.QuotedWord`)
 
     public readonly symbol : typeof QuotedWord.symbol = QuotedWord.symbol
     public readonly quote : Quote
@@ -243,7 +242,7 @@ export type AnyWord = BareWord | QuotedWord
 export type NamePart = Space | AnyWord
 
 export class Name extends Lexeme {
-    public static readonly symbol : unique symbol = Symbol(`l0.text.Name`)
+    public static readonly symbol : unique symbol = Symbol(`l0.lexeme.Name`)
 
     public static isPartWord(part : NamePart) : part is AnyWord {
         if (part.symbol === BareWord.symbol) return true
