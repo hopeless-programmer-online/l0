@@ -70,13 +70,13 @@ export abstract class Leaf extends Lexeme {
 }
 
 export class Space extends Leaf {
-    public static readonly symbol : unique symbol = Symbol(`l0.lexeme.Space`)
+    public static readonly symbol : unique symbol = Symbol(`l0.lexis.Space`)
 
     public readonly symbol : typeof Space.symbol = Space.symbol
 }
 
 export class Comment extends Leaf {
-    public static readonly symbol : unique symbol = Symbol(`l0.lexeme.Comment`)
+    public static readonly symbol : unique symbol = Symbol(`l0.lexis.Comment`)
 
     public readonly symbol : typeof Comment.symbol = Comment.symbol
 }
@@ -87,7 +87,7 @@ export enum DelimiterType {
 }
 
 export class Delimiter extends Leaf {
-    public static readonly symbol : unique symbol = Symbol(`l0.lexeme.Delimiter`)
+    public static readonly symbol : unique symbol = Symbol(`l0.lexis.Delimiter`)
 
     public readonly symbol : typeof Delimiter.symbol = Delimiter.symbol
     public readonly type : DelimiterType
@@ -137,13 +137,13 @@ export abstract class Brace extends Leaf {
 }
 
 export class Opening extends Brace {
-    public static readonly symbol : unique symbol = Symbol(`l0.lexeme.OpeningBrace`)
+    public static readonly symbol : unique symbol = Symbol(`l0.lexis.OpeningBrace`)
 
     public readonly symbol : typeof Opening.symbol = Opening.symbol
     public readonly direction = BraceDirection.Opening
 }
 export class Closing extends Brace {
-    public static readonly symbol : unique symbol = Symbol(`l0.lexeme.ClosingBrace`)
+    public static readonly symbol : unique symbol = Symbol(`l0.lexis.ClosingBrace`)
 
     public readonly symbol : typeof Closing.symbol = Closing.symbol
     public readonly direction = BraceDirection.Closing
@@ -153,7 +153,7 @@ export type Child = Space | Comment | Delimiter | Name | Block
 export type Children = Child[]
 
 export class Block extends Lexeme {
-    public static readonly symbol : unique symbol = Symbol(`l0.lexeme.Block`)
+    public static readonly symbol : unique symbol = Symbol(`l0.lexis.Block`)
 
     public readonly symbol : typeof Block.symbol = Block.symbol
     public readonly opening : Opening
@@ -190,15 +190,15 @@ export class Block extends Lexeme {
 }
 
 export abstract class Word extends Leaf {
-    public abstract isEqual(word : AnyWord) : boolean
+    public abstract isEqual(word : WordUnion) : boolean
 }
 
 export class BareWord extends Word {
-    public static readonly symbol : unique symbol = Symbol(`l0.lexeme.BareWord`)
+    public static readonly symbol : unique symbol = Symbol(`l0.lexis.BareWord`)
 
     public readonly symbol : typeof BareWord.symbol = BareWord.symbol
 
-    public isEqual(word : AnyWord) {
+    public isEqual(word : WordUnion) {
         return word.symbol === BareWord.symbol && this.text === word.text
     }
 }
@@ -209,7 +209,7 @@ export enum Quote {
 }
 
 export class QuotedWord extends Word {
-    public static readonly symbol : unique symbol = Symbol(`l0.lexeme.QuotedWord`)
+    public static readonly symbol : unique symbol = Symbol(`l0.lexis.QuotedWord`)
 
     public readonly symbol : typeof QuotedWord.symbol = QuotedWord.symbol
     public readonly quote : Quote
@@ -233,18 +233,18 @@ export class QuotedWord extends Word {
         this.unquoted = unquoted
     }
 
-    public isEqual(word : AnyWord) {
+    public isEqual(word : WordUnion) {
         return word.symbol === QuotedWord.symbol && this.text === word.text
     }
 }
 
-export type AnyWord = BareWord | QuotedWord
-export type NamePart = Space | Comment | AnyWord
+export type WordUnion = BareWord | QuotedWord
+export type NamePart = Space | Comment | WordUnion
 
 export class Name extends Lexeme {
-    public static readonly symbol : unique symbol = Symbol(`l0.lexeme.Name`)
+    public static readonly symbol : unique symbol = Symbol(`l0.lexis.Name`)
 
-    public static isPartWord(part : NamePart) : part is AnyWord {
+    public static isPartWord(part : NamePart) : part is WordUnion {
         if (part.symbol === BareWord.symbol) return true
         if (part.symbol === QuotedWord.symbol) return true
         if (part.symbol === Space.symbol) return false
