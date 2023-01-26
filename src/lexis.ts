@@ -239,7 +239,7 @@ export class QuotedWord extends Word {
 }
 
 export type AnyWord = BareWord | QuotedWord
-export type NamePart = Space | AnyWord
+export type NamePart = Space | Comment | AnyWord
 
 export class Name extends Lexeme {
     public static readonly symbol : unique symbol = Symbol(`l0.lexeme.Name`)
@@ -248,6 +248,7 @@ export class Name extends Lexeme {
         if (part.symbol === BareWord.symbol) return true
         if (part.symbol === QuotedWord.symbol) return true
         if (part.symbol === Space.symbol) return false
+        if (part.symbol === Comment.symbol) return false
 
         const never : never = part
 
@@ -379,25 +380,58 @@ export class Processor {
         const slicer = new Slicer({ locator })
         const children : Children = []
         const nesting : Nesting[] = []
+        const nameParts : NamePart[] = []
 
-        function append(child : Child) {
+        function top() {
             const top = nesting.length > 0
                 ? nesting[nesting.length - 1].children
                 : children
 
-            top.push(child)
+            return top
+        }
+        function append(child : Child) {
+            top().push(child)
+        }
+        function appendSpacing(part : Space | Comment) {
+            if (nameParts.length < 1) return append(part)
+
+            nameParts.push(part)
+        }
+        function endName() {
+            if (nameParts.length < 1) return
+            if (!nameParts.some(part => [ BareWord.symbol, QuotedWord.symbol ].includes(part.symbol))) throw new Error(`Unexpected empty name.`)
+
+            const tail : (Space | Comment)[] = []
+
+            while (true) {
+                const last = nameParts[nameParts.length - 1]
+
+                if (last.symbol === BareWord.symbol || last.symbol === QuotedWord.symbol) break
+
+                tail.push(last)
+                nameParts.pop()
+            }
+
+            const name = new Name({ parts : nameParts })
+
+            append(name)
+            tail.forEach(append)
         }
 
         while (true) {
             const character = locator.character
 
-            if (character === null) break
-            else if (character.match(emptyCharacter)) {
-                while (locator.next?.match(emptyCharacter));
+            if (character === null) {
+                endName()
+
+                break
+            }
+            else if (isWhitespace(character)) {
+                while (isWhitespace(locator.next));
 
                 const space = slicer.slice(params => new Space(params))
 
-                append(space)
+                appendSpacing(space)
             }
             else if (character === `;`) {
                 while (true) {
@@ -412,9 +446,11 @@ export class Processor {
 
                 const comment = slicer.slice(params => new Comment(params))
 
-                append(comment)
+                appendSpacing(comment)
             }
             else if (character === `,` || character === `:`) {
+                endName()
+
                 const type =
                     character === `,` ? DelimiterType.Comma :
                     character === `:` ? DelimiterType.Colon :
@@ -427,6 +463,8 @@ export class Processor {
                 append(delimiter)
             }
             else if (character === `(` || character === `{`) {
+                endName()
+
                 const type =
                     character === `(` ? BraceType.Round :
                     character === `{` ? BraceType.Figure :
@@ -439,6 +477,8 @@ export class Processor {
                 nesting.push(new Nesting({ opening }))
             }
             else if (character === `)` || character === `}`) {
+                endName()
+
                 if (nesting.length < 1) throw new Error(`Closing unopened block.`)
 
                 const type =
@@ -459,6 +499,29 @@ export class Processor {
 
                 append(block)
             }
+            else if (character === `'` || character === `"`) {
+                const quoteCharacter = character
+                let unquoted = ``
+
+                while (true) {
+                    const character = locator.next
+
+                    if (character === null) throw new Error(`Unclosed quoted word.`)
+                    if (character === quoteCharacter) break
+
+                    unquoted += character
+                }
+
+                locator.next
+
+                const quote =
+                    quoteCharacter === `'` ? Quote.Single :
+                    quoteCharacter === `"` ? Quote.Double :
+                    neverThrow(quoteCharacter, new Error(`Unexpected character ${quoteCharacter}.`))
+                const quoted = slicer.slice(params => new QuotedWord({ quote, unquoted, ...params }))
+
+                nameParts.push(quoted)
+            }
             else {
                 throw new Error // @todo
             }
@@ -470,8 +533,90 @@ export class Processor {
     }
 }
 
-const emptyCharacter = /^\s$/
+// For escape sequences see https://en.wikipedia.org/wiki/Escape_character
+// Fo whitespace list see https://stackoverflow.com/a/6507078/13502024
+const spaceCharacter                   = ` `
+const newLineCharacter                 = `\n`
+const carriageReturnCharacter          = `\r`
+const tabCharacter                     = `\t`
+const formFeedCharacter                = `\f`
+const verticalTabCharacter             = `\v`
+const noBreakSpaceCharacter            = `\u00a0` // see https://unicode-table.com/en/00A0/
+const oghamSpaceMarkCharacter          = `\u1680` // see https://unicode-table.com/en/1680/
+const enQuadCharacter                  = `\u2000` // see https://unicode-table.com/en/2000/
+const emQuadCharacter                  = `\u2001` // see https://unicode-table.com/en/2001/
+const enSpaceCharacter                 = `\u2002` // see https://unicode-table.com/en/2002/
+const emSpaceCharacter                 = `\u2003` // see https://unicode-table.com/en/2003/
+const threePerEmSpaceCharacter         = `\u2004` // see https://unicode-table.com/en/2004/
+const fourPerEmSpaceCharacter          = `\u2005` // see https://unicode-table.com/en/2005/
+const sixPerEmSpaceCharacter           = `\u2006` // see https://unicode-table.com/en/2006/
+const figureSpaceCharacter             = `\u2007` // see https://unicode-table.com/en/2007/
+const punctuationSpaceCharacter        = `\u2008` // see https://unicode-table.com/en/2008/
+const thinSpaceCharacter               = `\u2009` // see https://unicode-table.com/en/2009/
+const hairSpaceCharacter               = `\u200a` // see https://unicode-table.com/en/200a/
+const lineSeparatorCharacter           = `\u2028` // see https://unicode-table.com/en/2028/
+const paragraphSeparatorCharacter      = `\u2029` // see https://unicode-table.com/en/2029/
+const narrowNoBreakSpaceCharacter      = `\u202f` // see https://unicode-table.com/en/202F/
+const mediumMathematicalSpaceCharacter = `\u205f` // see https://unicode-table.com/en/205F/
+const ideographicSpaceCharacter        = `\u3000` // see https://unicode-table.com/en/3000/
+const zeroWidthNoBreakSpaceCharacter   = `\ufeff` // see https://unicode-table.com/en/FEFF/
+
+type WhitespaceCharacter =
+    | typeof spaceCharacter
+    | typeof newLineCharacter
+    | typeof carriageReturnCharacter
+    | typeof tabCharacter
+    | typeof formFeedCharacter
+    | typeof verticalTabCharacter
+    | typeof noBreakSpaceCharacter
+    | typeof oghamSpaceMarkCharacter
+    | typeof enQuadCharacter
+    | typeof emQuadCharacter
+    | typeof enSpaceCharacter
+    | typeof emSpaceCharacter
+    | typeof threePerEmSpaceCharacter
+    | typeof fourPerEmSpaceCharacter
+    | typeof sixPerEmSpaceCharacter
+    | typeof figureSpaceCharacter
+    | typeof punctuationSpaceCharacter
+    | typeof thinSpaceCharacter
+    | typeof hairSpaceCharacter
+    | typeof lineSeparatorCharacter
+    | typeof paragraphSeparatorCharacter
+    | typeof narrowNoBreakSpaceCharacter
+    | typeof mediumMathematicalSpaceCharacter
+    | typeof ideographicSpaceCharacter
+    | typeof zeroWidthNoBreakSpaceCharacter
 
 function neverThrow(never : never, error : Error) : never {
     throw error
+}
+function isWhitespace(character : string | null) : character is WhitespaceCharacter {
+    if (character === spaceCharacter) return true
+    if (character === newLineCharacter) return true
+    if (character === carriageReturnCharacter) return true
+    if (character === tabCharacter) return true
+    if (character === formFeedCharacter) return true
+    if (character === verticalTabCharacter) return true
+    if (character === noBreakSpaceCharacter) return true
+    if (character === oghamSpaceMarkCharacter) return true
+    if (character === enQuadCharacter) return true
+    if (character === emQuadCharacter) return true
+    if (character === enSpaceCharacter) return true
+    if (character === emSpaceCharacter) return true
+    if (character === threePerEmSpaceCharacter) return true
+    if (character === fourPerEmSpaceCharacter) return true
+    if (character === sixPerEmSpaceCharacter) return true
+    if (character === figureSpaceCharacter) return true
+    if (character === punctuationSpaceCharacter) return true
+    if (character === thinSpaceCharacter) return true
+    if (character === hairSpaceCharacter) return true
+    if (character === lineSeparatorCharacter) return true
+    if (character === paragraphSeparatorCharacter) return true
+    if (character === narrowNoBreakSpaceCharacter) return true
+    if (character === mediumMathematicalSpaceCharacter) return true
+    if (character === ideographicSpaceCharacter) return true
+    if (character === zeroWidthNoBreakSpaceCharacter) return true
+
+    return false
 }

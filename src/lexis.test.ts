@@ -1,4 +1,4 @@
-import { Space, Comment, Delimiter, Name, Block, Locator, Processor, DelimiterType, Opening, Brace, BraceType, BraceDirection, Closing } from './lexis'
+import { Space, Comment, Delimiter, Name, Block, Locator, Processor, DelimiterType, Opening, Brace, BraceType, BraceDirection, Closing, QuotedWord } from './lexis'
 
 test(`Check export`, () => {
     expect(Space).toBeDefined()
@@ -107,6 +107,31 @@ describe(`Check processor`, () => {
                     text : `:`,
                 },
             ])
+        })
+    })
+    describe(`Check names`, () => {
+        describe(`Check quoted`, () => {
+            test(`Check double quoted`, () => {
+                expect(process(`"abc\n\r'123"`)).toMatchObject([
+                    {   symbol : Name.symbol,
+                        parts : [
+                            {   symbol : QuotedWord.symbol,
+                                span : {
+                                    begin : { offset : 0, row : 0, column : 0 },
+                                    end : { offset : 11, row : 1, column : 6 },
+                                },
+                                text : `"abc\n\r'123"`,
+                                unquoted : `abc\n\r'123`,
+                            },
+                        ],
+                        span : {
+                            begin : { offset : 0, row : 0, column : 0 },
+                            end : { offset : 11, row : 1, column : 6 },
+                        },
+                        text : `"abc\n\r'123"`,
+                    },
+                ])
+            })
         })
     })
     describe(`Check blocks`, () => {
@@ -334,7 +359,7 @@ describe(`Check processor`, () => {
         })
     })
     describe(`Check combinations`, () => {
-        test(`Check whitespace + comment`, () => {
+        test(`Check space + comment`, () => {
             expect(process(` \n\r;abc`)).toMatchObject([
                 {   symbol : Space.symbol,
                     span : {
@@ -352,7 +377,7 @@ describe(`Check processor`, () => {
                 },
             ])
         })
-        test(`Check whitespace + ,`, () => {
+        test(`Check space + ,`, () => {
             expect(process(` \n\r,`)).toMatchObject([
                 {   symbol : Space.symbol,
                     span : {
@@ -370,7 +395,7 @@ describe(`Check processor`, () => {
                 },
             ])
         })
-        test(`Check whitespace + :`, () => {
+        test(`Check space + :`, () => {
             expect(process(` \n\r:`)).toMatchObject([
                 {   symbol : Space.symbol,
                     span : {
@@ -388,7 +413,35 @@ describe(`Check processor`, () => {
                 },
             ])
         })
-        test(`Check comment + whitespace`, () => {
+        test(`Check space + quoted name`, () => {
+            expect(process(` "a"`)).toMatchObject([
+                {   symbol : Space.symbol,
+                    span : {
+                        begin : { offset : 0, row : 0, column : 0 },
+                        end : { offset : 1, row : 0, column : 1 },
+                    },
+                    text : ` `,
+                },
+                {   symbol : Name.symbol,
+                    parts : [
+                        {   symbol : QuotedWord.symbol,
+                            span : {
+                                begin : { offset : 1, row : 0, column : 1 },
+                                end : { offset : 4, row : 0, column : 4 },
+                            },
+                            text : `"a"`,
+                            unquoted : `a`,
+                        },
+                    ],
+                    span : {
+                        begin : { offset : 1, row : 0, column : 1 },
+                        end : { offset : 4, row : 0, column : 4 },
+                    },
+                    text : `"a"`,
+                },
+            ])
+        })
+        test(`Check comment + space`, () => {
             expect(process(`;abc\n \n\r`)).toMatchObject([
                 {   symbol : Comment.symbol,
                     span : {
@@ -439,6 +492,34 @@ describe(`Check processor`, () => {
                         end : { offset : 6, row : 1, column : 1 },
                     },
                     text : `:`,
+                },
+            ])
+        })
+        test(`Check quoted name + space`, () => {
+            expect(process(`"a" `)).toMatchObject([
+                {   symbol : Name.symbol,
+                    parts : [
+                        {   symbol : QuotedWord.symbol,
+                            span : {
+                                begin : { offset : 0, row : 0, column : 0 },
+                                end : { offset : 3, row : 0, column : 3 },
+                            },
+                            text : `"a"`,
+                            unquoted : `a`,
+                        },
+                    ],
+                    span : {
+                        begin : { offset : 0, row : 0, column : 0 },
+                        end : { offset : 3, row : 0, column : 3 },
+                    },
+                    text : `"a"`,
+                },
+                {   symbol : Space.symbol,
+                    span : {
+                        begin : { offset : 3, row : 0, column : 3 },
+                        end : { offset : 4, row : 0, column : 4 },
+                    },
+                    text : ` `,
                 },
             ])
         })
