@@ -412,7 +412,9 @@ export class Processor {
                 nameParts.pop()
             }
 
-            const name = new Name({ parts : nameParts })
+            const name = new Name({ parts : nameParts.slice() })
+
+            nameParts.splice(0, nameParts.length)
 
             append(name)
             tail.forEach(append)
@@ -477,9 +479,9 @@ export class Processor {
                 nesting.push(new Nesting({ opening }))
             }
             else if (character === `)` || character === `}`) {
-                endName()
-
                 if (nesting.length < 1) throw new Error(`Closing unopened block.`)
+
+                endName()
 
                 const type =
                     character === `)` ? BraceType.Round :

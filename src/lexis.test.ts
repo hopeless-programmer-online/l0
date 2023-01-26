@@ -302,6 +302,52 @@ describe(`Check processor`, () => {
                     },
                 ])
             })
+            test(`Check quoted name`, () => {
+                expect(process(`("a")`)).toMatchObject([
+                    {   symbol : Block.symbol,
+                        opening : {
+                            symbol : Opening.symbol, type : BraceType.Round, direction : BraceDirection.Opening,
+                            span : {
+                                begin : { offset : 0, row : 0, column : 0 },
+                                end : { offset : 1, row : 0, column : 1 },
+                            },
+                            text : `(`,
+                        },
+                        closing : {
+                            symbol : Closing.symbol, type : BraceType.Round, direction : BraceDirection.Closing,
+                            span : {
+                                begin : { offset : 4, row : 0, column : 4 },
+                                end : { offset : 5, row : 0, column : 5 },
+                            },
+                            text : `)`,
+                        },
+                        children : [
+                            {   symbol : Name.symbol,
+                                parts : [
+                                    {   symbol : QuotedWord.symbol,
+                                        span : {
+                                            begin : { offset : 1, row : 0, column : 1 },
+                                            end : { offset : 4, row : 0, column : 4 },
+                                        },
+                                        text : `"a"`,
+                                        unquoted : `a`,
+                                    },
+                                ],
+                                span : {
+                                    begin : { offset : 1, row : 0, column : 1 },
+                                    end : { offset : 4, row : 0, column : 4 },
+                                },
+                                text : `"a"`,
+                            },
+                        ],
+                        span : {
+                            begin : { offset : 0, row : 0, column : 0 },
+                            end : { offset : 5, row : 0, column : 5 },
+                        },
+                        text : `("a")`,
+                    },
+                ])
+            })
             test(`Check block`, () => {
                 expect(process(`({})`)).toMatchObject([
                     {   symbol : Block.symbol,
@@ -495,6 +541,52 @@ describe(`Check processor`, () => {
                 },
             ])
         })
+        test(`Check delimiter + space`, () => {
+            expect(process(`: `)).toMatchObject([
+                {   symbol : Delimiter.symbol, type : DelimiterType.Colon,
+                    span : {
+                        begin : { offset : 0, row : 0, column : 0 },
+                        end : { offset : 1, row : 0, column : 1 },
+                    },
+                    text : `:`,
+                },
+                {   symbol : Space.symbol,
+                    span : {
+                        begin : { offset : 1, row : 0, column : 1 },
+                        end : { offset : 2, row : 0, column : 2 },
+                    },
+                    text : ` `,
+                },
+            ])
+        })
+        test(`Check delimiter + quoted name`, () => {
+            expect(process(`:"a"`)).toMatchObject([
+                {   symbol : Delimiter.symbol, type : DelimiterType.Colon,
+                    span : {
+                        begin : { offset : 0, row : 0, column : 0 },
+                        end : { offset : 1, row : 0, column : 1 },
+                    },
+                    text : `:`,
+                },
+                {   symbol : Name.symbol,
+                    parts : [
+                        {   symbol : QuotedWord.symbol,
+                            span : {
+                                begin : { offset : 1, row : 0, column : 1 },
+                                end : { offset : 4, row : 0, column : 4 },
+                            },
+                            text : `"a"`,
+                            unquoted : `a`,
+                        },
+                    ],
+                    span : {
+                        begin : { offset : 1, row : 0, column : 1 },
+                        end : { offset : 4, row : 0, column : 4 },
+                    },
+                    text : `"a"`,
+                },
+            ])
+        })
         test(`Check quoted name + space`, () => {
             expect(process(`"a" `)).toMatchObject([
                 {   symbol : Name.symbol,
@@ -520,6 +612,62 @@ describe(`Check processor`, () => {
                         end : { offset : 4, row : 0, column : 4 },
                     },
                     text : ` `,
+                },
+            ])
+        })
+        test(`Check quoted name + comment`, () => {
+            expect(process(`"a";`)).toMatchObject([
+                {   symbol : Name.symbol,
+                    parts : [
+                        {   symbol : QuotedWord.symbol,
+                            span : {
+                                begin : { offset : 0, row : 0, column : 0 },
+                                end : { offset : 3, row : 0, column : 3 },
+                            },
+                            text : `"a"`,
+                            unquoted : `a`,
+                        },
+                    ],
+                    span : {
+                        begin : { offset : 0, row : 0, column : 0 },
+                        end : { offset : 3, row : 0, column : 3 },
+                    },
+                    text : `"a"`,
+                },
+                {   symbol : Comment.symbol,
+                    span : {
+                        begin : { offset : 3, row : 0, column : 3 },
+                        end : { offset : 4, row : 0, column : 4 },
+                    },
+                    text : `;`,
+                },
+            ])
+        })
+        test(`Check quoted name + delimiter`, () => {
+            expect(process(`"a":`)).toMatchObject([
+                {   symbol : Name.symbol,
+                    parts : [
+                        {   symbol : QuotedWord.symbol,
+                            span : {
+                                begin : { offset : 0, row : 0, column : 0 },
+                                end : { offset : 3, row : 0, column : 3 },
+                            },
+                            text : `"a"`,
+                            unquoted : `a`,
+                        },
+                    ],
+                    span : {
+                        begin : { offset : 0, row : 0, column : 0 },
+                        end : { offset : 3, row : 0, column : 3 },
+                    },
+                    text : `"a"`,
+                },
+                {   symbol : Delimiter.symbol, type : DelimiterType.Colon,
+                    span : {
+                        begin : { offset : 3, row : 0, column : 3 },
+                        end : { offset : 4, row : 0, column : 4 },
+                    },
+                    text : `:`,
                 },
             ])
         })
