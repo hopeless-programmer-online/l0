@@ -1,4 +1,4 @@
-import { Space, Comment, Delimiter, Name, Block, Locator, Processor, DelimiterType, Opening, Brace, BraceType, BraceDirection, Closing, QuotedWord } from './lexis'
+import { Space, Comment, Delimiter, Name, Block, Locator, Processor, DelimiterType, Opening, Brace, BraceType, BraceDirection, Closing, QuotedWord, BareWord } from './lexis'
 
 test(`Check export`, () => {
     expect(Space).toBeDefined()
@@ -110,7 +110,48 @@ describe(`Check processor`, () => {
         })
     })
     describe(`Check names`, () => {
+        test(`Check bare`, () => {
+            expect(process(`abc123!@#`)).toMatchObject([
+                {   symbol : Name.symbol,
+                    parts : [
+                        {   symbol : BareWord.symbol,
+                            span : {
+                                begin : { offset : 0, row : 0, column : 0 },
+                                end : { offset : 9, row : 0, column : 9 },
+                            },
+                            text : `abc123!@#`,
+                        },
+                    ],
+                    span : {
+                        begin : { offset : 0, row : 0, column : 0 },
+                        end : { offset : 9, row : 0, column : 9 },
+                    },
+                    text : `abc123!@#`,
+                },
+            ])
+        })
         describe(`Check quoted`, () => {
+            test(`Check single quoted`, () => {
+                expect(process(`'abc\n\r"123'`)).toMatchObject([
+                    {   symbol : Name.symbol,
+                        parts : [
+                            {   symbol : QuotedWord.symbol,
+                                span : {
+                                    begin : { offset : 0, row : 0, column : 0 },
+                                    end : { offset : 11, row : 1, column : 6 },
+                                },
+                                text : `'abc\n\r"123'`,
+                                unquoted : `abc\n\r"123`,
+                            },
+                        ],
+                        span : {
+                            begin : { offset : 0, row : 0, column : 0 },
+                            end : { offset : 11, row : 1, column : 6 },
+                        },
+                        text : `'abc\n\r"123'`,
+                    },
+                ])
+            })
             test(`Check double quoted`, () => {
                 expect(process(`"abc\n\r'123"`)).toMatchObject([
                     {   symbol : Name.symbol,
@@ -299,6 +340,51 @@ describe(`Check processor`, () => {
                             end : { offset : 3, row : 0, column : 3 },
                         },
                         text : `(,)`,
+                    },
+                ])
+            })
+            test(`Check bare name`, () => {
+                expect(process(`(a)`)).toMatchObject([
+                    {   symbol : Block.symbol,
+                        opening : {
+                            symbol : Opening.symbol, type : BraceType.Round, direction : BraceDirection.Opening,
+                            span : {
+                                begin : { offset : 0, row : 0, column : 0 },
+                                end : { offset : 1, row : 0, column : 1 },
+                            },
+                            text : `(`,
+                        },
+                        closing : {
+                            symbol : Closing.symbol, type : BraceType.Round, direction : BraceDirection.Closing,
+                            span : {
+                                begin : { offset : 2, row : 0, column : 2 },
+                                end : { offset : 3, row : 0, column : 3 },
+                            },
+                            text : `)`,
+                        },
+                        children : [
+                            {   symbol : Name.symbol,
+                                parts : [
+                                    {   symbol : BareWord.symbol,
+                                        span : {
+                                            begin : { offset : 1, row : 0, column : 1 },
+                                            end : { offset : 2, row : 0, column : 2 },
+                                        },
+                                        text : `a`,
+                                    },
+                                ],
+                                span : {
+                                    begin : { offset : 1, row : 0, column : 1 },
+                                    end : { offset : 2, row : 0, column : 2 },
+                                },
+                                text : `a`,
+                            },
+                        ],
+                        span : {
+                            begin : { offset : 0, row : 0, column : 0 },
+                            end : { offset : 3, row : 0, column : 3 },
+                        },
+                        text : `(a)`,
                     },
                 ])
             })
@@ -668,6 +754,60 @@ describe(`Check processor`, () => {
                         end : { offset : 4, row : 0, column : 4 },
                     },
                     text : `:`,
+                },
+            ])
+        })
+    })
+    describe(`Check for smoke`, () => {
+        test(`Hello, World!`, () => {
+            expect(process(
+                `print("Hello, World!")`
+            )).toMatchObject([
+                {   symbol : Name.symbol,
+                    parts : [
+                        { symbol : BareWord.symbol, text : `print` },
+                    ],
+                },
+                {   symbol : Block.symbol,
+                    opening : { symbol : Opening.symbol, text : `(` },
+                    children : [
+                        {   symbol : Name.symbol,
+                            parts : [
+                                { symbol : QuotedWord.symbol, text : `"Hello, World!"`, unquoted : `Hello, World!` },
+                            ],
+                        },
+                    ],
+                    closing : { symbol : Closing.symbol, text : `)` },
+                },
+            ])
+        })
+        test(`Generic program call`, () => {
+            expect(process(
+                `u, v, w : f(x, y, z)`
+            )).toMatchObject([
+                {   symbol : Name.symbol, text : `u` },
+                {   symbol : Delimiter.symbol, text : `,` },
+                {   symbol : Space.symbol, text : ` ` },
+                {   symbol : Name.symbol, text : `v` },
+                {   symbol : Delimiter.symbol, text : `,` },
+                {   symbol : Space.symbol, text : ` ` },
+                {   symbol : Name.symbol, text : `w` },
+                {   symbol : Space.symbol, text : ` ` },
+                {   symbol : Delimiter.symbol, text : `:` },
+                {   symbol : Space.symbol, text : ` ` },
+                {   symbol : Name.symbol, text : `f` },
+                {   symbol : Block.symbol,
+                    opening : { symbol : Opening.symbol, text : `(` },
+                    children : [
+                        {   symbol : Name.symbol, text : `x` },
+                        {   symbol : Delimiter.symbol, text : `,` },
+                        {   symbol : Space.symbol, text : ` ` },
+                        {   symbol : Name.symbol, text : `y` },
+                        {   symbol : Delimiter.symbol, text : `,` },
+                        {   symbol : Space.symbol, text : ` ` },
+                        {   symbol : Name.symbol, text : `z` },
+                    ],
+                    closing : { symbol : Closing.symbol, text : `)` },
                 },
             ])
         })

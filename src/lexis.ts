@@ -524,8 +524,19 @@ export class Processor {
 
                 nameParts.push(quoted)
             }
+            else if (isWordCharacter(character)) {
+                while (true) {
+                    const character = locator.next
+
+                    if (character === null || !isWordCharacter(character)) break
+                }
+
+                const bare = slicer.slice(params => new BareWord({ ...params }))
+
+                nameParts.push(bare)
+            }
             else {
-                throw new Error // @todo
+                throw new Error(`Unexpected character ${character}`)
             }
         }
 
@@ -621,4 +632,18 @@ function isWhitespace(character : string | null) : character is WhitespaceCharac
     if (character === zeroWidthNoBreakSpaceCharacter) return true
 
     return false
+}
+function isWordCharacter(character : string) {
+    if (isWhitespace(character)) return false
+    if (character === `;`) return false
+    if (character === `,`) return false
+    if (character === `:`) return false
+    if (character === `(`) return false
+    if (character === `)`) return false
+    if (character === `{`) return false
+    if (character === `}`) return false
+    if (character === `'`) return false
+    if (character === `"`) return false
+
+    return true
 }
