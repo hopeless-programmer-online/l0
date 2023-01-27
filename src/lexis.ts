@@ -365,8 +365,8 @@ class Slicer {
     }
 }
 
-export class Processor {
-    public process(text : Text) : Children {
+export class Analyzer {
+    public analyze(text : Text) : Children {
         class Nesting {
             public readonly opening : Opening
             public readonly children : Children = []

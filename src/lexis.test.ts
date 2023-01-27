@@ -1,4 +1,4 @@
-import { Space, Comment, Delimiter, Name, Block, Locator, Processor, DelimiterType, Opening, Brace, BraceType, BraceDirection, Closing, QuotedWord, BareWord } from './lexis'
+import { Space, Comment, Delimiter, Name, Block, Locator, Analyzer, DelimiterType, Opening, Brace, BraceType, BraceDirection, Closing, QuotedWord, BareWord } from './lexis'
 
 test(`Check export`, () => {
     expect(Space).toBeDefined()
@@ -41,17 +41,17 @@ test(`Check Locator`, () => {
 })
 
 describe(`Check processor`, () => {
-    const process = (text : string) => {
-        const processor = new Processor
+    const parse = (text : string) => {
+        const analyzer = new Analyzer
 
-        return processor.process(text)
+        return analyzer.analyze(text)
     }
 
     test(`Check empty string`, () => {
-        expect(process(``)).toMatchObject([])
+        expect(parse(``)).toMatchObject([])
     })
     test(`Check spaces`, () => {
-        expect(process(` \n\r`)).toMatchObject([
+        expect(parse(` \n\r`)).toMatchObject([
             {   symbol : Space.symbol,
                 span : {
                     begin : { offset : 0, row : 0, column : 0 },
@@ -63,7 +63,7 @@ describe(`Check processor`, () => {
     })
     describe(`Check comments`, () => {
         test(`Check newline`, () => {
-            expect(process(`;abc\n`)).toMatchObject([
+            expect(parse(`;abc\n`)).toMatchObject([
                 {   symbol : Comment.symbol,
                     span : {
                         begin : { offset : 0, row : 0, column : 0 },
@@ -74,7 +74,7 @@ describe(`Check processor`, () => {
             ])
         })
         test(`Check end of text`, () => {
-            expect(process(`;abc`)).toMatchObject([
+            expect(parse(`;abc`)).toMatchObject([
                 {   symbol : Comment.symbol,
                     span : {
                         begin : { offset : 0, row : 0, column : 0 },
@@ -87,7 +87,7 @@ describe(`Check processor`, () => {
     })
     describe(`Check delimiters`, () => {
         test(`Check ,`, () => {
-            expect(process(`,`)).toMatchObject([
+            expect(parse(`,`)).toMatchObject([
                 {   symbol : Delimiter.symbol, type : DelimiterType.Comma,
                     span : {
                         begin : { offset : 0, row : 0, column : 0 },
@@ -98,7 +98,7 @@ describe(`Check processor`, () => {
             ])
         })
         test(`Check :`, () => {
-            expect(process(`:`)).toMatchObject([
+            expect(parse(`:`)).toMatchObject([
                 {   symbol : Delimiter.symbol, type : DelimiterType.Colon,
                     span : {
                         begin : { offset : 0, row : 0, column : 0 },
@@ -111,7 +111,7 @@ describe(`Check processor`, () => {
     })
     describe(`Check names`, () => {
         test(`Check bare`, () => {
-            expect(process(`abc123!@#`)).toMatchObject([
+            expect(parse(`abc123!@#`)).toMatchObject([
                 {   symbol : Name.symbol,
                     parts : [
                         {   symbol : BareWord.symbol,
@@ -132,7 +132,7 @@ describe(`Check processor`, () => {
         })
         describe(`Check quoted`, () => {
             test(`Check single quoted`, () => {
-                expect(process(`'abc\n\r"123'`)).toMatchObject([
+                expect(parse(`'abc\n\r"123'`)).toMatchObject([
                     {   symbol : Name.symbol,
                         parts : [
                             {   symbol : QuotedWord.symbol,
@@ -153,7 +153,7 @@ describe(`Check processor`, () => {
                 ])
             })
             test(`Check double quoted`, () => {
-                expect(process(`"abc\n\r'123"`)).toMatchObject([
+                expect(parse(`"abc\n\r'123"`)).toMatchObject([
                     {   symbol : Name.symbol,
                         parts : [
                             {   symbol : QuotedWord.symbol,
@@ -177,7 +177,7 @@ describe(`Check processor`, () => {
     })
     describe(`Check blocks`, () => {
         test(`Check ()`, () => {
-            expect(process(`()`)).toMatchObject([
+            expect(parse(`()`)).toMatchObject([
                 {   symbol : Block.symbol,
                     opening : {
                         symbol : Opening.symbol, type : BraceType.Round, direction : BraceDirection.Opening,
@@ -206,7 +206,7 @@ describe(`Check processor`, () => {
             ])
         })
         test(`Check {}`, () => {
-            expect(process(`{}`)).toMatchObject([
+            expect(parse(`{}`)).toMatchObject([
                 {   symbol : Block.symbol,
                     opening : {
                         symbol : Opening.symbol, type : BraceType.Figure, direction : BraceDirection.Opening,
@@ -236,7 +236,7 @@ describe(`Check processor`, () => {
         })
         describe(`Check children`, () => {
             test(`Check space`, () => {
-                expect(process(`( \n\r)`)).toMatchObject([
+                expect(parse(`( \n\r)`)).toMatchObject([
                     {   symbol : Block.symbol,
                         opening : {
                             symbol : Opening.symbol, type : BraceType.Round, direction : BraceDirection.Opening,
@@ -272,7 +272,7 @@ describe(`Check processor`, () => {
                 ])
             })
             test(`Check comment`, () => {
-                expect(process(`(;a\n)`)).toMatchObject([
+                expect(parse(`(;a\n)`)).toMatchObject([
                     {   symbol : Block.symbol,
                         opening : {
                             symbol : Opening.symbol, type : BraceType.Round, direction : BraceDirection.Opening,
@@ -308,7 +308,7 @@ describe(`Check processor`, () => {
                 ])
             })
             test(`Check delimiter`, () => {
-                expect(process(`(,)`)).toMatchObject([
+                expect(parse(`(,)`)).toMatchObject([
                     {   symbol : Block.symbol,
                         opening : {
                             symbol : Opening.symbol, type : BraceType.Round, direction : BraceDirection.Opening,
@@ -344,7 +344,7 @@ describe(`Check processor`, () => {
                 ])
             })
             test(`Check bare name`, () => {
-                expect(process(`(a)`)).toMatchObject([
+                expect(parse(`(a)`)).toMatchObject([
                     {   symbol : Block.symbol,
                         opening : {
                             symbol : Opening.symbol, type : BraceType.Round, direction : BraceDirection.Opening,
@@ -389,7 +389,7 @@ describe(`Check processor`, () => {
                 ])
             })
             test(`Check quoted name`, () => {
-                expect(process(`("a")`)).toMatchObject([
+                expect(parse(`("a")`)).toMatchObject([
                     {   symbol : Block.symbol,
                         opening : {
                             symbol : Opening.symbol, type : BraceType.Round, direction : BraceDirection.Opening,
@@ -435,7 +435,7 @@ describe(`Check processor`, () => {
                 ])
             })
             test(`Check block`, () => {
-                expect(process(`({})`)).toMatchObject([
+                expect(parse(`({})`)).toMatchObject([
                     {   symbol : Block.symbol,
                         opening : {
                             symbol : Opening.symbol, type : BraceType.Round, direction : BraceDirection.Opening,
@@ -492,7 +492,7 @@ describe(`Check processor`, () => {
     })
     describe(`Check combinations`, () => {
         test(`Check space + comment`, () => {
-            expect(process(` \n\r;abc`)).toMatchObject([
+            expect(parse(` \n\r;abc`)).toMatchObject([
                 {   symbol : Space.symbol,
                     span : {
                         begin : { offset : 0, row : 0, column : 0 },
@@ -510,7 +510,7 @@ describe(`Check processor`, () => {
             ])
         })
         test(`Check space + ,`, () => {
-            expect(process(` \n\r,`)).toMatchObject([
+            expect(parse(` \n\r,`)).toMatchObject([
                 {   symbol : Space.symbol,
                     span : {
                         begin : { offset : 0, row : 0, column : 0 },
@@ -528,7 +528,7 @@ describe(`Check processor`, () => {
             ])
         })
         test(`Check space + :`, () => {
-            expect(process(` \n\r:`)).toMatchObject([
+            expect(parse(` \n\r:`)).toMatchObject([
                 {   symbol : Space.symbol,
                     span : {
                         begin : { offset : 0, row : 0, column : 0 },
@@ -546,7 +546,7 @@ describe(`Check processor`, () => {
             ])
         })
         test(`Check space + quoted name`, () => {
-            expect(process(` "a"`)).toMatchObject([
+            expect(parse(` "a"`)).toMatchObject([
                 {   symbol : Space.symbol,
                     span : {
                         begin : { offset : 0, row : 0, column : 0 },
@@ -574,7 +574,7 @@ describe(`Check processor`, () => {
             ])
         })
         test(`Check comment + space`, () => {
-            expect(process(`;abc\n \n\r`)).toMatchObject([
+            expect(parse(`;abc\n \n\r`)).toMatchObject([
                 {   symbol : Comment.symbol,
                     span : {
                         begin : { offset : 0, row : 0, column : 0 },
@@ -592,7 +592,7 @@ describe(`Check processor`, () => {
             ])
         })
         test(`Check comment + ,`, () => {
-            expect(process(`;abc\n,`)).toMatchObject([
+            expect(parse(`;abc\n,`)).toMatchObject([
                 {   symbol : Comment.symbol,
                     span : {
                         begin : { offset : 0, row : 0, column : 0 },
@@ -610,7 +610,7 @@ describe(`Check processor`, () => {
             ])
         })
         test(`Check comment + :`, () => {
-            expect(process(`;abc\n:`)).toMatchObject([
+            expect(parse(`;abc\n:`)).toMatchObject([
                 {   symbol : Comment.symbol,
                     span : {
                         begin : { offset : 0, row : 0, column : 0 },
@@ -628,7 +628,7 @@ describe(`Check processor`, () => {
             ])
         })
         test(`Check delimiter + space`, () => {
-            expect(process(`: `)).toMatchObject([
+            expect(parse(`: `)).toMatchObject([
                 {   symbol : Delimiter.symbol, type : DelimiterType.Colon,
                     span : {
                         begin : { offset : 0, row : 0, column : 0 },
@@ -646,7 +646,7 @@ describe(`Check processor`, () => {
             ])
         })
         test(`Check delimiter + quoted name`, () => {
-            expect(process(`:"a"`)).toMatchObject([
+            expect(parse(`:"a"`)).toMatchObject([
                 {   symbol : Delimiter.symbol, type : DelimiterType.Colon,
                     span : {
                         begin : { offset : 0, row : 0, column : 0 },
@@ -674,7 +674,7 @@ describe(`Check processor`, () => {
             ])
         })
         test(`Check quoted name + space`, () => {
-            expect(process(`"a" `)).toMatchObject([
+            expect(parse(`"a" `)).toMatchObject([
                 {   symbol : Name.symbol,
                     parts : [
                         {   symbol : QuotedWord.symbol,
@@ -702,7 +702,7 @@ describe(`Check processor`, () => {
             ])
         })
         test(`Check quoted name + comment`, () => {
-            expect(process(`"a";`)).toMatchObject([
+            expect(parse(`"a";`)).toMatchObject([
                 {   symbol : Name.symbol,
                     parts : [
                         {   symbol : QuotedWord.symbol,
@@ -730,7 +730,7 @@ describe(`Check processor`, () => {
             ])
         })
         test(`Check quoted name + delimiter`, () => {
-            expect(process(`"a":`)).toMatchObject([
+            expect(parse(`"a":`)).toMatchObject([
                 {   symbol : Name.symbol,
                     parts : [
                         {   symbol : QuotedWord.symbol,
@@ -760,7 +760,7 @@ describe(`Check processor`, () => {
     })
     describe(`Check for smoke`, () => {
         test(`Hello, World!`, () => {
-            expect(process(
+            expect(parse(
                 `print("Hello, World!")`
             )).toMatchObject([
                 {   symbol : Name.symbol,
@@ -782,7 +782,7 @@ describe(`Check processor`, () => {
             ])
         })
         test(`Generic program call`, () => {
-            expect(process(
+            expect(parse(
                 `u, v, w : f(x, y, z)`
             )).toMatchObject([
                 {   symbol : Name.symbol, text : `u` },
