@@ -91,7 +91,12 @@ export class ExplicitParameter extends Parameter {
 export type ParameterUnion = ClosureParameter | SuperParameter | ExplicitParameter
 
 export class Commands {
-    public * [Symbol.iterator]() : Iterator<CommandUnion, void> {
+    public readonly list : CommandUnion[] = []
+
+    public declare(program : Program) {
+        const declaration = new Declaration({ program })
+
+        this.list.push(declaration)
     }
 }
 
@@ -104,10 +109,10 @@ export class Declaration extends Command {
     public readonly symbol : typeof Declaration.symbol = Declaration.symbol
     public readonly program : Program
 
-    public constructor() {
-        throw new Error // @todo
-
+    public constructor({ program } : { program : Program }) {
         super()
+
+        this.program = program
     }
 }
 
@@ -175,23 +180,27 @@ class Walker {
         this.program = program
     }
 
+    private get solid() {
+        while (true) {
+            if (this.index >= this.lexemes.length) return null
+
+            const lexeme = this.lexemes[this.index]
+
+            if (lexeme.symbol !== lexis.Space.symbol && lexeme.symbol !== lexis.Comment.symbol) return lexeme
+
+            ++this.index
+        }
+    }
+
     public get current() {
-        const { lexemes, index } = this
-
-        if (index >= lexemes.length) return null
-
-        return lexemes[index]
+        return this.solid
     }
     public get next() {
-        const { lexemes } = this
-
-        if (this.index >= lexemes.length) return null
+        if (this.index >= this.lexemes.length) return null
 
         ++this.index
 
-        if (this.index >= lexemes.length) return null
-
-        return lexemes[this.index]
+        return this.solid
     }
 }
 
@@ -208,35 +217,43 @@ export class Analyzer {
                 nesting.pop()
 
                 if (nesting.length < 1) break
+
+                walker = nesting[nesting.length - 1]
+
+                walker.next
             }
             else if (first.symbol === lexis.Name.symbol) {
                 const second = walker.next
 
                 if (!second) throw new Error(`Unexpected end of input.`)
                 if (second.symbol === lexis.Block.symbol) {
-                    if (second.opening.type !== lexis.BraceType.Round) throw new Error(`Unexpected ${second.opening.type} block.`)
+                    if (second.opening.type !== lexis.BraceType.Round) throw new Error(`Unexpected block ${logLexeme(second)}.`)
 
                     const third = walker.next
 
                     if (!third) throw new Error(`Unexpected end of input.`)
                     if (third.symbol === lexis.Block.symbol) {
-                        if (third.opening.type !== lexis.BraceType.Figure) throw new Error(`Unexpected ${third.opening.type} block.`)
+                        if (third.opening.type !== lexis.BraceType.Figure) throw new Error(`Unexpected block ${logLexeme(third)}.`)
 
-                        // @todo: add declaration
+                        const program = new Program
 
-                        walker = new Walker({
-                            lexemes : third.children,
-                            program : new Program,
-                        })
+                        walker.program.commands.declare(program)
+
+                        walker = new Walker({ lexemes : third.children, program })
+
                         nesting.push(walker)
                     }
-                    else throw new Error(`Unexpected lexeme ${third}.`)
+                    else throw new Error(`Unexpected lexeme ${logLexeme(third)}.`)
                 }
-                else throw new Error(`Unexpected lexeme ${second}.`)
+                else throw new Error(`Unexpected lexeme ${logLexeme(second)}.`)
             }
-            else throw new Error(`Unexpected lexeme ${first}.`)
+            else throw new Error(`Unexpected lexeme ${logLexeme(first)}.`)
         }
 
         return program
     }
+}
+
+function logLexeme(lexeme : lexis.Child) {
+    return `${lexeme} at ${lexeme.span.begin.row}:${lexeme.span.begin.column}`
 }

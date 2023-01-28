@@ -39,8 +39,28 @@ test(`Check export`, () => {
 
 describe(`Check analyzer`, () => {
     test(`Smoke test`, () => {
-        expect(parse(`f(){}`)).toMatchObject({
+        expect(parse(
+            `f() {\n` +
+            `    g() {\n` +
+            `    }\n` +
+            `}`
+        )).toMatchObject({
             symbol : Main.symbol,
+            commands : { list : [
+                {   symbol : Declaration.symbol,
+                    program : {
+                        symbol : Program.symbol,
+                        commands : { list : [
+                            {   symbol : Declaration.symbol,
+                                program : {
+                                    symbol : Program.symbol,
+                                    commands : { list : [] },
+                                },
+                            },
+                        ] },
+                    },
+                },
+            ] },
         })
     })
 })
