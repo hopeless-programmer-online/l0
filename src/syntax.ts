@@ -155,8 +155,8 @@ export class Commands {
 
         this.list.push(declaration)
     }
-    public call(target : Reference) {
-        const call = new Call({ target })
+    public call(target : Reference, inputs : Input[]) {
+        const call = new Call({ target, inputs : new Inputs({ list : inputs }) })
 
         this.list.push(call)
     }
@@ -194,28 +194,45 @@ export class Call extends Command {
 
     public readonly symbol : typeof Call.symbol = Call.symbol
     public readonly target : Reference
-    public readonly inputs = new Inputs
+    public readonly inputs : Inputs
     public readonly outputs = new Outputs
 
-    public constructor({ target } : { target : Reference }) {
+    public constructor({ target, inputs } : { target : Reference, inputs : Inputs }) {
         super()
 
+        this.inputs = inputs
         this.target = target
     }
 
     public toString() {
-        return ``
+        return `${this.target}(${this.inputs})`
     }
 }
 
 export type CommandUnion = Declaration | Call
 
 export class Inputs {
-    public * [Symbol.iterator]() : Iterator<Input, void> {
+    public readonly list : Input[]
+
+    public constructor({ list } : { list : Input[] }) {
+        this.list = list
+    }
+
+    public toString() {
+        return this.list.map(input => input.toString()).join(`, `)
     }
 }
 
 export class Input {
+    public readonly target : Reference
+
+    public constructor({ target } : { target : Reference }) {
+        this.target = target
+    }
+
+    public toString() {
+        return this.target.toString()
+    }
 }
 
 export class Outputs {
@@ -245,6 +262,10 @@ export class Reference {
 
     public constructor({ name } : { name : Name }) {
         this.name = name
+    }
+
+    public toString() {
+        return this.name.toString()
     }
 }
 
@@ -314,6 +335,27 @@ export class Analyzer {
             else throw new Error(`Unexpected ${logLexeme(first)} in parameters list.`)
         }
     }
+    private fillInputs(lexemes : lexis.Children) {
+        const walker = new Walker({ lexemes })
+        const inputs : Input[] = []
+
+        while(true) {
+            const first = walker.current
+
+            if (!first) break
+            if (first.symbol === lexis.Name.symbol) {
+                inputs.push(new Input({ target : new Reference({ name : Name.from(first) }) }))
+
+                const second = walker.next
+
+                if (!second) break
+                if (second.symbol === lexis.Delimiter.symbol && second.type === lexis.DelimiterType.Comma) walker.next
+            }
+            else throw new Error(`Unexpected ${logLexeme(first)} in parameters list.`)
+        }
+
+        return inputs
+    }
 
     public analyze(lexemes : lexis.Children) {
         const program = new Main
@@ -343,8 +385,9 @@ export class Analyzer {
 
                     if (!third || third.symbol === lexis.Name.symbol) {
                         const target = new Reference({ name : Name.from(first) })
+                        const inputs = this.fillInputs(second.children)
 
-                        walker.program.commands.call(target)
+                        walker.program.commands.call(target, inputs)
                     }
                     else if (third.symbol === lexis.Block.symbol) {
                         if (third.opening.type !== lexis.BraceType.Figure) throw new Error(`Unexpected block ${logLexeme(third)}.`)
