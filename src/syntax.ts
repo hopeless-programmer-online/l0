@@ -155,8 +155,12 @@ export class Commands {
 
         this.list.push(declaration)
     }
-    public call(target : Reference, inputs : Input[]) {
-        const call = new Call({ target, inputs : new Inputs({ list : inputs }) })
+    public call(target : Reference, inputs : Input[], outputs : ExplicitOutput[] = []) {
+        const call = new Call({
+            target,
+            inputs : new Inputs({ list : inputs }),
+            outputs : new Outputs({ explicit : outputs }),
+        })
 
         this.list.push(call)
     }
@@ -195,17 +199,20 @@ export class Call extends Command {
     public readonly symbol : typeof Call.symbol = Call.symbol
     public readonly target : Reference
     public readonly inputs : Inputs
-    public readonly outputs = new Outputs
+    public readonly outputs : Outputs
 
-    public constructor({ target, inputs } : { target : Reference, inputs : Inputs }) {
+    public constructor({ target, inputs, outputs } : { target : Reference, inputs : Inputs, outputs : Outputs }) {
         super()
 
-        this.inputs = inputs
         this.target = target
+        this.inputs = inputs
+        this.outputs = outputs
     }
 
     public toString() {
-        return `${this.target}(${this.inputs})`
+        const outputs = this.outputs.toString()
+
+        return `${outputs ? `${outputs} : ` : ``}${this.target}(${this.inputs})`
     }
 }
 
@@ -236,11 +243,27 @@ export class Input {
 }
 
 export class Outputs {
-    public * [Symbol.iterator]() : Iterator<OutputUnion, void> {
+    public readonly explicit : ExplicitOutput[]
+
+    public constructor({ explicit } : { explicit : ExplicitOutput[] }) {
+        this.explicit = explicit
+    }
+
+    public toString() {
+        return this.explicit.map(output => output.toString()).join()
     }
 }
 
 export abstract class Output {
+    public readonly name : Name
+
+    public constructor({ name } : { name : Name }) {
+        this.name = name
+    }
+
+    public toString() {
+        return this.name.toString()
+    }
 }
 
 export class SubOutput extends Output {
@@ -379,7 +402,7 @@ export class Analyzer {
 
                 if (!second) throw new Error(`Unexpected end of input.`)
                 if (second.symbol === lexis.Block.symbol) {
-                    if (second.opening.type !== lexis.BraceType.Round) throw new Error(`Unexpected block ${logLexeme(second)}.`)
+                    if (second.opening.type !== lexis.BraceType.Round) throw new Error(`Unexpected ${logLexeme(second)}.`)
 
                     const third = walker.next
 
@@ -402,11 +425,27 @@ export class Analyzer {
 
                         nesting.push(walker)
                     }
-                    else throw new Error(`Unexpected lexeme ${logLexeme(third)}.`)
+                    else throw new Error(`Unexpected ${logLexeme(third)}.`)
                 }
-                else throw new Error(`Unexpected lexeme ${logLexeme(second)}.`)
+                else if (second.symbol === lexis.Delimiter.symbol && second.type == lexis.DelimiterType.Colon) {
+                    const third = walker.next
+
+                    if (!third || third.symbol !== lexis.Name.symbol) throw new Error(`Unexpected ${third && logLexeme(third)}.`)
+
+                    const fourth = walker.next
+
+                    if (!fourth || fourth.symbol !== lexis.Block.symbol || fourth.opening.type !== lexis.BraceType.Round) throw new Error(`Unexpected ${fourth && logLexeme(fourth)}.`)
+
+                    const target = new Reference({ name : Name.from(third) })
+                    const inputs = this.fillInputs(fourth.children)
+                    const output = new ExplicitOutput({ name : Name.from(first) })
+
+                    walker.program.commands.call(target, inputs, [ output ] )
+                    walker.next
+                }
+                else throw new Error(`Unexpected ${logLexeme(second)}.`)
             }
-            else throw new Error(`Unexpected lexeme ${logLexeme(first)}.`)
+            else throw new Error(`Unexpected ${logLexeme(first)}.`)
         }
 
         return program

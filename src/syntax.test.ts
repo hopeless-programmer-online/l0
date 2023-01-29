@@ -320,6 +320,30 @@ describe(`Check analyzer`, () => {
             ] },
         })
     })
+    test(`Check single output`, () => {
+        expect(parse(
+            `x : f()`
+        )).toMatchObject({
+            symbol : Main.symbol,
+            parameters : { explicit : [] },
+            commands : { list : [
+                {   symbol : Call.symbol,
+                    target : {
+                        name : { words : [
+                            { symbol : BareWord.symbol, text : `f` },
+                        ] },
+                    },
+                    inputs : { list : [
+                    ] },
+                    outputs : { explicit : [
+                        { name : { words : [
+                            { symbol : BareWord.symbol, text : `x` },
+                        ] } },
+                    ] },
+                },
+            ] },
+        })
+    })
     describe(`Check combinations`, () => {
         test(`Check declaration + declaration`, () => {
             expect(parse(
