@@ -201,4 +201,21 @@ describe(`Check analyzer`, () => {
             ] },
         })
     })
+    test(`Check call`, () => {
+        expect(parse(
+            `f()`
+        )).toMatchObject({
+            symbol : Main.symbol,
+            parameters : { explicit : [] },
+            commands : { list : [
+                {   symbol : Call.symbol,
+                    target : {
+                        name : { words : [
+                            { symbol : BareWord.symbol, text : `f` },
+                        ] },
+                    },
+                },
+            ] },
+        })
+    })
 })

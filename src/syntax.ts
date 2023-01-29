@@ -155,6 +155,11 @@ export class Commands {
 
         this.list.push(declaration)
     }
+    public call(target : Reference) {
+        const call = new Call({ target })
+
+        this.list.push(call)
+    }
 
     public toString() {
         return this.list.map(command => command.toString()).join(`\n`)
@@ -188,14 +193,14 @@ export class Call extends Command {
     public static readonly symbol : unique symbol = Symbol(`l0.syntax.CallCommand`)
 
     public readonly symbol : typeof Call.symbol = Call.symbol
-    // public readonly target
-    public readonly inputs : Inputs
-    public readonly outputs : Outputs
+    public readonly target : Reference
+    public readonly inputs = new Inputs
+    public readonly outputs = new Outputs
 
-    public constructor() {
-        throw new Error // @todo
-
+    public constructor({ target } : { target : Reference }) {
         super()
+
+        this.target = target
     }
 
     public toString() {
@@ -234,6 +239,14 @@ export class ExplicitOutput extends Output {
 }
 
 export type OutputUnion = SubOutput | ExplicitOutput
+
+export class Reference {
+    public readonly name : Name
+
+    public constructor({ name } : { name : Name }) {
+        this.name = name
+    }
+}
 
 class Walker {
     private readonly lexemes : lexis.Children
@@ -328,8 +341,12 @@ export class Analyzer {
 
                     const third = walker.next
 
-                    if (!third) throw new Error(`Unexpected end of input.`)
-                    if (third.symbol === lexis.Block.symbol) {
+                    if (!third || third.symbol === lexis.Name.symbol) {
+                        const target = new Reference({ name : Name.from(first) })
+
+                        walker.program.commands.call(target)
+                    }
+                    else if (third.symbol === lexis.Block.symbol) {
                         if (third.opening.type !== lexis.BraceType.Figure) throw new Error(`Unexpected block ${logLexeme(third)}.`)
 
                         const program = new Program
