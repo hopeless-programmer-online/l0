@@ -3,15 +3,30 @@ import * as lexis from './lexis'
 export type Text = string
 
 export abstract class Word {
+    public static from(word : lexis.BareWord | lexis.QuotedWord) {
+        if (word.symbol === lexis.BareWord.symbol) return BareWord.from(word)
+        if (word.symbol === lexis.QuotedWord.symbol) return QuotedWord.from(word)
+
+        neverThrow(word, new Error(`Unexpected word ${word}.`))
+    }
+
     public readonly text : Text
 
     public constructor({ text } : { text : Text }) {
         this.text = text
     }
+
+    public toString() {
+        return this.text
+    }
 }
 
 export class BareWord extends Word {
     public static readonly symbol : unique symbol = Symbol(`l0.syntax.BareWord`)
+
+    public static from(word : lexis.BareWord) {
+        return new BareWord(word)
+    }
 
     public readonly symbol : typeof BareWord.symbol = BareWord.symbol
 }
@@ -19,12 +34,20 @@ export class BareWord extends Word {
 export class QuotedWord extends Word {
     public static readonly symbol : unique symbol = Symbol(`l0.syntax.QuotedWord`)
 
+    public static from(word : lexis.QuotedWord) {
+        return new QuotedWord(word)
+    }
+
     public readonly symbol : typeof QuotedWord.symbol = QuotedWord.symbol
 }
 
 export type WordUnion = BareWord | QuotedWord
 
 export class Name {
+    public static from(name : lexis.Name) {
+        return new Name({ words : name.words.map(Word.from) })
+    }
+
     public readonly words : WordUnion[]
 
     public constructor({ words } : { words : WordUnion[] }) {
@@ -40,6 +63,10 @@ export class Name {
 
         return new Name({ words })
     }
+
+    public toString() {
+        return this.words.map(word => word.toString()).join(` `)
+    }
 }
 
 export class Scope {
@@ -48,6 +75,12 @@ export class Scope {
 export abstract class GenericProgram {
     public readonly parameters = new Parameters
     public readonly commands = new Commands
+
+    public toString() {
+        return `(${this.parameters}) {${this.commands}}`
+            .replace(/^/g, `\t`)
+            .replace(/\n/g, `\n\t`)
+    }
 }
 
 export class Main extends GenericProgram {
@@ -63,23 +96,47 @@ export class Program extends GenericProgram {
 }
 
 export class Parameters {
-    public * [Symbol.iterator]() : Iterator<ParameterUnion, void> {
+    public readonly implicit : ImplicitParameter[] = []
+    public readonly super : SuperParameter = new SuperParameter
+    public readonly explicit : ExplicitParameter[] = []
+
+    public add(name : Name) {
+        const parameter = new ExplicitParameter({ name })
+
+        this.explicit.push(parameter)
+    }
+
+    public toString() {
+        return this.explicit.map(parameter => parameter.toString()).join(` `)
     }
 }
 
 export abstract class Parameter {
+    public readonly name : Name
+
+    public constructor({ name } : { name : Name }) {
+        this.name = name
+    }
+
+    public toString() {
+        return this.name.toString()
+    }
 }
 
-export class ClosureParameter extends Parameter {
-    public static readonly symbol : unique symbol = Symbol(`l0.syntax.ClosureParameter`)
+export class ImplicitParameter extends Parameter {
+    public static readonly symbol : unique symbol = Symbol(`l0.syntax.ImplicitParameter`)
 
-    public readonly symbol : typeof ClosureParameter.symbol = ClosureParameter.symbol
+    public readonly symbol : typeof ImplicitParameter.symbol = ImplicitParameter.symbol
 }
 
 export class SuperParameter extends Parameter {
     public static readonly symbol : unique symbol = Symbol(`l0.syntax.SuperParameter`)
 
     public readonly symbol : typeof SuperParameter.symbol = SuperParameter.symbol
+
+    public constructor() {
+        super({ name : new Name({ words : [ new BareWord({ text : `super` }) ] }) })
+    }
 }
 
 export class ExplicitParameter extends Parameter {
@@ -88,31 +145,42 @@ export class ExplicitParameter extends Parameter {
     public readonly symbol : typeof ExplicitParameter.symbol = ExplicitParameter.symbol
 }
 
-export type ParameterUnion = ClosureParameter | SuperParameter | ExplicitParameter
+export type ParameterUnion = ImplicitParameter | SuperParameter | ExplicitParameter
 
 export class Commands {
     public readonly list : CommandUnion[] = []
 
-    public declare(program : Program) {
-        const declaration = new Declaration({ program })
+    public declare(name : Name, program : Program) {
+        const declaration = new Declaration({ name, program })
 
         this.list.push(declaration)
+    }
+
+    public toString() {
+        return this.list.map(command => command.toString()).join(`\n`)
     }
 }
 
 export abstract class Command {
+    public abstract toString() : string
 }
 
 export class Declaration extends Command {
     public static readonly symbol : unique symbol = Symbol(`l0.syntax.DeclarationCommand`)
 
     public readonly symbol : typeof Declaration.symbol = Declaration.symbol
+    public readonly name : Name
     public readonly program : Program
 
-    public constructor({ program } : { program : Program }) {
+    public constructor({ name, program } : { name : Name, program : Program }) {
         super()
 
+        this.name = name
         this.program = program
+    }
+
+    public toString() {
+        return `${this.name} ${this.program}`
     }
 }
 
@@ -128,6 +196,10 @@ export class Call extends Command {
         throw new Error // @todo
 
         super()
+    }
+
+    public toString() {
+        return ``
     }
 }
 
@@ -167,17 +239,8 @@ class Walker {
     private readonly lexemes : lexis.Children
     private index = 0
 
-    public readonly program : GenericProgram
-
-    public constructor({
-        lexemes,
-        program,
-    } : {
-        lexemes : lexis.Children
-        program : GenericProgram
-    }) {
+    public constructor({ lexemes } : { lexemes : lexis.Children }) {
         this.lexemes = lexemes
-        this.program = program
     }
 
     private get solid() {
@@ -203,12 +266,46 @@ class Walker {
         return this.solid
     }
 }
+class ProgramWalker extends Walker {
+    public readonly program : GenericProgram
+
+    public constructor({
+        lexemes,
+        program,
+    } : {
+        lexemes : lexis.Children
+        program : GenericProgram
+    }) {
+        super({ lexemes })
+
+        this.program = program
+    }
+}
 
 export class Analyzer {
+    private fillParameters(program : Program, lexemes : lexis.Children) {
+        const walker = new Walker({ lexemes })
+
+        while(true) {
+            const first = walker.current
+
+            if (!first) break
+            if (first.symbol === lexis.Name.symbol) {
+                program.parameters.add(Name.from(first))
+
+                const second = walker.next
+
+                if (!second) break
+                if (second.symbol === lexis.Delimiter.symbol && second.type === lexis.DelimiterType.Comma) walker.next
+            }
+            else throw new Error(`Unexpected ${logLexeme(first)} in parameters list.`)
+        }
+    }
+
     public analyze(lexemes : lexis.Children) {
         const program = new Main
-        let walker = new Walker({ lexemes, program })
-        const nesting : Walker[] = [ walker ]
+        let walker = new ProgramWalker({ lexemes, program })
+        const nesting : ProgramWalker[] = [ walker ]
 
         while (true) {
             const first = walker.current
@@ -237,9 +334,11 @@ export class Analyzer {
 
                         const program = new Program
 
-                        walker.program.commands.declare(program)
+                        this.fillParameters(program, second.children)
 
-                        walker = new Walker({ lexemes : third.children, program })
+                        walker.program.commands.declare(Name.from(first), program)
+
+                        walker = new ProgramWalker({ lexemes : third.children, program })
 
                         nesting.push(walker)
                     }
@@ -254,6 +353,9 @@ export class Analyzer {
     }
 }
 
+function neverThrow(never : never, error : Error) : never {
+    throw error
+}
 function logLexeme(lexeme : lexis.Child) {
     return `${lexeme} at ${lexeme.span.begin.row}:${lexeme.span.begin.column}`
 }
