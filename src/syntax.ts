@@ -443,6 +443,41 @@ export class Analyzer {
                     walker.program.commands.call(target, inputs, [ output ] )
                     walker.next
                 }
+                else if (second.symbol === lexis.Delimiter.symbol && second.type == lexis.DelimiterType.Comma) {
+                    const outputs : ExplicitOutput[] = [ new ExplicitOutput({ name : Name.from(first) }) ]
+
+                    while (true) {
+                        const third = walker.next
+
+                        if (!third) throw new Error(`Unexpected end of input.`)
+                        if (third.symbol === lexis.Delimiter.symbol && third.type == lexis.DelimiterType.Colon) break
+                        if (third.symbol !== lexis.Name.symbol) throw new Error(`Unexpected ${logLexeme(second)}.`)
+
+                        outputs.push(new ExplicitOutput({ name : Name.from(third) }))
+
+                        const fourth = walker.next
+
+                        if (!fourth) throw new Error(`Unexpected end of input.`)
+                        if (fourth.symbol === lexis.Delimiter.symbol && fourth.type == lexis.DelimiterType.Comma) continue
+                        if (fourth.symbol === lexis.Delimiter.symbol && fourth.type == lexis.DelimiterType.Colon) break
+
+                        throw new Error(`Unexpected ${logLexeme(fourth)}.`)
+                    }
+
+                    const third = walker.next
+
+                    if (!third || third.symbol !== lexis.Name.symbol) throw new Error(`Unexpected ${third && logLexeme(third)}.`)
+
+                    const fourth = walker.next
+
+                    if (!fourth || fourth.symbol !== lexis.Block.symbol || fourth.opening.type !== lexis.BraceType.Round) throw new Error(`Unexpected ${fourth && logLexeme(fourth)}.`)
+
+                    const target = new Reference({ name : Name.from(third) })
+                    const inputs = this.fillInputs(fourth.children)
+
+                    walker.program.commands.call(target, inputs, outputs)
+                    walker.next
+                }
                 else throw new Error(`Unexpected ${logLexeme(second)}.`)
             }
             else throw new Error(`Unexpected ${logLexeme(first)}.`)

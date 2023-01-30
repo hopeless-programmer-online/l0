@@ -162,7 +162,7 @@ describe(`Check analyzer`, () => {
             ] },
         })
     })
-    test(`Check trailing comma in parameters`, () => {
+    test(`Check trailing comma after single parameter`, () => {
         expect(parse(
             `f(x,) {\n` +
             `}`
@@ -179,6 +179,37 @@ describe(`Check analyzer`, () => {
                             {   symbol : ExplicitParameter.symbol,
                                 name : { words : [
                                     { symbol : BareWord.symbol, text : `x` },
+                                ] },
+                            },
+                        ] },
+                        commands : { list : [] },
+                    },
+                },
+            ] },
+        })
+    })
+    test(`Check trailing comma after two parameters`, () => {
+        expect(parse(
+            `f(x, y,) {\n` +
+            `}`
+        )).toMatchObject({
+            symbol : Main.symbol,
+            commands : { list : [
+                {   symbol : Declaration.symbol,
+                    name : { words : [
+                        { symbol : BareWord.symbol, text : `f` },
+                    ] },
+                    program : {
+                        symbol : Program.symbol,
+                        parameters : { explicit : [
+                            {   symbol : ExplicitParameter.symbol,
+                                name : { words : [
+                                    { symbol : BareWord.symbol, text : `x` },
+                                ] },
+                            },
+                            {   symbol : ExplicitParameter.symbol,
+                                name : { words : [
+                                    { symbol : BareWord.symbol, text : `y` },
                                 ] },
                             },
                         ] },
@@ -320,6 +351,59 @@ describe(`Check analyzer`, () => {
             ] },
         })
     })
+    test(`Check trailing comma after single input`, () => {
+        expect(parse(
+            `f(x,)`
+        )).toMatchObject({
+            symbol : Main.symbol,
+            parameters : { explicit : [] },
+            commands : { list : [
+                {   symbol : Call.symbol,
+                    target : {
+                        name : { words : [
+                            { symbol : BareWord.symbol, text : `f` },
+                        ] },
+                    },
+                    inputs : { list : [
+                        { target : {
+                            name : { words : [
+                                { symbol : BareWord.symbol, text : `x` },
+                            ] },
+                        } },
+                    ] },
+                },
+            ] },
+        })
+    })
+    test(`Check trailing comma after two inputs`, () => {
+        expect(parse(
+            `f(x, y,)`
+        )).toMatchObject({
+            symbol : Main.symbol,
+            parameters : { explicit : [] },
+            commands : { list : [
+                {   symbol : Call.symbol,
+                    target : {
+                        name : { words : [
+                            { symbol : BareWord.symbol, text : `f` },
+                        ] },
+                    },
+                    inputs : { list : [
+                        { target : {
+                            name : { words : [
+                                { symbol : BareWord.symbol, text : `x` },
+                            ] },
+                        } },
+                        { target : {
+                            name : { words : [
+                                { symbol : BareWord.symbol, text : `y` },
+                            ] },
+                        } },
+                    ] },
+                },
+            ] },
+        })
+    })
     test(`Check single output`, () => {
         expect(parse(
             `x : f()`
@@ -338,6 +422,114 @@ describe(`Check analyzer`, () => {
                     outputs : { explicit : [
                         { name : { words : [
                             { symbol : BareWord.symbol, text : `x` },
+                        ] } },
+                    ] },
+                },
+            ] },
+        })
+    })
+    test(`Check two outputs`, () => {
+        expect(parse(
+            `x, y : f()`
+        )).toMatchObject({
+            symbol : Main.symbol,
+            parameters : { explicit : [] },
+            commands : { list : [
+                {   symbol : Call.symbol,
+                    target : {
+                        name : { words : [
+                            { symbol : BareWord.symbol, text : `f` },
+                        ] },
+                    },
+                    inputs : { list : [
+                    ] },
+                    outputs : { explicit : [
+                        { name : { words : [
+                            { symbol : BareWord.symbol, text : `x` },
+                        ] } },
+                        { name : { words : [
+                            { symbol : BareWord.symbol, text : `y` },
+                        ] } },
+                    ] },
+                },
+            ] },
+        })
+    })
+    test(`Check three outputs`, () => {
+        expect(parse(
+            `x, y, z : f()`
+        )).toMatchObject({
+            symbol : Main.symbol,
+            parameters : { explicit : [] },
+            commands : { list : [
+                {   symbol : Call.symbol,
+                    target : {
+                        name : { words : [
+                            { symbol : BareWord.symbol, text : `f` },
+                        ] },
+                    },
+                    inputs : { list : [
+                    ] },
+                    outputs : { explicit : [
+                        { name : { words : [
+                            { symbol : BareWord.symbol, text : `x` },
+                        ] } },
+                        { name : { words : [
+                            { symbol : BareWord.symbol, text : `y` },
+                        ] } },
+                        { name : { words : [
+                            { symbol : BareWord.symbol, text : `z` },
+                        ] } },
+                    ] },
+                },
+            ] },
+        })
+    })
+    test(`Check trailing comma after single output`, () => {
+        expect(parse(
+            `x, : f()`
+        )).toMatchObject({
+            symbol : Main.symbol,
+            parameters : { explicit : [] },
+            commands : { list : [
+                {   symbol : Call.symbol,
+                    target : {
+                        name : { words : [
+                            { symbol : BareWord.symbol, text : `f` },
+                        ] },
+                    },
+                    inputs : { list : [
+                    ] },
+                    outputs : { explicit : [
+                        { name : { words : [
+                            { symbol : BareWord.symbol, text : `x` },
+                        ] } },
+                    ] },
+                },
+            ] },
+        })
+    })
+    test(`Check trailing comma after two outputs`, () => {
+        expect(parse(
+            `x, y, : f()`
+        )).toMatchObject({
+            symbol : Main.symbol,
+            parameters : { explicit : [] },
+            commands : { list : [
+                {   symbol : Call.symbol,
+                    target : {
+                        name : { words : [
+                            { symbol : BareWord.symbol, text : `f` },
+                        ] },
+                    },
+                    inputs : { list : [
+                    ] },
+                    outputs : { explicit : [
+                        { name : { words : [
+                            { symbol : BareWord.symbol, text : `x` },
+                        ] } },
+                        { name : { words : [
+                            { symbol : BareWord.symbol, text : `y` },
                         ] } },
                     ] },
                 },
