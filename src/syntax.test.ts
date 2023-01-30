@@ -599,6 +599,40 @@ describe(`Check analyzer`, () => {
                 ] },
             })
         })
+        test(`Check declaration + outputs`, () => {
+            expect(parse(
+                `f() {\n` +
+                `}\n` +
+                `x : f()`
+            )).toMatchObject({
+                symbol : Main.symbol,
+                parameters : { explicit : [] },
+                commands : { list : [
+                    {   symbol : Declaration.symbol,
+                        name : { words : [
+                            { symbol : BareWord.symbol, text : `f` },
+                        ] },
+                        program : {
+                            symbol : Program.symbol,
+                            parameters : { explicit : [] },
+                            commands : { list : [] },
+                        },
+                    },
+                    {   symbol : Call.symbol,
+                        target : {
+                            name : { words : [
+                                { symbol : BareWord.symbol, text : `f` },
+                            ] },
+                        },
+                        outputs : { explicit : [
+                            { name : { words : [
+                                { symbol : BareWord.symbol, text : `x` },
+                            ] } },
+                        ] },
+                    },
+                ] },
+            })
+        })
         test(`Check call + declaration`, () => {
             expect(parse(
                 `f()\n` +
@@ -624,6 +658,37 @@ describe(`Check analyzer`, () => {
                             parameters : { explicit : [] },
                             commands : { list : [] },
                         },
+                    },
+                ] },
+            })
+        })
+        test(`Check call + outputs`, () => {
+            expect(parse(
+                `f()\n` +
+                `x : f()`
+            )).toMatchObject({
+                symbol : Main.symbol,
+                parameters : { explicit : [] },
+                commands : { list : [
+                    {   symbol : Call.symbol,
+                        target : {
+                            name : { words : [
+                                { symbol : BareWord.symbol, text : `f` },
+                            ] },
+                        },
+                        outputs : { explicit : [] },
+                    },
+                    {   symbol : Call.symbol,
+                        target : {
+                            name : { words : [
+                                { symbol : BareWord.symbol, text : `f` },
+                            ] },
+                        },
+                        outputs : { explicit : [
+                            { name : { words : [
+                                { symbol : BareWord.symbol, text : `x` },
+                            ] } },
+                        ] },
                     },
                 ] },
             })
