@@ -835,3 +835,71 @@ describe(`Check analyzer`, () => {
         })
     })
 })
+
+describe(`Stress test`, () => {
+    const bigNumber = 100
+
+    test(`Check ${bigNumber} calls`, () => {
+        let text = ``
+
+        for (let i = 0; i < bigNumber; ++i) {
+            text += `some output : some program("some input")\n`
+        }
+
+        expect(() => parse(text)).not.toThrow()
+    })
+    test(`Check ${bigNumber} outputs`, () => {
+        let text = ``
+
+        for (let i = 0; i < bigNumber - 1; ++i) {
+            text += `some output, `
+        }
+
+        text += `some output : some program()`
+
+        expect(() => parse(text)).not.toThrow()
+    })
+    test(`Check ${bigNumber} inputs`, () => {
+        let text = `some program(`
+
+        for (let i = 0; i < bigNumber - 1; ++i) {
+            text += `some input, `
+        }
+
+        text += `some input)`
+
+        expect(() => parse(text)).not.toThrow()
+    })
+    test(`Check ${bigNumber} declarations`, () => {
+        let text = ``
+
+        for (let i = 0; i < bigNumber; ++i) {
+            text += `some program(some input) {\n}\n`
+        }
+
+        expect(() => parse(text)).not.toThrow()
+    })
+    test(`Check ${bigNumber} parameters`, () => {
+        let text = `some program(`
+
+        for (let i = 0; i < bigNumber; ++i) {
+            text += `some input, `
+        }
+
+        text += `some input) {\n}\n`
+
+        expect(() => parse(text)).not.toThrow()
+    })
+    test(`Check ${bigNumber} nested declarations`, () => {
+        let text = ``
+
+        for (let i = 0; i < bigNumber; ++i) {
+            text += `some program() {\n`
+        }
+        for (let i = 0; i < bigNumber; ++i) {
+            text += `}\n`
+        }
+
+        expect(() => parse(text)).not.toThrow()
+    })
+})
