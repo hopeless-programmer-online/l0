@@ -77,8 +77,7 @@ export class Scope {
 
 export abstract class GenericProgram {
     public abstract readonly parameters : Parameters
-
-    public readonly commands = new Commands
+    public abstract readonly commands : Commands
 
     public toString() {
         return `(${this.parameters}) {${this.commands}}`
@@ -92,11 +91,13 @@ export class MainProgram extends GenericProgram {
 
     public readonly symbol : typeof MainProgram.symbol = MainProgram.symbol
     public readonly parameters : Parameters
+    public readonly commands : Commands
 
     public constructor() {
         super()
 
         this.parameters = new Parameters({ program : this })
+        this.commands = new Commands({ program : this })
     }
 }
 
@@ -105,11 +106,13 @@ export class DeclaredProgram extends GenericProgram {
 
     public readonly symbol : typeof DeclaredProgram.symbol = DeclaredProgram.symbol
     public readonly parameters : Parameters
+    public readonly commands : Commands
 
     public constructor() {
         super()
 
         this.parameters = new Parameters({ program : this })
+        this.commands = new Commands({ program : this })
     }
 }
 
@@ -183,7 +186,12 @@ export class ExplicitParameter extends GenericParameter {
 export type Parameter = SuperParameter | ExplicitParameter
 
 export class Commands {
+    public readonly program : Program
     public readonly list : Command[] = []
+
+    public constructor({ program } : { program : Program }) {
+        this.program = program
+    }
 
     public declare(name : Name, program : DeclaredProgram) {
         const declaration = new Declaration({ name, program })
