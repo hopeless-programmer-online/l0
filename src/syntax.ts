@@ -72,9 +72,6 @@ export class Name {
     }
 }
 
-export class Scope {
-}
-
 export abstract class GenericProgram {
     public abstract readonly parameters : Parameters
     public abstract readonly commands : Commands
@@ -87,7 +84,7 @@ export abstract class GenericProgram {
 }
 
 export class MainProgram extends GenericProgram {
-    public static readonly symbol : unique symbol = Symbol(`l0.syntax.Main`)
+    public static readonly symbol : unique symbol = Symbol(`l0.syntax.MainProgram`)
 
     public readonly symbol : typeof MainProgram.symbol = MainProgram.symbol
     public readonly parameters : Parameters
@@ -102,7 +99,7 @@ export class MainProgram extends GenericProgram {
 }
 
 export class DeclaredProgram extends GenericProgram {
-    public static readonly symbol : unique symbol = Symbol(`l0.syntax.Program`)
+    public static readonly symbol : unique symbol = Symbol(`l0.syntax.DeclaredProgram`)
 
     public readonly symbol : typeof DeclaredProgram.symbol = DeclaredProgram.symbol
     public readonly declaration : DeclarationCommand
@@ -121,6 +118,9 @@ export class DeclaredProgram extends GenericProgram {
 export type Program = MainProgram | DeclaredProgram
 
 export class Parameters {
+    public static readonly symbol : unique symbol = Symbol(`l0.syntax.Parameters`)
+
+    public readonly symbol : typeof Parameters.symbol = Parameters.symbol
     public readonly program : Program
     public readonly super : SuperParameter = new SuperParameter({ parameters : this })
     public readonly explicit : ExplicitParameter[] = []
@@ -219,11 +219,10 @@ export class Commands {
 
         return declaration
     }
-    public call(target : Reference, inputs : Input[], outputs : ExplicitOutput[] = []) {
+    public call(target : Reference, inputs : Input[]) {
         const call = new CallCommand({
             target,
             inputs : new Inputs({ list : inputs }),
-            outputs : new Outputs({ explicit : outputs }),
             commands : this,
         })
 
@@ -276,12 +275,12 @@ export class CallCommand extends GenericCommand {
     public readonly inputs : Inputs
     public readonly outputs : Outputs
 
-    public constructor({ target, inputs, outputs, commands } : { target : Reference, inputs : Inputs, outputs : Outputs, commands : Commands }) {
+    public constructor({ target, inputs, commands } : { target : Reference, inputs : Inputs, commands : Commands }) {
         super({ commands })
 
         this.target = target
         this.inputs = inputs
-        this.outputs = outputs
+        this.outputs = new Outputs({ call : this })
     }
 
     public toString() {
@@ -318,10 +317,34 @@ export class Input {
 }
 
 export class Outputs {
-    public readonly explicit : ExplicitOutput[]
+    public static readonly symbol : unique symbol = Symbol(`l0.syntax.Outputs`)
 
-    public constructor({ explicit } : { explicit : ExplicitOutput[] }) {
-        this.explicit = explicit
+    public readonly symbol : typeof Outputs.symbol = Outputs.symbol
+    public readonly call : CallCommand
+    public readonly sub = new SubOutput({ outputs : this })
+    public readonly explicit : ExplicitOutput[] = []
+
+    public constructor({ call } : { call : CallCommand }) {
+        this.call = call
+    }
+
+    public get last() {
+        const { sub, explicit } = this
+
+        if (explicit.length > 0) return explicit[explicit.length - 1]
+
+        return sub
+    }
+
+    public add(name : Name) {
+        const output = new ExplicitOutput({ name, outputs : this })
+
+        const { last } = this
+
+        last.next = output
+        output.previous = last
+
+        this.explicit.push(output)
     }
 
     public toString() {
@@ -330,9 +353,13 @@ export class Outputs {
 }
 
 export abstract class GenericOutput {
+    public readonly outputs : Outputs
     public readonly name : Name
+    public previous : Output | null = null
+    public next     : Output | null = null
 
-    public constructor({ name } : { name : Name }) {
+    public constructor({ name, outputs } : { name : Name, outputs : Outputs }) {
+        this.outputs = outputs
         this.name = name
     }
 
@@ -345,6 +372,10 @@ export class SubOutput extends GenericOutput {
     public static readonly symbol : unique symbol = Symbol(`l0.syntax.SubOutput`)
 
     public readonly symbol : typeof SubOutput.symbol = SubOutput.symbol
+
+    public constructor({ outputs } : { outputs : Outputs }) {
+        super({ name : Name.bare(`sub`), outputs })
+    }
 }
 
 export class ExplicitOutput extends GenericOutput {
@@ -355,7 +386,7 @@ export class ExplicitOutput extends GenericOutput {
 
 export type Output = SubOutput | ExplicitOutput
 
-// export type ReferenceTarget = Program | Parameter | Output
+export type ReferenceTarget = Program | Parameter | Output
 
 export class Reference {
     public readonly name : Name
@@ -513,13 +544,14 @@ export class Analyzer {
 
                     const target = new Reference({ name : Name.from(third) })
                     const inputs = this.fillInputs(fourth.children)
-                    const output = new ExplicitOutput({ name : Name.from(first) })
+                    const call = walker.program.commands.call(target, inputs)
 
-                    walker.program.commands.call(target, inputs, [ output ] )
+                    call.outputs.add(Name.from(first))
+
                     walker.next
                 }
                 else if (second.symbol === lexis.Delimiter.symbol && second.type == lexis.DelimiterType.Comma) {
-                    const outputs : ExplicitOutput[] = [ new ExplicitOutput({ name : Name.from(first) }) ]
+                    const outputs : Name[] = [ Name.from(first) ]
 
                     while (true) {
                         const third = walker.next
@@ -528,7 +560,7 @@ export class Analyzer {
                         if (third.symbol === lexis.Delimiter.symbol && third.type == lexis.DelimiterType.Colon) break
                         if (third.symbol !== lexis.Name.symbol) throw new Error(`Unexpected ${logLexeme(second)}.`)
 
-                        outputs.push(new ExplicitOutput({ name : Name.from(third) }))
+                        outputs.push(Name.from(third))
 
                         const fourth = walker.next
 
@@ -549,8 +581,10 @@ export class Analyzer {
 
                     const target = new Reference({ name : Name.from(third) })
                     const inputs = this.fillInputs(fourth.children)
+                    const call = walker.program.commands.call(target, inputs)
 
-                    walker.program.commands.call(target, inputs, outputs)
+                    for (const output of outputs) call.outputs.add(output)
+
                     walker.next
                 }
                 else throw new Error(`Unexpected ${logLexeme(second)}.`)
