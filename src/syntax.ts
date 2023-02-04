@@ -47,6 +47,9 @@ export class Name {
     public static from(name : lexis.Name) {
         return new Name({ words : name.words.map(Word.from) })
     }
+    public static bare(text : Text) {
+        return new Name({ words : [ new BareWord({ text }) ] })
+    }
 
     public readonly words : WordUnion[]
 
@@ -73,7 +76,8 @@ export class Scope {
 }
 
 export abstract class GenericProgram {
-    public readonly parameters = new Parameters
+    public abstract readonly parameters : Parameters
+
     public readonly commands = new Commands
 
     public toString() {
@@ -87,22 +91,54 @@ export class MainProgram extends GenericProgram {
     public static readonly symbol : unique symbol = Symbol(`l0.syntax.Main`)
 
     public readonly symbol : typeof MainProgram.symbol = MainProgram.symbol
+    public readonly parameters : Parameters
+
+    public constructor() {
+        super()
+
+        this.parameters = new Parameters({ program : this })
+    }
 }
 
 export class DeclaredProgram extends GenericProgram {
     public static readonly symbol : unique symbol = Symbol(`l0.syntax.Program`)
 
     public readonly symbol : typeof DeclaredProgram.symbol = DeclaredProgram.symbol
+    public readonly parameters : Parameters
+
+    public constructor() {
+        super()
+
+        this.parameters = new Parameters({ program : this })
+    }
 }
 
 export type Program = MainProgram | DeclaredProgram
 
 export class Parameters {
-    public readonly super : SuperParameter = new SuperParameter
+    public readonly program : Program
+    public readonly super : SuperParameter = new SuperParameter({ parameters : this })
     public readonly explicit : ExplicitParameter[] = []
 
+    public constructor({ program } : { program : Program }) {
+        this.program = program
+    }
+
+    public get last() {
+        const { explicit } = this
+
+        if (explicit.length > 0) return explicit[explicit.length - 1]
+
+        return this.super
+    }
+
     public add(name : Name) {
-        const parameter = new ExplicitParameter({ name })
+        const parameter = new ExplicitParameter({ name, parameters : this })
+
+        const { last } = this
+
+        last.next = parameter
+        parameter.previous = last
 
         this.explicit.push(parameter)
     }
@@ -113,9 +149,13 @@ export class Parameters {
 }
 
 export abstract class GenericParameter {
+    public readonly parameters : Parameters
     public readonly name : Name
+    public next     : Parameter | null = null
+    public previous : Parameter | null = null
 
-    public constructor({ name } : { name : Name }) {
+    public constructor({ name, parameters } : { name : Name, parameters : Parameters }) {
+        this.parameters = parameters
         this.name = name
     }
 
@@ -129,8 +169,8 @@ export class SuperParameter extends GenericParameter {
 
     public readonly symbol : typeof SuperParameter.symbol = SuperParameter.symbol
 
-    public constructor() {
-        super({ name : new Name({ words : [ new BareWord({ text : `super` }) ] }) })
+    public constructor({ parameters } : { parameters : Parameters }) {
+        super({ name : Name.bare(`super`), parameters })
     }
 }
 
