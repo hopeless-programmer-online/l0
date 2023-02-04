@@ -156,8 +156,8 @@ export class Parameters {
 export abstract class GenericParameter {
     public readonly parameters : Parameters
     public readonly name : Name
-    public next     : Parameter | null = null
     public previous : Parameter | null = null
+    public next     : Parameter | null = null
 
     public constructor({ name, parameters } : { name : Name, parameters : Parameters }) {
         this.parameters = parameters
@@ -195,10 +195,27 @@ export class Commands {
         this.program = program
     }
 
+    public get last() {
+        const { list } = this
+
+        return list.length > 0 ? list[list.length - 1] : null
+    }
+
+    private add(command : Command) {
+        const { list, last } = this
+
+        if (last) {
+            last.next = command
+            command.previous = last
+        }
+
+        list.push(command)
+    }
+
     public declare(name : Name) {
         const declaration = new DeclarationCommand({ name, commands : this })
 
-        this.list.push(declaration)
+        this.add(declaration)
 
         return declaration
     }
@@ -210,7 +227,9 @@ export class Commands {
             commands : this,
         })
 
-        this.list.push(call)
+        this.add(call)
+
+        return call
     }
 
     public toString() {
@@ -220,6 +239,8 @@ export class Commands {
 
 export abstract class GenericCommand {
     public readonly commands : Commands
+    public previous : Command | null = null
+    public next     : Command | null = null
 
     public constructor({ commands } : { commands : Commands }) {
         this.commands = commands
@@ -333,6 +354,8 @@ export class ExplicitOutput extends GenericOutput {
 }
 
 export type Output = SubOutput | ExplicitOutput
+
+// export type ReferenceTarget = Program | Parameter | Output
 
 export class Reference {
     public readonly name : Name
