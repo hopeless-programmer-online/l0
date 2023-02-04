@@ -6,8 +6,8 @@ import {
     Parameters,
     GenericParameter,
     Commands,
-    Declaration,
-    Call,
+    DeclarationCommand,
+    CallCommand,
     Inputs,
     Input,
     Outputs,
@@ -31,8 +31,8 @@ test(`Check export`, () => {
     expect(Parameters).toBeDefined()
     expect(GenericParameter).toBeDefined()
     expect(Commands).toBeDefined()
-    expect(Declaration).toBeDefined()
-    expect(Call).toBeDefined()
+    expect(DeclarationCommand).toBeDefined()
+    expect(CallCommand).toBeDefined()
     expect(Inputs).toBeDefined()
     expect(Input).toBeDefined()
     expect(Outputs).toBeDefined()
@@ -55,7 +55,7 @@ describe(`Check analyzer`, () => {
             symbol : MainProgram.symbol,
             parameters : { explicit : [] },
             commands : { list : [
-                {   symbol : Declaration.symbol,
+                {   symbol : DeclarationCommand.symbol,
                     name : { words : [
                         { symbol : BareWord.symbol, text : `f` },
                     ] },
@@ -75,7 +75,7 @@ describe(`Check analyzer`, () => {
         )).toMatchObject({
             symbol : MainProgram.symbol,
             commands : { list : [
-                {   symbol : Declaration.symbol,
+                {   symbol : DeclarationCommand.symbol,
                     name : { words : [
                         { symbol : BareWord.symbol, text : `f` },
                     ] },
@@ -101,7 +101,7 @@ describe(`Check analyzer`, () => {
         )).toMatchObject({
             symbol : MainProgram.symbol,
             commands : { list : [
-                {   symbol : Declaration.symbol,
+                {   symbol : DeclarationCommand.symbol,
                     name : { words : [
                         { symbol : BareWord.symbol, text : `f` },
                     ] },
@@ -132,7 +132,7 @@ describe(`Check analyzer`, () => {
         )).toMatchObject({
             symbol : MainProgram.symbol,
             commands : { list : [
-                {   symbol : Declaration.symbol,
+                {   symbol : DeclarationCommand.symbol,
                     name : { words : [
                         { symbol : BareWord.symbol, text : `f` },
                     ] },
@@ -168,7 +168,7 @@ describe(`Check analyzer`, () => {
         )).toMatchObject({
             symbol : MainProgram.symbol,
             commands : { list : [
-                {   symbol : Declaration.symbol,
+                {   symbol : DeclarationCommand.symbol,
                     name : { words : [
                         { symbol : BareWord.symbol, text : `f` },
                     ] },
@@ -194,7 +194,7 @@ describe(`Check analyzer`, () => {
         )).toMatchObject({
             symbol : MainProgram.symbol,
             commands : { list : [
-                {   symbol : Declaration.symbol,
+                {   symbol : DeclarationCommand.symbol,
                     name : { words : [
                         { symbol : BareWord.symbol, text : `f` },
                     ] },
@@ -227,14 +227,14 @@ describe(`Check analyzer`, () => {
         )).toMatchObject({
             symbol : MainProgram.symbol,
             commands : { list : [
-                {   symbol : Declaration.symbol,
+                {   symbol : DeclarationCommand.symbol,
                     name : { words : [
                         { symbol : BareWord.symbol, text : `f` },
                     ] },
                     program : {
                         symbol : DeclaredProgram.symbol,
                         commands : { list : [
-                            {   symbol : Declaration.symbol,
+                            {   symbol : DeclarationCommand.symbol,
                                 program : {
                                     symbol : DeclaredProgram.symbol,
                                     commands : { list : [] },
@@ -253,7 +253,7 @@ describe(`Check analyzer`, () => {
             symbol : MainProgram.symbol,
             parameters : { explicit : [] },
             commands : { list : [
-                {   symbol : Call.symbol,
+                {   symbol : CallCommand.symbol,
                     target : {
                         name : { words : [
                             { symbol : BareWord.symbol, text : `f` },
@@ -270,7 +270,7 @@ describe(`Check analyzer`, () => {
             symbol : MainProgram.symbol,
             parameters : { explicit : [] },
             commands : { list : [
-                {   symbol : Call.symbol,
+                {   symbol : CallCommand.symbol,
                     target : {
                         name : { words : [
                             { symbol : BareWord.symbol, text : `f` },
@@ -294,7 +294,7 @@ describe(`Check analyzer`, () => {
             symbol : MainProgram.symbol,
             parameters : { explicit : [] },
             commands : { list : [
-                {   symbol : Call.symbol,
+                {   symbol : CallCommand.symbol,
                     target : {
                         name : { words : [
                             { symbol : BareWord.symbol, text : `f` },
@@ -323,7 +323,7 @@ describe(`Check analyzer`, () => {
             symbol : MainProgram.symbol,
             parameters : { explicit : [] },
             commands : { list : [
-                {   symbol : Call.symbol,
+                {   symbol : CallCommand.symbol,
                     target : {
                         name : { words : [
                             { symbol : BareWord.symbol, text : `f` },
@@ -357,7 +357,7 @@ describe(`Check analyzer`, () => {
             symbol : MainProgram.symbol,
             parameters : { explicit : [] },
             commands : { list : [
-                {   symbol : Call.symbol,
+                {   symbol : CallCommand.symbol,
                     target : {
                         name : { words : [
                             { symbol : BareWord.symbol, text : `f` },
@@ -381,7 +381,7 @@ describe(`Check analyzer`, () => {
             symbol : MainProgram.symbol,
             parameters : { explicit : [] },
             commands : { list : [
-                {   symbol : Call.symbol,
+                {   symbol : CallCommand.symbol,
                     target : {
                         name : { words : [
                             { symbol : BareWord.symbol, text : `f` },
@@ -410,7 +410,7 @@ describe(`Check analyzer`, () => {
             symbol : MainProgram.symbol,
             parameters : { explicit : [] },
             commands : { list : [
-                {   symbol : Call.symbol,
+                {   symbol : CallCommand.symbol,
                     target : {
                         name : { words : [
                             { symbol : BareWord.symbol, text : `f` },
@@ -434,7 +434,7 @@ describe(`Check analyzer`, () => {
             symbol : MainProgram.symbol,
             parameters : { explicit : [] },
             commands : { list : [
-                {   symbol : Call.symbol,
+                {   symbol : CallCommand.symbol,
                     target : {
                         name : { words : [
                             { symbol : BareWord.symbol, text : `f` },
@@ -461,7 +461,7 @@ describe(`Check analyzer`, () => {
             symbol : MainProgram.symbol,
             parameters : { explicit : [] },
             commands : { list : [
-                {   symbol : Call.symbol,
+                {   symbol : CallCommand.symbol,
                     target : {
                         name : { words : [
                             { symbol : BareWord.symbol, text : `f` },
@@ -491,7 +491,7 @@ describe(`Check analyzer`, () => {
             symbol : MainProgram.symbol,
             parameters : { explicit : [] },
             commands : { list : [
-                {   symbol : Call.symbol,
+                {   symbol : CallCommand.symbol,
                     target : {
                         name : { words : [
                             { symbol : BareWord.symbol, text : `f` },
@@ -515,7 +515,7 @@ describe(`Check analyzer`, () => {
             symbol : MainProgram.symbol,
             parameters : { explicit : [] },
             commands : { list : [
-                {   symbol : Call.symbol,
+                {   symbol : CallCommand.symbol,
                     target : {
                         name : { words : [
                             { symbol : BareWord.symbol, text : `f` },
@@ -546,7 +546,7 @@ describe(`Check analyzer`, () => {
                 symbol : MainProgram.symbol,
                 parameters : { explicit : [] },
                 commands : { list : [
-                    {   symbol : Declaration.symbol,
+                    {   symbol : DeclarationCommand.symbol,
                         name : { words : [
                             { symbol : BareWord.symbol, text : `f` },
                         ] },
@@ -556,7 +556,7 @@ describe(`Check analyzer`, () => {
                             commands : { list : [] },
                         },
                     },
-                    {   symbol : Declaration.symbol,
+                    {   symbol : DeclarationCommand.symbol,
                         name : { words : [
                             { symbol : BareWord.symbol, text : `f` },
                         ] },
@@ -578,7 +578,7 @@ describe(`Check analyzer`, () => {
                 symbol : MainProgram.symbol,
                 parameters : { explicit : [] },
                 commands : { list : [
-                    {   symbol : Declaration.symbol,
+                    {   symbol : DeclarationCommand.symbol,
                         name : { words : [
                             { symbol : BareWord.symbol, text : `f` },
                         ] },
@@ -588,7 +588,7 @@ describe(`Check analyzer`, () => {
                             commands : { list : [] },
                         },
                     },
-                    {   symbol : Call.symbol,
+                    {   symbol : CallCommand.symbol,
                         target : {
                             name : { words : [
                                 { symbol : BareWord.symbol, text : `f` },
@@ -607,7 +607,7 @@ describe(`Check analyzer`, () => {
                 symbol : MainProgram.symbol,
                 parameters : { explicit : [] },
                 commands : { list : [
-                    {   symbol : Declaration.symbol,
+                    {   symbol : DeclarationCommand.symbol,
                         name : { words : [
                             { symbol : BareWord.symbol, text : `f` },
                         ] },
@@ -617,7 +617,7 @@ describe(`Check analyzer`, () => {
                             commands : { list : [] },
                         },
                     },
-                    {   symbol : Call.symbol,
+                    {   symbol : CallCommand.symbol,
                         target : {
                             name : { words : [
                                 { symbol : BareWord.symbol, text : `f` },
@@ -641,14 +641,14 @@ describe(`Check analyzer`, () => {
                 symbol : MainProgram.symbol,
                 parameters : { explicit : [] },
                 commands : { list : [
-                    {   symbol : Call.symbol,
+                    {   symbol : CallCommand.symbol,
                         target : {
                             name : { words : [
                                 { symbol : BareWord.symbol, text : `f` },
                             ] },
                         },
                     },
-                    {   symbol : Declaration.symbol,
+                    {   symbol : DeclarationCommand.symbol,
                         name : { words : [
                             { symbol : BareWord.symbol, text : `f` },
                         ] },
@@ -669,7 +669,7 @@ describe(`Check analyzer`, () => {
                 symbol : MainProgram.symbol,
                 parameters : { explicit : [] },
                 commands : { list : [
-                    {   symbol : Call.symbol,
+                    {   symbol : CallCommand.symbol,
                         target : {
                             name : { words : [
                                 { symbol : BareWord.symbol, text : `f` },
@@ -677,7 +677,7 @@ describe(`Check analyzer`, () => {
                         },
                         outputs : { explicit : [] },
                     },
-                    {   symbol : Call.symbol,
+                    {   symbol : CallCommand.symbol,
                         target : {
                             name : { words : [
                                 { symbol : BareWord.symbol, text : `f` },
@@ -700,14 +700,14 @@ describe(`Check analyzer`, () => {
                 symbol : MainProgram.symbol,
                 parameters : { explicit : [] },
                 commands : { list : [
-                    {   symbol : Call.symbol,
+                    {   symbol : CallCommand.symbol,
                         target : {
                             name : { words : [
                                 { symbol : BareWord.symbol, text : `f` },
                             ] },
                         },
                     },
-                    {   symbol : Call.symbol,
+                    {   symbol : CallCommand.symbol,
                         target : {
                             name : { words : [
                                 { symbol : BareWord.symbol, text : `f` },

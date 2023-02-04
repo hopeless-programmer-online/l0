@@ -194,15 +194,16 @@ export class Commands {
     }
 
     public declare(name : Name, program : DeclaredProgram) {
-        const declaration = new Declaration({ name, program })
+        const declaration = new DeclarationCommand({ name, program, commands : this })
 
         this.list.push(declaration)
     }
     public call(target : Reference, inputs : Input[], outputs : ExplicitOutput[] = []) {
-        const call = new Call({
+        const call = new CallCommand({
             target,
             inputs : new Inputs({ list : inputs }),
             outputs : new Outputs({ explicit : outputs }),
+            commands : this,
         })
 
         this.list.push(call)
@@ -214,18 +215,24 @@ export class Commands {
 }
 
 export abstract class GenericCommand {
+    public readonly commands : Commands
+
+    public constructor({ commands } : { commands : Commands }) {
+        this.commands = commands
+    }
+
     public abstract toString() : string
 }
 
-export class Declaration extends GenericCommand {
+export class DeclarationCommand extends GenericCommand {
     public static readonly symbol : unique symbol = Symbol(`l0.syntax.DeclarationCommand`)
 
-    public readonly symbol : typeof Declaration.symbol = Declaration.symbol
+    public readonly symbol : typeof DeclarationCommand.symbol = DeclarationCommand.symbol
     public readonly name : Name
     public readonly program : DeclaredProgram
 
-    public constructor({ name, program } : { name : Name, program : DeclaredProgram }) {
-        super()
+    public constructor({ name, program, commands } : { name : Name, program : DeclaredProgram, commands : Commands }) {
+        super({ commands })
 
         this.name = name
         this.program = program
@@ -236,16 +243,16 @@ export class Declaration extends GenericCommand {
     }
 }
 
-export class Call extends GenericCommand {
+export class CallCommand extends GenericCommand {
     public static readonly symbol : unique symbol = Symbol(`l0.syntax.CallCommand`)
 
-    public readonly symbol : typeof Call.symbol = Call.symbol
+    public readonly symbol : typeof CallCommand.symbol = CallCommand.symbol
     public readonly target : Reference
     public readonly inputs : Inputs
     public readonly outputs : Outputs
 
-    public constructor({ target, inputs, outputs } : { target : Reference, inputs : Inputs, outputs : Outputs }) {
-        super()
+    public constructor({ target, inputs, outputs, commands } : { target : Reference, inputs : Inputs, outputs : Outputs, commands : Commands }) {
+        super({ commands })
 
         this.target = target
         this.inputs = inputs
@@ -259,7 +266,7 @@ export class Call extends GenericCommand {
     }
 }
 
-export type Command = Declaration | Call
+export type Command = DeclarationCommand | CallCommand
 
 export class Inputs {
     public readonly list : Input[]
