@@ -1,8 +1,8 @@
 import { Analyzer as Lexer } from './lexis'
 import {
     BareWord,
-    Main,
-    Program,
+    MainProgram,
+    DeclaredProgram,
     Parameters,
     GenericParameter,
     Commands,
@@ -26,8 +26,8 @@ function parse(text : string) {
 }
 
 test(`Check export`, () => {
-    expect(Main).toBeDefined()
-    expect(Program).toBeDefined()
+    expect(MainProgram).toBeDefined()
+    expect(DeclaredProgram).toBeDefined()
     expect(Parameters).toBeDefined()
     expect(GenericParameter).toBeDefined()
     expect(Commands).toBeDefined()
@@ -42,7 +42,7 @@ test(`Check export`, () => {
 describe(`Check analyzer`, () => {
     test(`Check empty string`, () => {
         expect(parse(``)).toMatchObject({
-            symbol : Main.symbol,
+            symbol : MainProgram.symbol,
             parameters : { explicit : [] },
             commands : { list : [] },
         })
@@ -52,7 +52,7 @@ describe(`Check analyzer`, () => {
             `f() {\n` +
             `}`
         )).toMatchObject({
-            symbol : Main.symbol,
+            symbol : MainProgram.symbol,
             parameters : { explicit : [] },
             commands : { list : [
                 {   symbol : Declaration.symbol,
@@ -60,7 +60,7 @@ describe(`Check analyzer`, () => {
                         { symbol : BareWord.symbol, text : `f` },
                     ] },
                     program : {
-                        symbol : Program.symbol,
+                        symbol : DeclaredProgram.symbol,
                         parameters : { explicit : [] },
                         commands : { list : [] },
                     },
@@ -73,14 +73,14 @@ describe(`Check analyzer`, () => {
             `f(x) {\n` +
             `}`
         )).toMatchObject({
-            symbol : Main.symbol,
+            symbol : MainProgram.symbol,
             commands : { list : [
                 {   symbol : Declaration.symbol,
                     name : { words : [
                         { symbol : BareWord.symbol, text : `f` },
                     ] },
                     program : {
-                        symbol : Program.symbol,
+                        symbol : DeclaredProgram.symbol,
                         parameters : { explicit : [
                             {   symbol : ExplicitParameter.symbol,
                                 name : { words : [
@@ -99,14 +99,14 @@ describe(`Check analyzer`, () => {
             `f(x, y) {\n` +
             `}`
         )).toMatchObject({
-            symbol : Main.symbol,
+            symbol : MainProgram.symbol,
             commands : { list : [
                 {   symbol : Declaration.symbol,
                     name : { words : [
                         { symbol : BareWord.symbol, text : `f` },
                     ] },
                     program : {
-                        symbol : Program.symbol,
+                        symbol : DeclaredProgram.symbol,
                         parameters : { explicit : [
                             {   symbol : ExplicitParameter.symbol,
                                 name : { words : [
@@ -130,14 +130,14 @@ describe(`Check analyzer`, () => {
             `f(x, y, z) {\n` +
             `}`
         )).toMatchObject({
-            symbol : Main.symbol,
+            symbol : MainProgram.symbol,
             commands : { list : [
                 {   symbol : Declaration.symbol,
                     name : { words : [
                         { symbol : BareWord.symbol, text : `f` },
                     ] },
                     program : {
-                        symbol : Program.symbol,
+                        symbol : DeclaredProgram.symbol,
                         parameters : { explicit : [
                             {   symbol : ExplicitParameter.symbol,
                                 name : { words : [
@@ -166,14 +166,14 @@ describe(`Check analyzer`, () => {
             `f(x,) {\n` +
             `}`
         )).toMatchObject({
-            symbol : Main.symbol,
+            symbol : MainProgram.symbol,
             commands : { list : [
                 {   symbol : Declaration.symbol,
                     name : { words : [
                         { symbol : BareWord.symbol, text : `f` },
                     ] },
                     program : {
-                        symbol : Program.symbol,
+                        symbol : DeclaredProgram.symbol,
                         parameters : { explicit : [
                             {   symbol : ExplicitParameter.symbol,
                                 name : { words : [
@@ -192,14 +192,14 @@ describe(`Check analyzer`, () => {
             `f(x, y,) {\n` +
             `}`
         )).toMatchObject({
-            symbol : Main.symbol,
+            symbol : MainProgram.symbol,
             commands : { list : [
                 {   symbol : Declaration.symbol,
                     name : { words : [
                         { symbol : BareWord.symbol, text : `f` },
                     ] },
                     program : {
-                        symbol : Program.symbol,
+                        symbol : DeclaredProgram.symbol,
                         parameters : { explicit : [
                             {   symbol : ExplicitParameter.symbol,
                                 name : { words : [
@@ -225,18 +225,18 @@ describe(`Check analyzer`, () => {
             `    }\n` +
             `}`
         )).toMatchObject({
-            symbol : Main.symbol,
+            symbol : MainProgram.symbol,
             commands : { list : [
                 {   symbol : Declaration.symbol,
                     name : { words : [
                         { symbol : BareWord.symbol, text : `f` },
                     ] },
                     program : {
-                        symbol : Program.symbol,
+                        symbol : DeclaredProgram.symbol,
                         commands : { list : [
                             {   symbol : Declaration.symbol,
                                 program : {
-                                    symbol : Program.symbol,
+                                    symbol : DeclaredProgram.symbol,
                                     commands : { list : [] },
                                 },
                             },
@@ -250,7 +250,7 @@ describe(`Check analyzer`, () => {
         expect(parse(
             `f()`
         )).toMatchObject({
-            symbol : Main.symbol,
+            symbol : MainProgram.symbol,
             parameters : { explicit : [] },
             commands : { list : [
                 {   symbol : Call.symbol,
@@ -267,7 +267,7 @@ describe(`Check analyzer`, () => {
         expect(parse(
             `f(x)`
         )).toMatchObject({
-            symbol : Main.symbol,
+            symbol : MainProgram.symbol,
             parameters : { explicit : [] },
             commands : { list : [
                 {   symbol : Call.symbol,
@@ -291,7 +291,7 @@ describe(`Check analyzer`, () => {
         expect(parse(
             `f(x, x)`
         )).toMatchObject({
-            symbol : Main.symbol,
+            symbol : MainProgram.symbol,
             parameters : { explicit : [] },
             commands : { list : [
                 {   symbol : Call.symbol,
@@ -320,7 +320,7 @@ describe(`Check analyzer`, () => {
         expect(parse(
             `f(x, x, x)`
         )).toMatchObject({
-            symbol : Main.symbol,
+            symbol : MainProgram.symbol,
             parameters : { explicit : [] },
             commands : { list : [
                 {   symbol : Call.symbol,
@@ -354,7 +354,7 @@ describe(`Check analyzer`, () => {
         expect(parse(
             `f(x,)`
         )).toMatchObject({
-            symbol : Main.symbol,
+            symbol : MainProgram.symbol,
             parameters : { explicit : [] },
             commands : { list : [
                 {   symbol : Call.symbol,
@@ -378,7 +378,7 @@ describe(`Check analyzer`, () => {
         expect(parse(
             `f(x, y,)`
         )).toMatchObject({
-            symbol : Main.symbol,
+            symbol : MainProgram.symbol,
             parameters : { explicit : [] },
             commands : { list : [
                 {   symbol : Call.symbol,
@@ -407,7 +407,7 @@ describe(`Check analyzer`, () => {
         expect(parse(
             `x : f()`
         )).toMatchObject({
-            symbol : Main.symbol,
+            symbol : MainProgram.symbol,
             parameters : { explicit : [] },
             commands : { list : [
                 {   symbol : Call.symbol,
@@ -431,7 +431,7 @@ describe(`Check analyzer`, () => {
         expect(parse(
             `x, y : f()`
         )).toMatchObject({
-            symbol : Main.symbol,
+            symbol : MainProgram.symbol,
             parameters : { explicit : [] },
             commands : { list : [
                 {   symbol : Call.symbol,
@@ -458,7 +458,7 @@ describe(`Check analyzer`, () => {
         expect(parse(
             `x, y, z : f()`
         )).toMatchObject({
-            symbol : Main.symbol,
+            symbol : MainProgram.symbol,
             parameters : { explicit : [] },
             commands : { list : [
                 {   symbol : Call.symbol,
@@ -488,7 +488,7 @@ describe(`Check analyzer`, () => {
         expect(parse(
             `x, : f()`
         )).toMatchObject({
-            symbol : Main.symbol,
+            symbol : MainProgram.symbol,
             parameters : { explicit : [] },
             commands : { list : [
                 {   symbol : Call.symbol,
@@ -512,7 +512,7 @@ describe(`Check analyzer`, () => {
         expect(parse(
             `x, y, : f()`
         )).toMatchObject({
-            symbol : Main.symbol,
+            symbol : MainProgram.symbol,
             parameters : { explicit : [] },
             commands : { list : [
                 {   symbol : Call.symbol,
@@ -543,7 +543,7 @@ describe(`Check analyzer`, () => {
                 `f() {\n` +
                 `}`
             )).toMatchObject({
-                symbol : Main.symbol,
+                symbol : MainProgram.symbol,
                 parameters : { explicit : [] },
                 commands : { list : [
                     {   symbol : Declaration.symbol,
@@ -551,7 +551,7 @@ describe(`Check analyzer`, () => {
                             { symbol : BareWord.symbol, text : `f` },
                         ] },
                         program : {
-                            symbol : Program.symbol,
+                            symbol : DeclaredProgram.symbol,
                             parameters : { explicit : [] },
                             commands : { list : [] },
                         },
@@ -561,7 +561,7 @@ describe(`Check analyzer`, () => {
                             { symbol : BareWord.symbol, text : `f` },
                         ] },
                         program : {
-                            symbol : Program.symbol,
+                            symbol : DeclaredProgram.symbol,
                             parameters : { explicit : [] },
                             commands : { list : [] },
                         },
@@ -575,7 +575,7 @@ describe(`Check analyzer`, () => {
                 `}\n` +
                 `f()`
             )).toMatchObject({
-                symbol : Main.symbol,
+                symbol : MainProgram.symbol,
                 parameters : { explicit : [] },
                 commands : { list : [
                     {   symbol : Declaration.symbol,
@@ -583,7 +583,7 @@ describe(`Check analyzer`, () => {
                             { symbol : BareWord.symbol, text : `f` },
                         ] },
                         program : {
-                            symbol : Program.symbol,
+                            symbol : DeclaredProgram.symbol,
                             parameters : { explicit : [] },
                             commands : { list : [] },
                         },
@@ -604,7 +604,7 @@ describe(`Check analyzer`, () => {
                 `}\n` +
                 `x : f()`
             )).toMatchObject({
-                symbol : Main.symbol,
+                symbol : MainProgram.symbol,
                 parameters : { explicit : [] },
                 commands : { list : [
                     {   symbol : Declaration.symbol,
@@ -612,7 +612,7 @@ describe(`Check analyzer`, () => {
                             { symbol : BareWord.symbol, text : `f` },
                         ] },
                         program : {
-                            symbol : Program.symbol,
+                            symbol : DeclaredProgram.symbol,
                             parameters : { explicit : [] },
                             commands : { list : [] },
                         },
@@ -638,7 +638,7 @@ describe(`Check analyzer`, () => {
                 `f() {\n` +
                 `}`
             )).toMatchObject({
-                symbol : Main.symbol,
+                symbol : MainProgram.symbol,
                 parameters : { explicit : [] },
                 commands : { list : [
                     {   symbol : Call.symbol,
@@ -653,7 +653,7 @@ describe(`Check analyzer`, () => {
                             { symbol : BareWord.symbol, text : `f` },
                         ] },
                         program : {
-                            symbol : Program.symbol,
+                            symbol : DeclaredProgram.symbol,
                             parameters : { explicit : [] },
                             commands : { list : [] },
                         },
@@ -666,7 +666,7 @@ describe(`Check analyzer`, () => {
                 `f()\n` +
                 `x : f()`
             )).toMatchObject({
-                symbol : Main.symbol,
+                symbol : MainProgram.symbol,
                 parameters : { explicit : [] },
                 commands : { list : [
                     {   symbol : Call.symbol,
@@ -697,7 +697,7 @@ describe(`Check analyzer`, () => {
                 `f()\n` +
                 `f()`
             )).toMatchObject({
-                symbol : Main.symbol,
+                symbol : MainProgram.symbol,
                 parameters : { explicit : [] },
                 commands : { list : [
                     {   symbol : Call.symbol,

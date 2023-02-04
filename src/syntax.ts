@@ -83,17 +83,19 @@ export abstract class GenericProgram {
     }
 }
 
-export class Main extends GenericProgram {
+export class MainProgram extends GenericProgram {
     public static readonly symbol : unique symbol = Symbol(`l0.syntax.Main`)
 
-    public readonly symbol : typeof Main.symbol = Main.symbol
+    public readonly symbol : typeof MainProgram.symbol = MainProgram.symbol
 }
 
-export class Program extends GenericProgram {
+export class DeclaredProgram extends GenericProgram {
     public static readonly symbol : unique symbol = Symbol(`l0.syntax.Program`)
 
-    public readonly symbol : typeof Program.symbol = Program.symbol
+    public readonly symbol : typeof DeclaredProgram.symbol = DeclaredProgram.symbol
 }
+
+export type Program = MainProgram | DeclaredProgram
 
 export class Parameters {
     public readonly super : SuperParameter = new SuperParameter
@@ -143,7 +145,7 @@ export type Parameter = SuperParameter | ExplicitParameter
 export class Commands {
     public readonly list : Command[] = []
 
-    public declare(name : Name, program : Program) {
+    public declare(name : Name, program : DeclaredProgram) {
         const declaration = new Declaration({ name, program })
 
         this.list.push(declaration)
@@ -172,9 +174,9 @@ export class Declaration extends GenericCommand {
 
     public readonly symbol : typeof Declaration.symbol = Declaration.symbol
     public readonly name : Name
-    public readonly program : Program
+    public readonly program : DeclaredProgram
 
-    public constructor({ name, program } : { name : Name, program : Program }) {
+    public constructor({ name, program } : { name : Name, program : DeclaredProgram }) {
         super()
 
         this.name = name
@@ -333,7 +335,7 @@ class ProgramWalker extends Walker {
 }
 
 export class Analyzer {
-    private fillParameters(program : Program, lexemes : lexis.Children) {
+    private fillParameters(program : DeclaredProgram, lexemes : lexis.Children) {
         const walker = new Walker({ lexemes })
 
         while(true) {
@@ -374,7 +376,7 @@ export class Analyzer {
     }
 
     public analyze(lexemes : lexis.Children) {
-        const program = new Main
+        const program = new MainProgram
         let walker = new ProgramWalker({ lexemes, program })
         const nesting : ProgramWalker[] = [ walker ]
 
@@ -408,7 +410,7 @@ export class Analyzer {
                     else if (third.symbol === lexis.Block.symbol) {
                         if (third.opening.type !== lexis.BraceType.Figure) throw new Error(`Unexpected block ${logLexeme(third)}.`)
 
-                        const program = new Program
+                        const program = new DeclaredProgram
 
                         this.fillParameters(program, second.children)
 
