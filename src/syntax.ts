@@ -141,7 +141,7 @@ export class ExplicitParameter extends GenericParameter {
 export type Parameter = SuperParameter | ExplicitParameter
 
 export class Commands {
-    public readonly list : CommandUnion[] = []
+    public readonly list : Command[] = []
 
     public declare(name : Name, program : Program) {
         const declaration = new Declaration({ name, program })
@@ -163,11 +163,11 @@ export class Commands {
     }
 }
 
-export abstract class Command {
+export abstract class GenericCommand {
     public abstract toString() : string
 }
 
-export class Declaration extends Command {
+export class Declaration extends GenericCommand {
     public static readonly symbol : unique symbol = Symbol(`l0.syntax.DeclarationCommand`)
 
     public readonly symbol : typeof Declaration.symbol = Declaration.symbol
@@ -186,7 +186,7 @@ export class Declaration extends Command {
     }
 }
 
-export class Call extends Command {
+export class Call extends GenericCommand {
     public static readonly symbol : unique symbol = Symbol(`l0.syntax.CallCommand`)
 
     public readonly symbol : typeof Call.symbol = Call.symbol
@@ -209,7 +209,7 @@ export class Call extends Command {
     }
 }
 
-export type CommandUnion = Declaration | Call
+export type Command = Declaration | Call
 
 export class Inputs {
     public readonly list : Input[]
