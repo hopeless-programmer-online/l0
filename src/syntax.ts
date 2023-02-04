@@ -105,12 +105,14 @@ export class DeclaredProgram extends GenericProgram {
     public static readonly symbol : unique symbol = Symbol(`l0.syntax.Program`)
 
     public readonly symbol : typeof DeclaredProgram.symbol = DeclaredProgram.symbol
+    public readonly declaration : DeclarationCommand
     public readonly parameters : Parameters
     public readonly commands : Commands
 
-    public constructor() {
+    public constructor({ declaration } : { declaration : DeclarationCommand }) {
         super()
 
+        this.declaration = declaration
         this.parameters = new Parameters({ program : this })
         this.commands = new Commands({ program : this })
     }
@@ -193,10 +195,12 @@ export class Commands {
         this.program = program
     }
 
-    public declare(name : Name, program : DeclaredProgram) {
-        const declaration = new DeclarationCommand({ name, program, commands : this })
+    public declare(name : Name) {
+        const declaration = new DeclarationCommand({ name, commands : this })
 
         this.list.push(declaration)
+
+        return declaration
     }
     public call(target : Reference, inputs : Input[], outputs : ExplicitOutput[] = []) {
         const call = new CallCommand({
@@ -231,11 +235,11 @@ export class DeclarationCommand extends GenericCommand {
     public readonly name : Name
     public readonly program : DeclaredProgram
 
-    public constructor({ name, program, commands } : { name : Name, program : DeclaredProgram, commands : Commands }) {
+    public constructor({ name, commands } : { name : Name, commands : Commands }) {
         super({ commands })
 
         this.name = name
-        this.program = program
+        this.program = new DeclaredProgram({ declaration : this })
     }
 
     public toString() {
@@ -465,11 +469,9 @@ export class Analyzer {
                     else if (third.symbol === lexis.Block.symbol) {
                         if (third.opening.type !== lexis.BraceType.Figure) throw new Error(`Unexpected block ${logLexeme(third)}.`)
 
-                        const program = new DeclaredProgram
+                        const { program } = walker.program.commands.declare(Name.from(first))
 
                         this.fillParameters(program, second.children)
-
-                        walker.program.commands.declare(Name.from(first), program)
 
                         walker = new ProgramWalker({ lexemes : third.children, program })
 
