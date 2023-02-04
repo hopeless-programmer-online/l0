@@ -110,7 +110,7 @@ export class Parameters {
     }
 }
 
-export abstract class Parameter {
+export abstract class GenericParameter {
     public readonly name : Name
 
     public constructor({ name } : { name : Name }) {
@@ -122,7 +122,7 @@ export abstract class Parameter {
     }
 }
 
-export class SuperParameter extends Parameter {
+export class SuperParameter extends GenericParameter {
     public static readonly symbol : unique symbol = Symbol(`l0.syntax.SuperParameter`)
 
     public readonly symbol : typeof SuperParameter.symbol = SuperParameter.symbol
@@ -132,13 +132,13 @@ export class SuperParameter extends Parameter {
     }
 }
 
-export class ExplicitParameter extends Parameter {
+export class ExplicitParameter extends GenericParameter {
     public static readonly symbol : unique symbol = Symbol(`l0.syntax.ExplicitParameter`)
 
     public readonly symbol : typeof ExplicitParameter.symbol = ExplicitParameter.symbol
 }
 
-export type ParameterUnion = SuperParameter | ExplicitParameter
+export type Parameter = SuperParameter | ExplicitParameter
 
 export class Commands {
     public readonly list : CommandUnion[] = []

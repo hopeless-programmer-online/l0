@@ -4,7 +4,7 @@ import {
     Main,
     Program,
     Parameters,
-    Parameter,
+    GenericParameter,
     Commands,
     Declaration,
     Call,
@@ -29,7 +29,7 @@ test(`Check export`, () => {
     expect(Main).toBeDefined()
     expect(Program).toBeDefined()
     expect(Parameters).toBeDefined()
-    expect(Parameter).toBeDefined()
+    expect(GenericParameter).toBeDefined()
     expect(Commands).toBeDefined()
     expect(Declaration).toBeDefined()
     expect(Call).toBeDefined()
