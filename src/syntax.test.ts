@@ -251,7 +251,13 @@ describe(`Check analyzer`, () => {
             `f()`
         )).toMatchObject({
             symbol : MainProgram.symbol,
-            parameters : { explicit : [] },
+            parameters : { explicit : [
+                {   symbol : ExplicitParameter.symbol,
+                    name : { words : [
+                        { symbol : BareWord.symbol, text : `f` },
+                    ] },
+                },
+            ] },
             commands : { list : [
                 {   symbol : CallCommand.symbol,
                     target : {
@@ -268,7 +274,18 @@ describe(`Check analyzer`, () => {
             `f(x)`
         )).toMatchObject({
             symbol : MainProgram.symbol,
-            parameters : { explicit : [] },
+            parameters : { explicit : [
+                {   symbol : ExplicitParameter.symbol,
+                    name : { words : [
+                        { symbol : BareWord.symbol, text : `f` },
+                    ] },
+                },
+                {   symbol : ExplicitParameter.symbol,
+                    name : { words : [
+                        { symbol : BareWord.symbol, text : `x` },
+                    ] },
+                },
+            ] },
             commands : { list : [
                 {   symbol : CallCommand.symbol,
                     target : {
@@ -292,7 +309,18 @@ describe(`Check analyzer`, () => {
             `f(x, x)`
         )).toMatchObject({
             symbol : MainProgram.symbol,
-            parameters : { explicit : [] },
+            parameters : { explicit : [
+                {   symbol : ExplicitParameter.symbol,
+                    name : { words : [
+                        { symbol : BareWord.symbol, text : `f` },
+                    ] },
+                },
+                {   symbol : ExplicitParameter.symbol,
+                    name : { words : [
+                        { symbol : BareWord.symbol, text : `x` },
+                    ] },
+                },
+            ] },
             commands : { list : [
                 {   symbol : CallCommand.symbol,
                     target : {
@@ -321,7 +349,18 @@ describe(`Check analyzer`, () => {
             `f(x, x, x)`
         )).toMatchObject({
             symbol : MainProgram.symbol,
-            parameters : { explicit : [] },
+            parameters : { explicit : [
+                {   symbol : ExplicitParameter.symbol,
+                    name : { words : [
+                        { symbol : BareWord.symbol, text : `f` },
+                    ] },
+                },
+                {   symbol : ExplicitParameter.symbol,
+                    name : { words : [
+                        { symbol : BareWord.symbol, text : `x` },
+                    ] },
+                },
+            ] },
             commands : { list : [
                 {   symbol : CallCommand.symbol,
                     target : {
@@ -355,7 +394,18 @@ describe(`Check analyzer`, () => {
             `f(x,)`
         )).toMatchObject({
             symbol : MainProgram.symbol,
-            parameters : { explicit : [] },
+            parameters : { explicit : [
+                {   symbol : ExplicitParameter.symbol,
+                    name : { words : [
+                        { symbol : BareWord.symbol, text : `f` },
+                    ] },
+                },
+                {   symbol : ExplicitParameter.symbol,
+                    name : { words : [
+                        { symbol : BareWord.symbol, text : `x` },
+                    ] },
+                },
+            ] },
             commands : { list : [
                 {   symbol : CallCommand.symbol,
                     target : {
@@ -379,7 +429,23 @@ describe(`Check analyzer`, () => {
             `f(x, y,)`
         )).toMatchObject({
             symbol : MainProgram.symbol,
-            parameters : { explicit : [] },
+            parameters : { explicit : [
+                {   symbol : ExplicitParameter.symbol,
+                    name : { words : [
+                        { symbol : BareWord.symbol, text : `f` },
+                    ] },
+                },
+                {   symbol : ExplicitParameter.symbol,
+                    name : { words : [
+                        { symbol : BareWord.symbol, text : `x` },
+                    ] },
+                },
+                {   symbol : ExplicitParameter.symbol,
+                    name : { words : [
+                        { symbol : BareWord.symbol, text : `y` },
+                    ] },
+                },
+            ] },
             commands : { list : [
                 {   symbol : CallCommand.symbol,
                     target : {
@@ -408,7 +474,13 @@ describe(`Check analyzer`, () => {
             `x : f()`
         )).toMatchObject({
             symbol : MainProgram.symbol,
-            parameters : { explicit : [] },
+            parameters : { explicit : [
+                {   symbol : ExplicitParameter.symbol,
+                    name : { words : [
+                        { symbol : BareWord.symbol, text : `f` },
+                    ] },
+                },
+            ] },
             commands : { list : [
                 {   symbol : CallCommand.symbol,
                     target : {
@@ -639,7 +711,13 @@ describe(`Check analyzer`, () => {
                 `}`
             )).toMatchObject({
                 symbol : MainProgram.symbol,
-                parameters : { explicit : [] },
+                parameters : { explicit : [
+                    {   symbol : ExplicitParameter.symbol,
+                        name : { words : [
+                            { symbol : BareWord.symbol, text : `f` },
+                        ] },
+                    },
+                ] },
                 commands : { list : [
                     {   symbol : CallCommand.symbol,
                         target : {
@@ -667,7 +745,13 @@ describe(`Check analyzer`, () => {
                 `x : f()`
             )).toMatchObject({
                 symbol : MainProgram.symbol,
-                parameters : { explicit : [] },
+                parameters : { explicit : [
+                    {   symbol : ExplicitParameter.symbol,
+                        name : { words : [
+                            { symbol : BareWord.symbol, text : `f` },
+                        ] },
+                    },
+                ] },
                 commands : { list : [
                     {   symbol : CallCommand.symbol,
                         target : {
@@ -698,7 +782,13 @@ describe(`Check analyzer`, () => {
                 `f()`
             )).toMatchObject({
                 symbol : MainProgram.symbol,
-                parameters : { explicit : [] },
+                parameters : { explicit : [
+                    {   symbol : ExplicitParameter.symbol,
+                        name : { words : [
+                            { symbol : BareWord.symbol, text : `f` },
+                        ] },
+                    },
+                ] },
                 commands : { list : [
                     {   symbol : CallCommand.symbol,
                         target : {
@@ -706,6 +796,7 @@ describe(`Check analyzer`, () => {
                                 { symbol : BareWord.symbol, text : `f` },
                             ] },
                         },
+                        outputs : { explicit : [] },
                     },
                     {   symbol : CallCommand.symbol,
                         target : {
@@ -713,6 +804,7 @@ describe(`Check analyzer`, () => {
                                 { symbol : BareWord.symbol, text : `f` },
                             ] },
                         },
+                        outputs : { explicit : [] },
                     },
                 ] },
             })

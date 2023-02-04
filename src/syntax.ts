@@ -2,7 +2,7 @@ import * as lexis from './lexis'
 
 export type Text = string
 
-export abstract class Word {
+export abstract class GenericWord {
     public static from(word : lexis.BareWord | lexis.QuotedWord) {
         if (word.symbol === lexis.BareWord.symbol) return BareWord.from(word)
         if (word.symbol === lexis.QuotedWord.symbol) return QuotedWord.from(word)
@@ -16,12 +16,14 @@ export abstract class Word {
         this.text = text
     }
 
+    public abstract isEqual(other : Word) : boolean
+
     public toString() {
         return this.text
     }
 }
 
-export class BareWord extends Word {
+export class BareWord extends GenericWord {
     public static readonly symbol : unique symbol = Symbol(`l0.syntax.BareWord`)
 
     public static from(word : lexis.BareWord) {
@@ -29,9 +31,13 @@ export class BareWord extends Word {
     }
 
     public readonly symbol : typeof BareWord.symbol = BareWord.symbol
+
+    public isEqual(other : Word) {
+        return other.symbol === BareWord.symbol && this.text === other.text
+    }
 }
 
-export class QuotedWord extends Word {
+export class QuotedWord extends GenericWord {
     public static readonly symbol : unique symbol = Symbol(`l0.syntax.QuotedWord`)
 
     public static from(word : lexis.QuotedWord) {
@@ -39,21 +45,25 @@ export class QuotedWord extends Word {
     }
 
     public readonly symbol : typeof QuotedWord.symbol = QuotedWord.symbol
+
+    public isEqual(other : Word) {
+        return other.symbol === QuotedWord.symbol && this.text === other.text
+    }
 }
 
-export type WordUnion = BareWord | QuotedWord
+export type Word = BareWord | QuotedWord
 
 export class Name {
     public static from(name : lexis.Name) {
-        return new Name({ words : name.words.map(Word.from) })
+        return new Name({ words : name.words.map(GenericWord.from) })
     }
     public static bare(text : Text) {
         return new Name({ words : [ new BareWord({ text }) ] })
     }
 
-    public readonly words : WordUnion[]
+    public readonly words : Word[]
 
-    public constructor({ words } : { words : WordUnion[] }) {
+    public constructor({ words } : { words : Word[] }) {
         this.words = words
     }
 
@@ -67,8 +77,85 @@ export class Name {
         return new Name({ words })
     }
 
+    public isEqual(other : Name) {
+        return (
+            this.words.length === other.words.length &&
+            this.words.every((word, index) => word.isEqual(other.words[index]))
+        )
+    }
     public toString() {
         return this.words.map(word => word.toString()).join(` `)
+    }
+}
+
+type ScopeMap = Map<Name, ReferenceTarget>
+type ScopeTarget = Program | Commands | Command | Parameters | Parameter | Outputs | Output
+
+export class Scope {
+    public static from(target : ScopeTarget) {
+        const map : ScopeMap = new Map
+
+        function insert(name : Name, target : ReferenceTarget) {
+            while (Array.from(map.keys()).some(key => name.isEqual(key))) name = name.overlapped
+
+            map.set(name, target)
+        }
+
+        while (true) {
+            if (target.symbol === MainProgram.symbol) {
+                break
+            }
+            else if (target.symbol === DeclaredProgram.symbol) {
+                target = target.declaration
+            }
+            else if (target.symbol === Commands.symbol) {
+                target = target.last || target.program.parameters
+            }
+            else if (target.symbol === DeclarationCommand.symbol) {
+                insert(target.name, target.program)
+
+                target = target.previous || target.commands.program.parameters
+            }
+            else if (target.symbol === CallCommand.symbol) {
+                target = target.outputs
+            }
+            else if (target.symbol === Parameters.symbol) {
+                target = target.last
+            }
+            else if (target.symbol === SuperParameter.symbol || target.symbol === ExplicitParameter.symbol) {
+                insert(target.name, target)
+
+                target = target.previous || target.parameters.program
+            }
+            else if (target.symbol === Outputs.symbol) {
+                target = target.last
+            }
+            else if (target.symbol === SubOutput.symbol || target.symbol === ExplicitOutput.symbol) {
+                insert(target.name, target)
+
+                target = target.previous || target.outputs.call.previous || target.outputs.call.commands.program.parameters
+            }
+            else neverThrow(target, new Error(`Unexpected target ${target}.`))
+        }
+
+        return new Scope({ map })
+    }
+
+    private map : ScopeMap
+
+    public constructor({ map } : { map : ScopeMap }) {
+        this.map = map
+    }
+
+    public find(name : Name) {
+        for (const [ key, value ] of this.map.entries()) if (name.isEqual(key)) return new Reference({ name })
+
+        return null
+    }
+    public toString() {
+        return Array.from(this.map.keys())
+            .map(name => name.toString())
+            .join(`, `)
     }
 }
 
@@ -77,9 +164,11 @@ export abstract class GenericProgram {
     public abstract readonly commands : Commands
 
     public toString() {
-        return `(${this.parameters}) {${this.commands}}`
-            .replace(/^/g, `\t`)
-            .replace(/\n/g, `\n\t`)
+        const commands = `${this.commands}`
+            .replace(/^/g, `    `)
+            .replace(/\n/g, `\n    `)
+
+        return `(${this.parameters}) {${commands !== `` ? `\n${commands}\n` : ``}}`
     }
 }
 
@@ -149,7 +238,7 @@ export class Parameters {
     }
 
     public toString() {
-        return this.explicit.map(parameter => parameter.toString()).join(` `)
+        return this.explicit.map(parameter => parameter.toString()).join(`, `)
     }
 }
 
@@ -188,6 +277,9 @@ export class ExplicitParameter extends GenericParameter {
 export type Parameter = SuperParameter | ExplicitParameter
 
 export class Commands {
+    public static readonly symbol : unique symbol = Symbol(`l0.syntax.Commands`)
+
+    public readonly symbol : typeof Commands.symbol = Commands.symbol
     public readonly program : Program
     public readonly list : Command[] = []
 
@@ -448,50 +540,65 @@ class ProgramWalker extends Walker {
 }
 
 export class Analyzer {
-    private fillParameters(program : DeclaredProgram, lexemes : lexis.Children) {
-        const walker = new Walker({ lexemes })
-
-        while(true) {
-            const first = walker.current
-
-            if (!first) break
-            if (first.symbol === lexis.Name.symbol) {
-                program.parameters.add(Name.from(first))
-
-                const second = walker.next
-
-                if (!second) break
-                if (second.symbol === lexis.Delimiter.symbol && second.type === lexis.DelimiterType.Comma) walker.next
-            }
-            else throw new Error(`Unexpected ${logLexeme(first)} in parameters list.`)
-        }
-    }
-    private fillInputs(lexemes : lexis.Children) {
-        const walker = new Walker({ lexemes })
-        const inputs : Input[] = []
-
-        while(true) {
-            const first = walker.current
-
-            if (!first) break
-            if (first.symbol === lexis.Name.symbol) {
-                inputs.push(new Input({ target : new Reference({ name : Name.from(first) }) }))
-
-                const second = walker.next
-
-                if (!second) break
-                if (second.symbol === lexis.Delimiter.symbol && second.type === lexis.DelimiterType.Comma) walker.next
-            }
-            else throw new Error(`Unexpected ${logLexeme(first)} in parameters list.`)
-        }
-
-        return inputs
-    }
-
     public analyze(lexemes : lexis.Children) {
-        const program = new MainProgram
-        let walker = new ProgramWalker({ lexemes, program })
+        const main = new MainProgram
+        let walker = new ProgramWalker({ lexemes, program: main })
         const nesting : ProgramWalker[] = [ walker ]
+
+        function findReference(name : Name, scopeTarget : ScopeTarget) {
+            const scope = Scope.from(scopeTarget)
+
+            // console.log(`${scope}`)
+
+            const reference = scope.find(name)
+
+            if (reference) return reference
+
+            const parameter = main.parameters.add(name)
+
+            return new Reference({ name })
+        }
+        function fillParameters(program : DeclaredProgram, lexemes : lexis.Children) {
+            const walker = new Walker({ lexemes })
+
+            while(true) {
+                const first = walker.current
+
+                if (!first) break
+                if (first.symbol === lexis.Name.symbol) {
+                    program.parameters.add(Name.from(first))
+
+                    const second = walker.next
+
+                    if (!second) break
+                    if (second.symbol === lexis.Delimiter.symbol && second.type === lexis.DelimiterType.Comma) walker.next
+                }
+                else throw new Error(`Unexpected ${logLexeme(first)} in parameters list.`)
+            }
+        }
+        function fillInputs(lexemes : lexis.Children, scopeTarget : ScopeTarget) {
+            const walker = new Walker({ lexemes })
+            const inputs : Input[] = []
+
+            while(true) {
+                const first = walker.current
+
+                if (!first) break
+                if (first.symbol === lexis.Name.symbol) {
+                    const target = findReference(Name.from(first), scopeTarget)
+
+                    inputs.push(new Input({ target }))
+
+                    const second = walker.next
+
+                    if (!second) break
+                    if (second.symbol === lexis.Delimiter.symbol && second.type === lexis.DelimiterType.Comma) walker.next
+                }
+                else throw new Error(`Unexpected ${logLexeme(first)} in parameters list.`)
+            }
+
+            return inputs
+        }
 
         while (true) {
             const first = walker.current
@@ -515,8 +622,8 @@ export class Analyzer {
                     const third = walker.next
 
                     if (!third || third.symbol === lexis.Name.symbol) {
-                        const target = new Reference({ name : Name.from(first) })
-                        const inputs = this.fillInputs(second.children)
+                        const target = findReference(Name.from(first), walker.program.commands)
+                        const inputs = fillInputs(second.children, walker.program.commands)
 
                         walker.program.commands.call(target, inputs)
                     }
@@ -525,7 +632,7 @@ export class Analyzer {
 
                         const { program } = walker.program.commands.declare(Name.from(first))
 
-                        this.fillParameters(program, second.children)
+                        fillParameters(program, second.children)
 
                         walker = new ProgramWalker({ lexemes : third.children, program })
 
@@ -542,8 +649,8 @@ export class Analyzer {
 
                     if (!fourth || fourth.symbol !== lexis.Block.symbol || fourth.opening.type !== lexis.BraceType.Round) throw new Error(`Unexpected ${fourth && logLexeme(fourth)}.`)
 
-                    const target = new Reference({ name : Name.from(third) })
-                    const inputs = this.fillInputs(fourth.children)
+                    const target = findReference(Name.from(third), walker.program.commands)
+                    const inputs = fillInputs(fourth.children, walker.program.commands)
                     const call = walker.program.commands.call(target, inputs)
 
                     call.outputs.add(Name.from(first))
@@ -580,7 +687,7 @@ export class Analyzer {
                     if (!fourth || fourth.symbol !== lexis.Block.symbol || fourth.opening.type !== lexis.BraceType.Round) throw new Error(`Unexpected ${fourth && logLexeme(fourth)}.`)
 
                     const target = new Reference({ name : Name.from(third) })
-                    const inputs = this.fillInputs(fourth.children)
+                    const inputs = fillInputs(fourth.children, walker.program.commands)
                     const call = walker.program.commands.call(target, inputs)
 
                     for (const output of outputs) call.outputs.add(output)
@@ -592,7 +699,7 @@ export class Analyzer {
             else throw new Error(`Unexpected ${logLexeme(first)}.`)
         }
 
-        return program
+        return main
     }
 }
 
