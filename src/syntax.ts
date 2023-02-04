@@ -247,7 +247,7 @@ export class Outputs {
     }
 }
 
-export abstract class Output {
+export abstract class GenericOutput {
     public readonly name : Name
 
     public constructor({ name } : { name : Name }) {
@@ -259,19 +259,19 @@ export abstract class Output {
     }
 }
 
-export class SubOutput extends Output {
+export class SubOutput extends GenericOutput {
     public static readonly symbol : unique symbol = Symbol(`l0.syntax.SubOutput`)
 
     public readonly symbol : typeof SubOutput.symbol = SubOutput.symbol
 }
 
-export class ExplicitOutput extends Output {
+export class ExplicitOutput extends GenericOutput {
     public static readonly symbol : unique symbol = Symbol(`l0.syntax.ExplicitOutput`)
 
     public readonly symbol : typeof ExplicitOutput.symbol = ExplicitOutput.symbol
 }
 
-export type OutputUnion = SubOutput | ExplicitOutput
+export type Output = SubOutput | ExplicitOutput
 
 export class Reference {
     public readonly name : Name

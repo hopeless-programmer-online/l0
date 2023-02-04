@@ -11,7 +11,7 @@ import {
     Inputs,
     Input,
     Outputs,
-    Output,
+    GenericOutput,
     Analyzer,
     ExplicitParameter,
 } from './syntax'
@@ -36,7 +36,7 @@ test(`Check export`, () => {
     expect(Inputs).toBeDefined()
     expect(Input).toBeDefined()
     expect(Outputs).toBeDefined()
-    expect(Output).toBeDefined()
+    expect(GenericOutput).toBeDefined()
 })
 
 describe(`Check analyzer`, () => {
