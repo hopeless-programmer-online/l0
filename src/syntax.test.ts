@@ -504,7 +504,13 @@ describe(`Check analyzer`, () => {
             `x, y : f()`
         )).toMatchObject({
             symbol : MainProgram.symbol,
-            parameters : { explicit : [] },
+            parameters : { explicit : [
+                {   symbol : ExplicitParameter.symbol,
+                    name : { words : [
+                        { symbol : BareWord.symbol, text : `f` },
+                    ] },
+                },
+            ] },
             commands : { list : [
                 {   symbol : CallCommand.symbol,
                     target : {
@@ -531,7 +537,13 @@ describe(`Check analyzer`, () => {
             `x, y, z : f()`
         )).toMatchObject({
             symbol : MainProgram.symbol,
-            parameters : { explicit : [] },
+            parameters : { explicit : [
+                {   symbol : ExplicitParameter.symbol,
+                    name : { words : [
+                        { symbol : BareWord.symbol, text : `f` },
+                    ] },
+                },
+            ] },
             commands : { list : [
                 {   symbol : CallCommand.symbol,
                     target : {
@@ -561,7 +573,13 @@ describe(`Check analyzer`, () => {
             `x, : f()`
         )).toMatchObject({
             symbol : MainProgram.symbol,
-            parameters : { explicit : [] },
+            parameters : { explicit : [
+                {   symbol : ExplicitParameter.symbol,
+                    name : { words : [
+                        { symbol : BareWord.symbol, text : `f` },
+                    ] },
+                },
+            ] },
             commands : { list : [
                 {   symbol : CallCommand.symbol,
                     target : {
@@ -585,7 +603,13 @@ describe(`Check analyzer`, () => {
             `x, y, : f()`
         )).toMatchObject({
             symbol : MainProgram.symbol,
-            parameters : { explicit : [] },
+            parameters : { explicit : [
+                {   symbol : ExplicitParameter.symbol,
+                    name : { words : [
+                        { symbol : BareWord.symbol, text : `f` },
+                    ] },
+                },
+            ] },
             commands : { list : [
                 {   symbol : CallCommand.symbol,
                     target : {

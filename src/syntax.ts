@@ -148,7 +148,7 @@ export class Scope {
     }
 
     public find(name : Name) {
-        for (const [ key, value ] of this.map.entries()) if (name.isEqual(key)) return new Reference({ name })
+        for (const [ key, target ] of this.map.entries()) if (name.isEqual(key)) return new Reference({ name, target })
 
         return null
     }
@@ -235,6 +235,8 @@ export class Parameters {
         parameter.previous = last
 
         this.explicit.push(parameter)
+
+        return parameter
     }
 
     public toString() {
@@ -482,9 +484,11 @@ export type ReferenceTarget = Program | Parameter | Output
 
 export class Reference {
     public readonly name : Name
+    public readonly target : ReferenceTarget
 
-    public constructor({ name } : { name : Name }) {
+    public constructor({ name, target } : { name : Name, target : ReferenceTarget }) {
         this.name = name
+        this.target = target
     }
 
     public toString() {
@@ -556,7 +560,7 @@ export class Analyzer {
 
             const parameter = main.parameters.add(name)
 
-            return new Reference({ name })
+            return new Reference({ name, target : parameter })
         }
         function fillParameters(program : DeclaredProgram, lexemes : lexis.Children) {
             const walker = new Walker({ lexemes })
@@ -686,7 +690,7 @@ export class Analyzer {
 
                     if (!fourth || fourth.symbol !== lexis.Block.symbol || fourth.opening.type !== lexis.BraceType.Round) throw new Error(`Unexpected ${fourth && logLexeme(fourth)}.`)
 
-                    const target = new Reference({ name : Name.from(third) })
+                    const target = findReference(Name.from(third), walker.program.commands)
                     const inputs = fillInputs(fourth.children, walker.program.commands)
                     const call = walker.program.commands.call(target, inputs)
 
