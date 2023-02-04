@@ -96,7 +96,6 @@ export class Program extends GenericProgram {
 }
 
 export class Parameters {
-    public readonly implicit : ImplicitParameter[] = []
     public readonly super : SuperParameter = new SuperParameter
     public readonly explicit : ExplicitParameter[] = []
 
@@ -123,12 +122,6 @@ export abstract class Parameter {
     }
 }
 
-export class ImplicitParameter extends Parameter {
-    public static readonly symbol : unique symbol = Symbol(`l0.syntax.ImplicitParameter`)
-
-    public readonly symbol : typeof ImplicitParameter.symbol = ImplicitParameter.symbol
-}
-
 export class SuperParameter extends Parameter {
     public static readonly symbol : unique symbol = Symbol(`l0.syntax.SuperParameter`)
 
@@ -145,7 +138,7 @@ export class ExplicitParameter extends Parameter {
     public readonly symbol : typeof ExplicitParameter.symbol = ExplicitParameter.symbol
 }
 
-export type ParameterUnion = ImplicitParameter | SuperParameter | ExplicitParameter
+export type ParameterUnion = SuperParameter | ExplicitParameter
 
 export class Commands {
     public readonly list : CommandUnion[] = []

@@ -1,7 +1,6 @@
 import { Analyzer as Lexer } from './lexis'
 import {
     BareWord,
-    Name,
     Main,
     Program,
     Parameters,
