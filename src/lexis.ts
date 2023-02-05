@@ -1,3 +1,5 @@
+import { neverThrow } from "./utilities"
+
 export type Offset = number
 export type Row = number
 export type Column = number
@@ -601,9 +603,6 @@ type WhitespaceCharacter =
     | typeof ideographicSpaceCharacter
     | typeof zeroWidthNoBreakSpaceCharacter
 
-function neverThrow(never : never, error : Error) : never {
-    throw error
-}
 function isWhitespace(character : string | null) : character is WhitespaceCharacter {
     if (character === spaceCharacter) return true
     if (character === newLineCharacter) return true

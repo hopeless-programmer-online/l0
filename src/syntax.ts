@@ -1,4 +1,5 @@
 import * as lexis from './lexis'
+import { neverThrow } from './utilities'
 
 export type Text = string
 
@@ -287,6 +288,10 @@ export class Commands {
 
     public constructor({ program } : { program : Program }) {
         this.program = program
+    }
+
+    public * [Symbol.iterator]() {
+        yield * this.list
     }
 
     public get last() {
@@ -707,9 +712,6 @@ export class Analyzer {
     }
 }
 
-function neverThrow(never : never, error : Error) : never {
-    throw error
-}
 function logLexeme(lexeme : lexis.Child) {
     return `${lexeme} at ${lexeme.span.begin.row}:${lexeme.span.begin.column}`
 }
