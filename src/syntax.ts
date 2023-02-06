@@ -403,20 +403,23 @@ export class Inputs {
         this.list = list
     }
 
+    public map<T>(callback : (input : Input, index : number, inputs : Inputs) => T) {
+        return this.list.map((input, index) => callback(input, index, this))
+    }
     public toString() {
         return this.list.map(input => input.toString()).join(`, `)
     }
 }
 
 export class Input {
-    public readonly target : Reference
+    public readonly reference : Reference
 
-    public constructor({ target } : { target : Reference }) {
-        this.target = target
+    public constructor({ reference } : { reference : Reference }) {
+        this.reference = reference
     }
 
     public toString() {
-        return this.target.toString()
+        return this.reference.toString()
     }
 }
 
@@ -430,6 +433,11 @@ export class Outputs {
 
     public constructor({ call } : { call : CallCommand }) {
         this.call = call
+    }
+
+    public * [Symbol.iterator]() {
+        yield this.sub
+        yield * this.explicit
     }
 
     public get last() {
@@ -599,9 +607,9 @@ export class Analyzer {
 
                 if (!first) break
                 if (first.symbol === lexis.Name.symbol) {
-                    const target = findReference(Name.from(first), scopeTarget)
+                    const reference = findReference(Name.from(first), scopeTarget)
 
-                    inputs.push(new Input({ target }))
+                    inputs.push(new Input({ reference }))
 
                     const second = walker.next
 

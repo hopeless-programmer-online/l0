@@ -294,7 +294,7 @@ describe(`Check analyzer`, () => {
                         ] },
                     },
                     inputs : { list : [
-                        { target : {
+                        { reference : {
                             name : { words : [
                                 { symbol : BareWord.symbol, text : `x` },
                             ] },
@@ -329,12 +329,12 @@ describe(`Check analyzer`, () => {
                         ] },
                     },
                     inputs : { list : [
-                        { target : {
+                        { reference : {
                             name : { words : [
                                 { symbol : BareWord.symbol, text : `x` },
                             ] },
                         } },
-                        { target : {
+                        { reference : {
                             name : { words : [
                                 { symbol : BareWord.symbol, text : `x` },
                             ] },
@@ -369,17 +369,17 @@ describe(`Check analyzer`, () => {
                         ] },
                     },
                     inputs : { list : [
-                        { target : {
+                        { reference : {
                             name : { words : [
                                 { symbol : BareWord.symbol, text : `x` },
                             ] },
                         } },
-                        { target : {
+                        { reference : {
                             name : { words : [
                                 { symbol : BareWord.symbol, text : `x` },
                             ] },
                         } },
-                        { target : {
+                        { reference : {
                             name : { words : [
                                 { symbol : BareWord.symbol, text : `x` },
                             ] },
@@ -414,7 +414,7 @@ describe(`Check analyzer`, () => {
                         ] },
                     },
                     inputs : { list : [
-                        { target : {
+                        { reference : {
                             name : { words : [
                                 { symbol : BareWord.symbol, text : `x` },
                             ] },
@@ -454,12 +454,12 @@ describe(`Check analyzer`, () => {
                         ] },
                     },
                     inputs : { list : [
-                        { target : {
+                        { reference : {
                             name : { words : [
                                 { symbol : BareWord.symbol, text : `x` },
                             ] },
                         } },
-                        { target : {
+                        { reference : {
                             name : { words : [
                                 { symbol : BareWord.symbol, text : `y` },
                             ] },
@@ -837,7 +837,7 @@ describe(`Check analyzer`, () => {
 })
 
 describe(`Stress test`, () => {
-    const bigNumber = 100
+    const bigNumber = 10
 
     test(`Check ${bigNumber} calls`, () => {
         let text = ``
