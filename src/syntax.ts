@@ -219,6 +219,11 @@ export class Parameters {
         this.program = program
     }
 
+    public * [Symbol.iterator]() {
+        yield this.super
+        yield * this.explicit
+    }
+
     public get last() {
         const { explicit } = this
 
