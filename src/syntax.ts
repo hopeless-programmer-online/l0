@@ -244,6 +244,9 @@ export class Parameters {
 
         return parameter
     }
+    public map<T>(callback : (parameter : Parameter, index : number, parameters : Parameters) => T) {
+        return [ ...this ].map((parameter, index) => callback(parameter, index, this))
+    }
 
     public toString() {
         return this.explicit.map(parameter => parameter.toString()).join(`, `)
