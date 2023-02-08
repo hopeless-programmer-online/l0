@@ -46,6 +46,13 @@ export class QuotedWord extends GenericWord {
     }
 
     public readonly symbol : typeof QuotedWord.symbol = QuotedWord.symbol
+    public readonly unquoted : Text
+
+    public constructor({ text, unquoted } : { text : Text, unquoted : Text }) {
+        super({ text })
+
+        this.unquoted = unquoted
+    }
 
     public isEqual(other : Word) {
         return other.symbol === QuotedWord.symbol && this.text === other.text
