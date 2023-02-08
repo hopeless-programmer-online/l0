@@ -1,28 +1,25 @@
-import { Name, MainProgram as Main, DeclarationCommand as Declaration, CallCommand as Call, Program, ReferenceTarget, Command } from './syntax'
+import { Name, MainProgram as Main, DeclarationCommand as Declaration, CallCommand as Call, Program, ReferenceTarget, Command, SuperParameter, ExplicitParameter } from './syntax'
 import { neverThrow } from './utilities'
 
-// export class Entry {
-// }
-
-export abstract class GenericStub {
+export abstract class GenericValue {
 }
 
-// export class TerminalStub extends GenericStub {
-//     public static readonly symbol : unique symbol = Symbol(`l0.syntax.TerminalStub`)
+export class Terminal extends GenericValue {
+    public static readonly symbol : unique symbol = Symbol(`l0.syntax.TerminalValue`)
 
-//     public readonly symbol : typeof TerminalStub.symbol = TerminalStub.symbol
-// }
+    public readonly symbol : typeof Terminal.symbol = Terminal.symbol
+}
 
-// export class BindStub extends GenericStub {
-//     public static readonly symbol : unique symbol = Symbol(`l0.syntax.BindStub`)
+export class Bind extends GenericValue {
+    public static readonly symbol : unique symbol = Symbol(`l0.syntax.BindProgramValue`)
 
-//     public readonly symbol : typeof BindStub.symbol = BindStub.symbol
-// }
+    public readonly symbol : typeof Bind.symbol = Bind.symbol
+}
 
-export class TemplateStub extends GenericStub {
-    public static readonly symbol : unique symbol = Symbol(`l0.syntax.TemplateStub`)
+export class Template extends GenericValue {
+    public static readonly symbol : unique symbol = Symbol(`l0.syntax.Template`)
 
-    public readonly symbol : typeof TemplateStub.symbol = TemplateStub.symbol
+    public readonly symbol : typeof Template.symbol = Template.symbol
     public readonly targets : number[]
 
     public constructor({ targets } : { targets : number[] }) {
@@ -32,20 +29,20 @@ export class TemplateStub extends GenericStub {
     }
 }
 
-// export class NamedStub extends GenericStub {
-//     public static readonly symbol : unique symbol = Symbol(`l0.syntax.NamedStub`)
+export class Named extends GenericValue {
+    public static readonly symbol : unique symbol = Symbol(`l0.syntax.NamedValue`)
 
-//     public readonly symbol : typeof NamedStub.symbol = NamedStub.symbol
-//     public readonly name : Name
+    public readonly symbol : typeof Named.symbol = Named.symbol
+    public readonly name : Name
 
-//     public constructor({ name } : { name : Name }) {
-//         super()
+    public constructor({ name } : { name : Name }) {
+        super()
 
-//         this.name = name
-//     }
-// }
+        this.name = name
+    }
+}
 
-// export type Stub = TerminalStub | BindStub | TemplateStub | NamedStub
+export type Value = Bind | Template | Named | Terminal
 
 class CurrentInstructionPlaceholder {
     public static readonly symbol : unique symbol = Symbol(`l0.syntax.CurrentInstructionPlaceholder`)
@@ -96,22 +93,24 @@ class ControlPassingTemplatePlaceholder extends CommandTemplatePlaceholder<Call>
     public readonly symbol : typeof ControlPassingTemplatePlaceholder.symbol = ControlPassingTemplatePlaceholder.symbol
 }
 
-type Placeholder =
-    | CurrentInstructionPlaceholder
-    | BindPlaceholder
+type TemplatePlaceholder =
     | LoopTemplatePlaceholder
     | DeclarationTemplatePlaceholder
     | ContinuationBidingTemplatePlaceholder
     | ControlPassingTemplatePlaceholder
+type Placeholder =
+    | CurrentInstructionPlaceholder
+    | BindPlaceholder
+    | TemplatePlaceholder
 
 type BufferElement = Placeholder | ReferenceTarget
 
-function collectTemplates(program : Program, templates : Placeholder[] = []) {
+function collectTemplates(program : Program, templates : TemplatePlaceholder[] = []) {
     for (const command of program.commands) {
         if (command.symbol === Declaration.symbol) {
             templates.push(new DeclarationTemplatePlaceholder({ command }))
 
-            collectTemplates(command.program)
+            collectTemplates(command.program, templates)
         }
         else if (command.symbol === Call.symbol) {
             templates.push(new ContinuationBidingTemplatePlaceholder({ command }))
@@ -145,57 +144,108 @@ function findContinuationIndex(state : BufferElement[], command : Command) {
 
     return continuationIndex
 }
+function findPlaceholder(placeholders : TemplatePlaceholder[], callback : (placeholder : TemplatePlaceholder) => boolean) {
+    const placeholder = placeholders.find(callback)
+
+    if (!placeholder) throw new Error(`Cannot find placeholder.`)
+
+    return placeholder
+}
+function fillTemplates(program : Program, state : BufferElement[], placeholders : TemplatePlaceholder[], lookup : Map<TemplatePlaceholder, Template> = new Map) {
+    state = [ ...state, ...program.parameters ]
+
+    for (const command of program.commands) {
+        const continuationIndex = findContinuationIndex(state, command)
+
+        if (command.symbol === Declaration.symbol) {
+            lookup.set(
+                findPlaceholder(placeholders, x => x.symbol === DeclarationTemplatePlaceholder.symbol && x.command === command),
+                new Template({ targets : [
+                    // call binding program
+                    findBind(state),
+                    // pass template for the next command
+                    continuationIndex,
+                    // pass template of the target program
+                    findPlaceholderIndex(state, x => x.symbol === DeclarationTemplatePlaceholder.symbol && x.command === command),
+                    // pass all elements in the buffer
+                    ...state.map((x, i) => i),
+                ] }),
+            )
+
+            state.push(command.program)
+
+            fillTemplates(command.program, state, placeholders, lookup)
+        }
+        else if (command.symbol === Call.symbol) {
+            lookup.set(
+                findPlaceholder(placeholders, x => x.symbol === ContinuationBidingTemplatePlaceholder.symbol && x.command === command),
+                new Template({ targets : [
+                    // call binding program
+                    findBind(state),
+                    // pass template for the next command
+                    continuationIndex,
+                    // pass template of the call continuation
+                    findPlaceholderIndex(state, x => x.symbol === ContinuationBidingTemplatePlaceholder.symbol && x.command === command),
+                    // pass all elements in the buffer
+                    ...state.map((x, i) => i),
+                ] }),
+            )
+            lookup.set(
+                findPlaceholder(placeholders, x => x.symbol === ControlPassingTemplatePlaceholder.symbol && x.command === command),
+                new Template({ targets : [
+                    // call target program
+                    findPlaceholderIndex(state, x => x === command.target.target),
+                    // pass continuation that is at the end of the buffer
+                    state.length,
+                    // pass inputs
+                    ...command.inputs.map(x => findPlaceholderIndex(state, y => y === x.reference.target))
+                ] }),
+            )
+
+            state.push(...command.outputs)
+        }
+        else neverThrow(command, new Error(`Unexpected command: ${command}.`))
+    }
+
+    lookup.set(
+        findPlaceholder(placeholders, x => x.symbol === LoopTemplatePlaceholder.symbol && x.program === program),
+        new Template({ targets : [
+            // call super program
+            findPlaceholderIndex(state, x => x === program.parameters.super),
+            // pass super as super
+            findPlaceholderIndex(state, x => x === program.parameters.super),
+        ] }),
+    )
+
+    return lookup
+}
 
 export class Analyzer {
-    public analyze(main : Main) {
-        const templates = collectTemplates(main)
+    public analyze(main : Main) : Value[] {
+        const placeholders = collectTemplates(main)
+        const lookup = fillTemplates(main, [ ...placeholders, new BindPlaceholder ], placeholders)
+        const templates = placeholders.map(placeholder => {
+            const template = lookup.get(placeholder)
 
-        function processCommands(program : Program, state : BufferElement[]) {
-            state = [ ...state, ...program.parameters ]
+            if (!template) {
+                console.error(placeholder)
 
-            for (const command of program.commands) {
-                const continuationIndex = findContinuationIndex(state, command)
-
-                if (command.symbol === Declaration.symbol) {
-                    new TemplateStub({ targets : [
-                        // call binding program
-                        findBind(state),
-                        // pass template for the next command
-                        continuationIndex,
-                        // pass template of the target program
-                        findPlaceholderIndex(state, x => x.symbol === DeclarationTemplatePlaceholder.symbol && x.command === command),
-                        // pass all elements in the buffer
-                        ...state.map((x, i) => i),
-                    ] })
-
-                    state.push(command.program)
-                }
-                else if (command.symbol === Call.symbol) {
-                    new TemplateStub({ targets : [
-                        // call binding program
-                        findBind(state),
-                        // pass template for the next command
-                        continuationIndex,
-                        // pass template of the call continuation
-                        findPlaceholderIndex(state, x => x.symbol === ContinuationBidingTemplatePlaceholder.symbol && x.command === command),
-                        // pass all elements in the buffer
-                        ...state.map((x, i) => i),
-                    ] })
-                    new TemplateStub({ targets : [
-                        // call binding program
-                        findPlaceholderIndex(state, x => x.symbol === ControlPassingTemplatePlaceholder.symbol && x.command === command),
-                        // pass continuation that is at the end of the buffer
-                        state.length,
-                        // pass inputs
-                        ...command.inputs.map(x => findPlaceholderIndex(state, y => y === x.reference.target))
-                    ] })
-
-                    state.push(...command.outputs)
-                }
-                else neverThrow(command, new Error(`Unexpected command z: ${command}.`))
+                throw new Error(`Placeholder ${placeholder} is not filled.`)
             }
-        }
 
-        processCommands(main, [ ...templates, new BindPlaceholder ])
+            return template
+        })
+
+        const values = [
+            ...templates,
+            new Bind,
+            ...main.parameters.map(parameter =>
+                parameter.symbol === SuperParameter.symbol ? new Terminal :
+                parameter.symbol === ExplicitParameter.symbol ? new Named({ name : parameter.name }) :
+                neverThrow(parameter, new Error(`Unexpected parameter: ${parameter}`))
+            )
+        ]
+
+        return values
     }
 }
