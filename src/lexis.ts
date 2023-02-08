@@ -42,7 +42,7 @@ export class Span {
 
 export type Text = string
 
-export abstract class Lexeme {
+export abstract class GenericLexeme {
     public abstract readonly span : Span
     /** Raw text */
     public abstract readonly text : Text
@@ -52,7 +52,7 @@ export abstract class Lexeme {
     }
 }
 
-export abstract class Leaf extends Lexeme {
+export abstract class Leaf extends GenericLexeme {
     public readonly span : Span
     /** Raw text */
     public readonly text : Text
@@ -151,23 +151,23 @@ export class Closing extends Brace {
     public readonly direction = BraceDirection.Closing
 }
 
-export type Child = Space | Comment | Delimiter | Name | Block
-export type Children = Child[]
+export type Lexeme = Space | Comment | Delimiter | Name | Block
+export type Lexemes = Lexeme[]
 
-export class Block extends Lexeme {
+export class Block extends GenericLexeme {
     public static readonly symbol : unique symbol = Symbol(`l0.lexis.Block`)
 
     public readonly symbol : typeof Block.symbol = Block.symbol
     public readonly opening : Opening
     public readonly closing : Closing
-    public readonly children : Children
+    public readonly children : Lexemes
 
     public constructor({
         children,
         opening,
         closing,
     } : {
-        children : Children
+        children : Lexemes
         opening : Opening
         closing : Closing
     }) {
@@ -191,16 +191,16 @@ export class Block extends Lexeme {
     }
 }
 
-export abstract class Word extends Leaf {
-    public abstract isEqual(word : WordUnion) : boolean
+export abstract class GenericWord extends Leaf {
+    public abstract isEqual(word : Word) : boolean
 }
 
-export class BareWord extends Word {
+export class BareWord extends GenericWord {
     public static readonly symbol : unique symbol = Symbol(`l0.lexis.BareWord`)
 
     public readonly symbol : typeof BareWord.symbol = BareWord.symbol
 
-    public isEqual(word : WordUnion) {
+    public isEqual(word : Word) {
         return word.symbol === BareWord.symbol && this.text === word.text
     }
 }
@@ -210,7 +210,7 @@ export enum Quote {
     Double = `double`,
 }
 
-export class QuotedWord extends Word {
+export class QuotedWord extends GenericWord {
     public static readonly symbol : unique symbol = Symbol(`l0.lexis.QuotedWord`)
 
     public readonly symbol : typeof QuotedWord.symbol = QuotedWord.symbol
@@ -235,18 +235,18 @@ export class QuotedWord extends Word {
         this.unquoted = unquoted
     }
 
-    public isEqual(word : WordUnion) {
+    public isEqual(word : Word) {
         return word.symbol === QuotedWord.symbol && this.text === word.text
     }
 }
 
-export type WordUnion = BareWord | QuotedWord
-export type NamePart = Space | Comment | WordUnion
+export type Word = BareWord | QuotedWord
+export type NamePart = Space | Comment | Word
 
-export class Name extends Lexeme {
+export class Name extends GenericLexeme {
     public static readonly symbol : unique symbol = Symbol(`l0.lexis.Name`)
 
-    public static isPartWord(part : NamePart) : part is WordUnion {
+    public static isPartWord(part : NamePart) : part is Word {
         if (part.symbol === BareWord.symbol) return true
         if (part.symbol === QuotedWord.symbol) return true
         if (part.symbol === Space.symbol) return false
@@ -368,10 +368,10 @@ class Slicer {
 }
 
 export class Analyzer {
-    public analyze(text : Text) : Children {
+    public analyze(text : Text) : Lexemes {
         class Nesting {
             public readonly opening : Opening
-            public readonly children : Children = []
+            public readonly children : Lexemes = []
 
             public constructor({ opening } : { opening : Opening }) {
                 this.opening  = opening
@@ -380,7 +380,7 @@ export class Analyzer {
 
         const locator = new Locator({ text })
         const slicer = new Slicer({ locator })
-        const children : Children = []
+        const children : Lexemes = []
         const nesting : Nesting[] = []
         const nameParts : NamePart[] = []
 
@@ -391,7 +391,7 @@ export class Analyzer {
 
             return top
         }
-        function append(child : Child) {
+        function append(child : Lexeme) {
             top().push(child)
         }
         function appendSpacing(part : Space | Comment) {

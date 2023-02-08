@@ -525,10 +525,10 @@ export class Reference {
 }
 
 class Walker {
-    private readonly lexemes : lexis.Children
+    private readonly lexemes : lexis.Lexemes
     private index = 0
 
-    public constructor({ lexemes } : { lexemes : lexis.Children }) {
+    public constructor({ lexemes } : { lexemes : lexis.Lexemes }) {
         this.lexemes = lexemes
     }
 
@@ -562,7 +562,7 @@ class ProgramWalker extends Walker {
         lexemes,
         program,
     } : {
-        lexemes : lexis.Children
+        lexemes : lexis.Lexemes
         program : GenericProgram
     }) {
         super({ lexemes })
@@ -572,7 +572,7 @@ class ProgramWalker extends Walker {
 }
 
 export class Analyzer {
-    public analyze(lexemes : lexis.Children) {
+    public analyze(lexemes : lexis.Lexemes) {
         const main = new MainProgram
         let walker = new ProgramWalker({ lexemes, program: main })
         const nesting : ProgramWalker[] = [ walker ]
@@ -590,7 +590,7 @@ export class Analyzer {
 
             return new Reference({ name, target : parameter })
         }
-        function fillParameters(program : DeclaredProgram, lexemes : lexis.Children) {
+        function fillParameters(program : DeclaredProgram, lexemes : lexis.Lexemes) {
             const walker = new Walker({ lexemes })
 
             while(true) {
@@ -608,7 +608,7 @@ export class Analyzer {
                 else throw new Error(`Unexpected ${logLexeme(first)} in parameters list.`)
             }
         }
-        function fillInputs(lexemes : lexis.Children, scopeTarget : ScopeTarget) {
+        function fillInputs(lexemes : lexis.Lexemes, scopeTarget : ScopeTarget) {
             const walker = new Walker({ lexemes })
             const inputs : Input[] = []
 
@@ -735,6 +735,6 @@ export class Analyzer {
     }
 }
 
-function logLexeme(lexeme : lexis.Child) {
+function logLexeme(lexeme : lexis.Lexeme) {
     return `${lexeme} at ${lexeme.span.begin.row}:${lexeme.span.begin.column}`
 }
