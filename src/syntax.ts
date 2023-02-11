@@ -309,6 +309,11 @@ export class Commands {
         yield * this.list
     }
 
+    public get first() {
+        const { list } = this
+
+        return list.length > 0 ? list[0] : null
+    }
     public get last() {
         const { list } = this
 
