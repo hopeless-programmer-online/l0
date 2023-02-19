@@ -63,7 +63,7 @@ export default class VirtualMachine {
 
             const buffer = this.buffer.slice(3)
             const continuation = new Internal({ buffer, template : continuationTemplate })
-            const target = new Internal({ buffer, template : targetTemplate })
+            const target = new Internal({ buffer : buffer.slice(), template : targetTemplate })
 
             buffer.push(target)
 
