@@ -1,9 +1,10 @@
 import { readFile } from 'fs-extra'
 import { Analyzer as LexisAnalyzer } from './lexis'
-import { Analyzer as SyntaxAnalyzer, QuotedWord } from './syntax'
+import { Analyzer as SyntaxAnalyzer, BareWord, QuotedWord } from './syntax'
 import { Analyzer as SemanticsAnalyzer, Bind, Named, Template, Terminal } from './semantics'
 import  Machine, { Internal, External } from './vm'
 import { neverThrow } from './utilities'
+import { formatWithOptions } from 'util'
 
 export type Path = string
 
@@ -21,6 +22,14 @@ export class Params {
         this.path = path
     }
 }
+
+// class Variable {
+//     public target : any
+//
+//     public constructor({ target } : { target : any }) {
+//         this.target = target
+//     }
+// }
 
 export default class Cli {
     public async run(params? : Params) {
@@ -40,13 +49,45 @@ export default class Cli {
             if (value.symbol !== Named.symbol) neverThrow(value, new Error) // @todo
 
             const { name } = value
+            const text = name.toString()
 
-            if (name.toString() === `print`) return new External({ callback : ([ me, next, ...params ]) => {
+            if (text === `true`) return true
+            if (text === `false`) return false
+            if (text === `print`) return new External({ callback : ([ me, next, ...params ]) => {
                 console.log(...params)
 
                 return [ next, next ]
             } })
+            if (text === `not`) return new External({ callback : ([ me, next, a ]) => {
+                return [ next, next, !a ]
+            } })
+            if (text === `and`) return new External({ callback : ([ me, next, a, b ]) => {
+                return [ next, next, a && b ]
+            } })
+            if (text === `or`) return new External({ callback : ([ me, next, a, b ]) => {
+                return [ next, next, a || b ]
+            } })
+            // if (text === `+`) return new External({ callback : ([ me, next, a, b ]) => {
+            //     return [ next, next, a + b ]
+            // } })
+            // if (text === `-`) return new External({ callback : ([ me, next, a, b ]) => {
+            //     return [ next, next, a - b ]
+            // } })
+            // if (text === `*`) return new External({ callback : ([ me, next, a, b ]) => {
+            //     return [ next, next, a * b ]
+            // } })
+            // if (text === `/`) return new External({ callback : ([ me, next, a, b ]) => {
+            //     return [ next, next, a / b ]
+            // } })
             if (name.words.length === 1 && name.words[0].symbol === QuotedWord.symbol) return name.words[0].unquoted
+
+//             const numberMatch = text.match(/^-?\s*\d+(?:\d|\s)*(?:\.\s*\d+(?:\d|\s)*)?$/)
+//
+//             if (numberMatch) {
+//                 const number = Number(numberMatch[0].replace(/\s/g, ``))
+//
+//                 return number
+//             }
 
             throw new Error // @todo
         })
