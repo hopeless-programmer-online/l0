@@ -162,6 +162,13 @@ function findPlaceholderIndex(state : BufferElement[], callback : (element : Buf
 
     return index
 }
+function findHeadIndex(state : BufferElement[], program : Program) {
+    const { last } = program.commands
+
+    if (!last) return findPlaceholderIndex(state, x => x.symbol === LoopTemplatePlaceholder.symbol && x.program === program)
+
+    return findPlaceholderIndex(state, x => (x.symbol === DeclarationTemplatePlaceholder.symbol || x.symbol === ContinuationBidingTemplatePlaceholder.symbol) && x.command === last)
+}
 function findContinuationIndex(state : BufferElement[], command : Command) {
     const { next } = command
     // template of the next command or loop as continuation template
@@ -198,9 +205,11 @@ function fillTemplates(program : Program, state : BufferElement[], placeholders 
                         // pass template for the next command
                         continuationIndex,
                         // pass template of the target program
-                        findPlaceholderIndex(state, x => x.symbol === DeclarationTemplatePlaceholder.symbol && x.command === command),
-                        // pass all elements in the buffer
-                        ...state.map((x, i) => i),
+                        findHeadIndex(state, command.program),
+                        // pass all elements (except current command) in the buffer
+                        ...state.slice(1).map((x, i) => i + 1),
+                        // // pass all elements in the buffer
+                        // ...state.map((x, i) => i),
                     ],
                 }),
             )
