@@ -20,11 +20,18 @@ export abstract class Something extends vm.Anything<Anything> {
 }
 
 export class Nothing extends Something {
+    public toString() : string {
+        return colorize(`something`, Colors.fgMagenta)
+    }
 }
 
 export class Terminal extends Something {
     public call(buffer : Buffer) : typeof vm.terminal {
         return vm.terminal
+    }
+
+    public toString() : string {
+        return `${colorize(`<`, Colors.fgWhite)}${colorize(`terminal`, Colors.fgMagenta)}${colorize(`>`, Colors.fgWhite)} ${colorize(`program`, Colors.fgBlue)}`
     }
 }
 
@@ -82,6 +89,10 @@ export class Internal extends Something {
             list : this.template.targets.map(i => restored.get(i)),
         })
     }
+
+    public toString() : string {
+        return `${colorize(`<`, Colors.fgWhite)}${colorize(`internal`, Colors.fgMagenta)}${colorize(`>`, Colors.fgWhite)} ${colorize(`program`, Colors.fgBlue)}`
+    }
 }
 
 export class External extends Something {
@@ -108,6 +119,10 @@ export class External extends Something {
     public call(buffer : Buffer) : Buffer {
         return this.callback(buffer)
     }
+
+    public toString() : string {
+        return `${colorize(`<`, Colors.fgWhite)}${colorize(`external`, Colors.fgMagenta)}${colorize(`>`, Colors.fgWhite)} ${colorize(`program`, Colors.fgBlue)} ${colorize(this.name, Colors.fgGreen)}`
+    }
 }
 
 class Primitive<Value> extends Something {
@@ -124,6 +139,10 @@ export class Boolean extends Primitive<boolean> {
     public static from(value : boolean) {
         return new Boolean({ value })
     }
+
+    public toString() : string {
+        return colorize(`${this.value}`, Colors.fgBlue)
+    }
 }
 
 export class Int32 extends Primitive<number> {
@@ -136,11 +155,19 @@ export class Int32 extends Primitive<number> {
 
         return new Int32({ value })
     }
+
+    public toString() : string {
+        return colorize(`${this.value}`, Colors.fgYellow)
+    }
 }
 
 export class UTF8String extends Primitive<string> {
     public static from(word : syntax.QuotedWord) {
-        return new UTF8String({ value : word.text })
+        return new UTF8String({ value : word.unquoted })
+    }
+
+    public toString() : string {
+        return colorize(`${this.value}`, Colors.fgRed)
     }
 }
 
@@ -178,7 +205,7 @@ export default class Context {
             return pack([ continuation ])
         })
         const print = External.from(`print`, ([ _, next, ...params ]) => {
-            console.log(...params.map(x => x.toString()))
+            console.log(...params.map(x => toFormatString(x)))
 
             return pack([ next, next ])
         })
@@ -220,3 +247,78 @@ export default class Context {
 
 type Anything = Nothing | Terminal | Template | Internal | External
 type Buffer = vm.Buffer<Anything>
+
+function toFormatString(something : Something) : string {
+    const all = new Set<Something>()
+    const ids = new Map<Something, string>()
+
+    const stringify = (something : Something) : string => {
+        let id = ids.get(something)
+
+        if (id !== undefined) return id
+
+        if (all.has(something)) {
+            const id = colorize(colorize(`<ref ${ids.size + 1}>`, Colors.fgBlack), Colors.bgRed)
+
+            ids.set(something, id)
+
+            return id
+        }
+        else all.add(something)
+
+        let text = ``;
+
+//         if (something instanceof List_) {
+//             let elements = something.elements.map(stringify).join(colorize(`, `, Colors.fgWhite))
+//
+//             if (elements.length > 0) elements = ` ${elements} `
+//
+//             text = colorize(`[`, Colors.fgWhite) + elements + colorize(`]`, Colors.fgWhite)
+//         }
+        if (something instanceof UTF8String) {
+            text = colorize(`${JSON.stringify(something.value)}`, Colors.fgRed)
+        }
+        else text = something.toString()
+
+        // get id again as it might have changed during nested stringify()
+        id = ids.get(something)
+
+        id = id !== undefined ? `${id} ` : ``
+
+        return `${id}${text}`
+    }
+
+    return stringify(something)
+}
+
+enum Colors {
+    reset      = 0,
+    bright     = 1,
+    dim        = 2,
+    underscore = 4,
+    blink      = 5,
+    reverse    = 7,
+    hidden     = 8,
+
+    fgBlack    = 30,
+    fgRed      = 31,
+    fgGreen    = 32,
+    fgYellow   = 33,
+    fgBlue     = 34,
+    fgMagenta  = 35,
+    fgCyan     = 36,
+    fgWhite    = 37,
+
+    bgBlack    = 40,
+    bgRed      = 41,
+    bgGreen    = 42,
+    bgYellow   = 43,
+    bgBlue     = 44,
+    bgMagenta  = 45,
+    bgCyan     = 46,
+    bgWhite    = 47,
+}
+
+function colorize(text : string, color : Colors = Colors.reset) {
+    return `\x1b[${color}m${text}\x1b[${Colors.reset}m`
+}
