@@ -581,7 +581,7 @@ export class Analyzer {
         let walker = new ProgramWalker1({ lexemes, scope : new Scope, program : main })
         const nesting : ProgramWalker1[] = [ walker ]
 
-        function findReference1(name : Name) {
+        function findReference(name : Name) {
             const { scope } = nesting[nesting.length - 1]
             let reference = scope.get(name)
 
@@ -622,30 +622,7 @@ export class Analyzer {
 
                 if (!first) break
                 if (first.symbol === lexis.Name.symbol) {
-                    const reference = findReference1(Name.from(first))
-
-                    inputs.push(new Input({ reference }))
-
-                    const second = walker.next
-
-                    if (!second) break
-                    if (second.symbol === lexis.Delimiter.symbol && second.type === lexis.DelimiterType.Comma) walker.next
-                }
-                else throw new Error(`Unexpected ${logLexeme(first)} in parameters list.`)
-            }
-
-            return inputs
-        }
-        function fillInputs1(lexemes : lexis.Lexemes) {
-            const walker = new Walker({ lexemes })
-            const inputs : Input[] = []
-
-            while(true) {
-                const first = walker.current
-
-                if (!first) break
-                if (first.symbol === lexis.Name.symbol) {
-                    const reference = findReference1(Name.from(first))
+                    const reference = findReference(Name.from(first))
 
                     inputs.push(new Input({ reference }))
 
@@ -682,8 +659,8 @@ export class Analyzer {
                     const third = walker.next
 
                     if (!third || third.symbol === lexis.Name.symbol) {
-                        const target = findReference1(Name.from(first))
-                        const inputs = fillInputs1(second.children)
+                        const target = findReference(Name.from(first))
+                        const inputs = fillInputs(second.children)
 
                         walker.program.commands.call(target, inputs)
                     }
@@ -717,7 +694,7 @@ export class Analyzer {
 
                     if (!fourth || fourth.symbol !== lexis.Block.symbol || fourth.opening.type !== lexis.BraceType.Round) throw new Error(`Unexpected ${fourth && logLexeme(fourth)}.`)
 
-                    const target = findReference1(Name.from(third))
+                    const target = findReference(Name.from(third))
                     const inputs = fillInputs(fourth.children)
                     const call = walker.program.commands.call(target, inputs)
 
@@ -756,7 +733,7 @@ export class Analyzer {
 
                     if (!fourth || fourth.symbol !== lexis.Block.symbol || fourth.opening.type !== lexis.BraceType.Round) throw new Error(`Unexpected ${fourth && logLexeme(fourth)}.`)
 
-                    const target = findReference1(Name.from(third))
+                    const target = findReference(Name.from(third))
                     const inputs = fillInputs(fourth.children)
                     const call = walker.program.commands.call(target, inputs)
 
