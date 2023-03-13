@@ -91,7 +91,11 @@ export class Internal extends Something {
     }
 
     public toString() : string {
-        return `${colorize(`<`, Colors.fgWhite)}${colorize(`internal`, Colors.fgMagenta)}${colorize(`>`, Colors.fgWhite)} ${colorize(`program`, Colors.fgBlue)}`
+        let { comment } = this.template
+
+        if (comment !== undefined) comment = ` ${colorize(`(${this.template.comment})`, Colors.fgWhite)}`
+
+        return `${colorize(`<`, Colors.fgWhite)}${colorize(`internal`, Colors.fgMagenta)}${colorize(`>`, Colors.fgWhite)} ${colorize(`program`, Colors.fgBlue)}${comment}`
     }
 }
 
