@@ -1,4 +1,3 @@
-import { formatWithOptions } from 'util'
 import { Name, MainProgram as Main, DeclarationCommand as Declaration, CallCommand as Call, Program, ReferenceTarget, Command, SuperParameter, ExplicitParameter } from './syntax'
 import { neverThrow } from './utilities'
 
