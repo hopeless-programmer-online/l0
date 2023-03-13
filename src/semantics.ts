@@ -163,11 +163,11 @@ function findPlaceholderIndex(state : BufferElement[], callback : (element : Buf
     return index
 }
 function findHeadIndex(state : BufferElement[], program : Program) {
-    const { last } = program.commands
+    const { first } = program.commands
 
-    if (!last) return findPlaceholderIndex(state, x => x.symbol === LoopTemplatePlaceholder.symbol && x.program === program)
+    if (!first) return findPlaceholderIndex(state, x => x.symbol === LoopTemplatePlaceholder.symbol && x.program === program)
 
-    return findPlaceholderIndex(state, x => (x.symbol === DeclarationTemplatePlaceholder.symbol || x.symbol === ContinuationBidingTemplatePlaceholder.symbol) && x.command === last)
+    return findPlaceholderIndex(state, x => (x.symbol === DeclarationTemplatePlaceholder.symbol || x.symbol === ContinuationBidingTemplatePlaceholder.symbol) && x.command === first)
 }
 function findContinuationIndex(state : BufferElement[], command : Command) {
     const { next } = command
