@@ -1,74 +1,151 @@
-import { Bind, Template, Terminal } from './semantics'
 import { formatWithOptions } from 'util'
+import { neverThrow } from './utilities'
 
-export class Internal {
-    public buffer : any[]
-    public template : Template
+export type Anything<
+    Nothing_ extends Nothing,
+    Something_ extends Something,
+    Terminal_ extends Terminal,
+    Internal_ extends Internal<Nothing_, Something_, Terminal_, Internal_, External_>,
+    External_ extends External<Nothing_, Something_, Terminal_, Internal_, External_>,
+> =
+    | Nothing_
+    | Something_
+    | Terminal_
+    | Internal_
+    | External_
 
-    public constructor({
-        buffer,
-        template,
-    } : {
-        buffer : any[]
-        template : Template
-    }) {
-        this.buffer = buffer
-        this.template = template
-    }
-}
-export class External {
-    public callback : (buffer : any[]) => any[]
+export class Nothing {
+    public static readonly symbol : unique symbol = Symbol(`l0.vm.Nothing`)
 
-    public constructor({
-        callback,
-    } : {
-        callback : (buffer : any[]) => any[],
-    }) {
-        this.callback  =callback
-    }
+    public readonly symbol : typeof Nothing.symbol = Nothing.symbol
 }
 
-export default class VirtualMachine {
-    public buffer : any[]
+export class Something {
+    public static readonly symbol : unique symbol = Symbol(`l0.vm.Something`)
 
-    public constructor({ buffer } : { buffer : any[] }) {
+    public readonly symbol : typeof Something.symbol = Something.symbol
+}
+
+export class Terminal {
+    public static readonly symbol : unique symbol = Symbol(`l0.vm.Terminal`)
+
+    public readonly symbol : typeof Terminal.symbol = Terminal.symbol
+}
+
+export abstract class Internal<
+    Nothing_ extends Nothing,
+    Something_ extends Something,
+    Terminal_ extends Terminal,
+    Internal_ extends Internal<Nothing_, Something_, Terminal_, Internal_, External_>,
+    External_ extends External<Nothing_, Something_, Terminal_, Internal_, External_>,
+> {
+    public static readonly symbol : unique symbol = Symbol(`l0.vm.Internal`)
+
+    public readonly symbol : typeof Internal.symbol = Internal.symbol
+
+    public abstract get targets() : number[]
+    public abstract get closure() : Anything<Nothing_, Something_, Terminal_, Internal_, External_>[]
+}
+
+export abstract class External<
+    Nothing_ extends Nothing,
+    Something_ extends Something,
+    Terminal_ extends Terminal,
+    Internal_ extends Internal<Nothing_, Something_, Terminal_, Internal_, External_>,
+    External_ extends External<Nothing_, Something_, Terminal_, Internal_, External_>,
+> {
+    public static readonly symbol : unique symbol = Symbol(`l0.vm.External`)
+
+    public readonly symbol : typeof External.symbol = External.symbol
+
+    public abstract call(
+        buffer : Buffer<Nothing_, Something_, Terminal_, Internal_, External_>
+    ) : Buffer<Nothing_, Something_, Terminal_, Internal_, External_>
+}
+
+export class Buffer<
+    Nothing_ extends Nothing,
+    Something_ extends Something,
+    Terminal_ extends Terminal,
+    Internal_ extends Internal<Nothing_, Something_, Terminal_, Internal_, External_>,
+    External_ extends External<Nothing_, Something_, Terminal_, Internal_, External_>,
+> {
+    private _list : Anything<Nothing_, Something_, Terminal_, Internal_, External_>[]
+
+    public readonly nothing : Nothing_
+
+    public constructor({
+        list,
+        nothing,
+    } : {
+        list : Anything<Nothing_, Something_, Terminal_, Internal_, External_>[]
+        nothing : Nothing_
+    }) {
+        this._list = list
+        this.nothing = nothing
+    }
+
+    public get list() {
+        return this._list
+    }
+    public get first() {
+        return this.get(0)
+    }
+
+    public get(index : number) : Anything<Nothing_, Something_, Terminal_, Internal_, External_> {
+        return this.list[index] || this.nothing
+    }
+}
+
+export default class VirtualMachine<
+    Nothing_ extends Nothing,
+    Something_ extends Something,
+    Terminal_ extends Terminal,
+    Internal_ extends Internal<Nothing_, Something_, Terminal_, Internal_, External_>,
+    External_ extends External<Nothing_, Something_, Terminal_, Internal_, External_>,
+> {
+    public buffer : Buffer<Nothing_, Something_, Terminal_, Internal_, External_>
+    public readonly nothing : Nothing_
+
+    public constructor({ buffer } : { buffer : Buffer<Nothing_, Something_, Terminal_, Internal_, External_> }) {
         this.buffer = buffer
+        this.nothing = buffer.nothing
     }
 
     public get halted() {
-        return this.buffer[0] instanceof Terminal
+        return this.buffer.first.symbol === Terminal.symbol
     }
 
     public step() {
-        const first = this.buffer[0]
+        const { first } = this.buffer
 
-        if (first instanceof Internal) {
-            const buffer = [
-                first,
-                ...first.buffer,
-                ...this.buffer.slice(1),
-            ]
+        // console.log(`step: ${formatWithOptions({ colors : true, depth : 0 }, first)}`)
 
-            this.buffer = first.template.targets.map(x => buffer[x])
+        if (first.symbol === Nothing.symbol) throw new Error(`Cannot call nothing: ${first}.`)
+        else if (first.symbol === Something.symbol) throw new Error(`Cannot call: ${first}.`)
+        else if (first.symbol === Terminal.symbol) return
+        else if (first.symbol === Internal.symbol) {
+            // @todo: optimize?
+            const restored = new Buffer({
+                nothing : this.nothing,
+                list : [
+                    first,
+                    ...first.closure,
+                    ...this.buffer.list.slice(1),
+                ],
+            })
+
+            // console.log(formatWithOptions({ colors : true, depth : 1 }, restored.list))
+            // console.log(first.targets)
+
+            this.buffer = new Buffer({
+                nothing : this.nothing,
+                list : first.targets.map(x => restored.get(x)),
+            })
         }
-        else if (first instanceof External) {
-            this.buffer = first.callback(this.buffer)
+        else if (first.symbol === External.symbol) {
+            this.buffer = first.call(this.buffer)
         }
-        else if (first instanceof Bind) {
-            const continuationTemplate = this.buffer[1]
-            const targetTemplate = this.buffer[2]
-
-            if (!(continuationTemplate instanceof Template)) throw new Error // @todo
-            if (!(targetTemplate instanceof Template)) throw new Error // @todo
-
-            const buffer = this.buffer.slice(3)
-            const continuation = new Internal({ buffer, template : continuationTemplate })
-            const target = new Internal({ buffer : buffer.slice(), template : targetTemplate })
-
-            buffer.push(target)
-
-            this.buffer = [ continuation ]
-        }
-        else throw new Error(`${formatWithOptions({ colors : true }, first)} is not an instruction.`)
+        else neverThrow(first, new Error(`Unexpected value: ${first}.`))
     }
 }
