@@ -4,7 +4,6 @@ import * as syntax from './syntax'
 import * as semantics from './semantics'
 import Machine, * as vm from './vm'
 import Context, * as std from './vm/standard'
-import { neverThrow } from './utilities'
 
 export type Path = string
 
