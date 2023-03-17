@@ -190,6 +190,9 @@ export default class Context {
 
     public readonly nothing : Nothing
 
+    public readonly type : Nothing
+
+    public readonly Boolean : External
     public readonly true : Boolean
     public readonly false : Boolean
     public readonly isEqual : External
@@ -198,19 +201,20 @@ export default class Context {
     public readonly and : External
     public readonly or : External
 
+    public readonly Int32 : External
     public readonly add : External
     public readonly sub : External
     public readonly mul : External
     public readonly div : External
 
-    public constructor() {
-        const nothing = new Nothing
-        const terminal = new Terminal
+    public readonly UTF8String : External
 
+    public constructor() {
         function pack(list : Anything[]) {
             return new vm.Buffer({ nothing, list })
         }
 
+        const terminal = new Terminal
         const bind = External.from(`bind`, buffer => {
             const continuationTemplate = buffer.get(1)
             const targetTemplate = buffer.get(2)
@@ -232,6 +236,24 @@ export default class Context {
             return pack([ next, next ])
         })
 
+        const nothing = new Nothing
+
+        const type = External.from(`type`, ([ _, next, a ]) => {
+            if (a instanceof Boolean) return pack([ next, next, Boolean_ ])
+            if (a instanceof Int32) return pack([ next, next, Int32_ ])
+            if (a instanceof UTF8String) return pack([ next, next, UTF8String_ ])
+
+            return pack([ next, next, nothing ])
+        })
+
+        const Boolean_ = External.from(`Boolean`, ([ _, next, a ]) => {
+            if (a instanceof Nothing) return pack([ next, next, false_ ])
+            if (a instanceof Boolean) return pack([ next, next, a ])
+            if (a instanceof Int32) return pack([ next, next, a.value > 0 ? true_ : false_ ])
+            if (a instanceof UTF8String) return pack([ next, next, a.value.length > 0 ? true_ : false_ ])
+
+            return pack([ next, next, true_ ])
+        })
         const true_ = Boolean.from(true)
         const false_ = Boolean.from(false)
         const isEqual = External.from(`==`, ([ _, next, a, b ]) => {
@@ -264,36 +286,54 @@ export default class Context {
             return pack([ next, next, new Boolean({ value : a.value || b.value }) ])
         })
 
-        const add = External.from(`+`, ([ _, next, a, b ]) => {
-            if (!(a instanceof Int32)) throw new Error // @todo
-            if (!(b instanceof Int32)) throw new Error // @todo
+        const Int32_ = External.from(`Int32`, ([ _, next, a ]) => {
+            if (a instanceof Nothing) return pack([ next, next, new Int32({ value : 0 }) ])
+            if (a instanceof Boolean) return pack([ next, next, new Int32({ value : a.value ? 1 : 0 }) ])
+            if (a instanceof Int32) return pack([ next, next, a ])
+            if (a instanceof UTF8String) return pack([ next, next, new Int32({ value : a.value.length }) ])
 
-            return pack([ next, next, new Int32({ value : a.value + b.value }) ])
+            return pack([ next, next, true_ ])
+        })
+        const add = External.from(`+`, ([ _, next, a, b ]) => {
+            if (a instanceof Int32 && b instanceof Int32) return pack([ next, next, new Int32({ value : a.value + b.value }) ])
+            if (a instanceof UTF8String && b instanceof UTF8String) return pack([ next, next, new UTF8String({ value : a.value + b.value }) ])
+
+            throw new Error // @todo
         })
         const sub = External.from(`-`, ([ _, next, a, b ]) => {
-            if (!(a instanceof Int32)) throw new Error // @todo
-            if (!(b instanceof Int32)) throw new Error // @todo
+            if (a instanceof Int32 && b instanceof Int32) return pack([ next, next, new Int32({ value : a.value - b.value }) ])
 
-            return pack([ next, next, new Int32({ value : a.value - b.value }) ])
+            throw new Error // @todo
         })
         const mul = External.from(`*`, ([ _, next, a, b ]) => {
-            if (!(a instanceof Int32)) throw new Error // @todo
-            if (!(b instanceof Int32)) throw new Error // @todo
+            if (a instanceof Int32 && b instanceof Int32) return pack([ next, next, new Int32({ value : a.value * b.value }) ])
 
-            return pack([ next, next, new Int32({ value : a.value * b.value }) ])
+            throw new Error // @todo
         })
         const div = External.from(`/`, ([ _, next, a, b ]) => {
-            if (!(a instanceof Int32)) throw new Error // @todo
-            if (!(b instanceof Int32)) throw new Error // @todo
+            if (a instanceof Int32 && b instanceof Int32) return pack([ next, next, new Int32({ value : a.value / b.value }) ])
 
-            return pack([ next, next, new Int32({ value : Math.floor(a.value / b.value) }) ])
+            throw new Error // @todo
         })
 
-        this.nothing = nothing
+        const UTF8String_ = External.from(`UTF8String`, ([ _, next, a ]) => {
+            if (a instanceof Nothing) return pack([ next, next, new UTF8String({ value : `nothing` }) ])
+            if (a instanceof Boolean) return pack([ next, next, new UTF8String({ value : a.value ? `true` : `false` }) ])
+            if (a instanceof Int32) return pack([ next, next, new UTF8String({ value : `${a.value}` }) ])
+            if (a instanceof UTF8String) return pack([ next, next, a ])
+
+            return pack([ next, next, true_ ])
+        })
+
         this.terminal = terminal
         this.bind = bind
         this.print = print
 
+        this.nothing = nothing
+
+        this.type = type
+
+        this.Boolean = Boolean_
         this.true = true_
         this.false = false_
         this.isEqual = isEqual
@@ -302,10 +342,13 @@ export default class Context {
         this.and = and
         this.or = or
 
+        this.Int32 = Int32_
         this.add = add
         this.sub = sub
         this.mul = mul
         this.div = div
+
+        this.UTF8String = UTF8String_
     }
 
     public resolve(value : semantics.Value) : Anything {
@@ -318,24 +361,30 @@ export default class Context {
         const text = name.toString()
 
         switch (text) {
-            case `super`   : return this.terminal
-            case `bind`    : return this.bind
-            case `print`   : return this.print
+            case `super`      : return this.terminal
+            case `bind`       : return this.bind
+            case `print`      : return this.print
 
-            case `nothing` : return this.nothing
+            case `nothing`    : return this.nothing
 
-            case `true`    : return this.true
-            case `false`   : return this.false
-            case `==`      : return this.isEqual
-            case `!=`      : return this.isNotEqual
-            case `not`     : return this.not
-            case `and`     : return this.and
-            case `or`      : return this.or
+            case `type`       : return this.type
 
-            case `+`       : return this.add
-            case `-`       : return this.sub
-            case `*`       : return this.mul
-            case `/`       : return this.div
+            case `Boolean`    : return this.Boolean
+            case `true`       : return this.true
+            case `false`      : return this.false
+            case `==`         : return this.isEqual
+            case `!=`         : return this.isNotEqual
+            case `not`        : return this.not
+            case `and`        : return this.and
+            case `or`         : return this.or
+
+            case `Int32`      : return this.Int32
+            case `+`          : return this.add
+            case `-`          : return this.sub
+            case `*`          : return this.mul
+            case `/`          : return this.div
+
+            case `UTF8String` : return this.UTF8String
         }
 
         if (name.words.length === 1 && name.words[0].symbol === syntax.QuotedWord.symbol) return UTF8String.from(name.words[0])
