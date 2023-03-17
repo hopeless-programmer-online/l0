@@ -1,3 +1,4 @@
+import * as syntax from './syntax'
 import { Name, MainProgram as Main, DeclarationCommand as Declaration, CallCommand as Call, Program, ReferenceTarget, Command, SuperParameter, ExplicitParameter } from './syntax'
 import { neverThrow } from './utilities'
 
@@ -120,6 +121,16 @@ class ControlPassingTemplatePlaceholder extends CommandTemplatePlaceholder<Call>
 
     public readonly symbol : typeof ControlPassingTemplatePlaceholder.symbol = ControlPassingTemplatePlaceholder.symbol
 }
+class ContinuationBidingPlaceholder {
+    public static readonly symbol : unique symbol = Symbol(`l0.syntax.ContinuationBidingPlaceholder`)
+
+    public readonly symbol : typeof ContinuationBidingPlaceholder.symbol = ContinuationBidingPlaceholder.symbol
+    public readonly command : Call
+
+    public constructor({ command } : { command : Call }) {
+        this.command = command
+    }
+}
 
 type TemplatePlaceholder =
     | LoopTemplatePlaceholder
@@ -130,6 +141,7 @@ type Placeholder =
     | CurrentInstructionPlaceholder
     | BindPlaceholder
     | TemplatePlaceholder
+    | ContinuationBidingPlaceholder
 
 type BufferElement = Placeholder | ReferenceTarget
 
@@ -189,6 +201,46 @@ function findPlaceholder(placeholders : TemplatePlaceholder[], callback : (place
 function fillTemplates(program : Program, state : BufferElement[], placeholders : TemplatePlaceholder[], lookup : Map<TemplatePlaceholder, Template> = new Map) {
     state = [ ...state, ...program.parameters ]
 
+    function printState(state : BufferElement[]) {
+        console.log(`---------------------------------`)
+
+        for (const x of state) {
+            if (x.symbol === CurrentInstructionPlaceholder.symbol) {
+                console.log(`[current instruction]`)
+            }
+            else if (x.symbol === BindPlaceholder.symbol) {
+                console.log(`[external] bind`)
+            }
+            else if (x.symbol === LoopTemplatePlaceholder.symbol) {
+                console.log(`[template] loop ${x.program.symbol === Main.symbol ? `main` : x.program.declaration.name}`)
+            }
+            else if (x.symbol === DeclarationTemplatePlaceholder.symbol) {
+                console.log(`[template] declaration ${x.command.name}`)
+            }
+            else if (x.symbol === ContinuationBidingTemplatePlaceholder.symbol) {
+                console.log(`[template] continuation biding ${x.command.target.name}()`)
+            }
+            else if (x.symbol === ControlPassingTemplatePlaceholder.symbol) {
+                console.log(`[template] control passing ${x.command.target.name}()`)
+            }
+            else if (x.symbol === ContinuationBidingPlaceholder.symbol) {
+                console.log(`[internal] continuation biding ${x.command.target.name}`)
+            }
+            else if (x.symbol === syntax.MainProgram.symbol) {
+                console.log(`[internal] main`)
+            }
+            else if (x.symbol === syntax.DeclaredProgram.symbol) {
+                console.log(`[internal] ${x.declaration.name} program`)
+            }
+            else if (x.symbol === syntax.ExplicitParameter.symbol || x.symbol === syntax.SuperParameter.symbol) {
+                console.log(`[internal] ${x.name} parameter`)
+            }
+            else if (x.symbol === syntax.ExplicitOutput.symbol || x.symbol === syntax.SubOutput.symbol) {
+                console.log(`[internal] ${x.name} output ${x.outputs.call.target.name}()`)
+            }
+        }
+    }
+
     for (const command of program.commands) {
         const continuationIndex = findContinuationIndex(state, command)
 
@@ -205,10 +257,8 @@ function fillTemplates(program : Program, state : BufferElement[], placeholders 
                         continuationIndex,
                         // pass template of the target program
                         findHeadIndex(state, command.program),
-                        // pass all elements (except current command) in the buffer
+                        // pass all elements in the buffer, except current command
                         ...state.slice(1).map((x, i) => i + 1),
-                        // // pass all elements in the buffer
-                        // ...state.map((x, i) => i),
                     ],
                 }),
             )
@@ -230,11 +280,14 @@ function fillTemplates(program : Program, state : BufferElement[], placeholders 
                         findPlaceholderIndex(state, x => x.symbol === ControlPassingTemplatePlaceholder.symbol && x.command === command),
                         // pass template for the next command
                         continuationIndex,
-                        // pass all elements (except current command) in the buffer
+                        // pass all elements in the buffer, except current command
                         ...state.slice(1).map((x, i) => i + 1),
                     ],
                 }),
             )
+
+            state.push(new ContinuationBidingPlaceholder({ command }))
+
             lookup.set(
                 findPlaceholder(placeholders, x => x.symbol === ControlPassingTemplatePlaceholder.symbol && x.command === command),
                 new Template({
@@ -243,8 +296,8 @@ function fillTemplates(program : Program, state : BufferElement[], placeholders 
                     targets : [
                         // call target program
                         findPlaceholderIndex(state, x => x === command.target.target),
-                        // pass continuation that is at the end of the buffer
-                        state.length,
+                        // pass continuation
+                        findPlaceholderIndex(state, x => x.symbol === ContinuationBidingPlaceholder.symbol && x.command === command),
                         // pass inputs
                         ...command.inputs.map(x => findPlaceholderIndex(state, y => y === x.reference.target)),
                     ],

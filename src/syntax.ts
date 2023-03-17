@@ -661,8 +661,9 @@ export class Analyzer {
                     if (!third || third.symbol === lexis.Name.symbol) {
                         const target = findReference(Name.from(first))
                         const inputs = fillInputs(second.children)
+                        const call = walker.program.commands.call(target, inputs)
 
-                        walker.program.commands.call(target, inputs)
+                        for (const output of call.outputs) walker.scope.add(output.name, output)
                     }
                     else if (third.symbol === lexis.Block.symbol) {
                         if (third.opening.type !== lexis.BraceType.Figure) throw new Error(`Unexpected block ${logLexeme(third)}.`)
