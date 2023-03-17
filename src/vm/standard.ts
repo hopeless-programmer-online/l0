@@ -21,7 +21,7 @@ export abstract class Something extends vm.Anything<Anything> {
 
 export class Nothing extends Something {
     public toString() : string {
-        return colorize(`something`, Colors.fgMagenta)
+        return colorize(`nothing`, Colors.fgMagenta)
     }
 }
 
@@ -54,6 +54,14 @@ export class Template extends Something {
 
         this.targets = targets
         this.comment = comment
+    }
+
+    public toString() : string {
+        let { comment } = this
+
+        if (comment !== undefined) comment = ` ${colorize(`(${comment})`, Colors.fgWhite)}`
+
+        return `${colorize(`<`, Colors.fgWhite)}${colorize(`template`, Colors.fgGreen)}${colorize(`>`, Colors.fgWhite)}${comment}`
     }
 }
 
@@ -93,7 +101,7 @@ export class Internal extends Something {
     public toString() : string {
         let { comment } = this.template
 
-        if (comment !== undefined) comment = ` ${colorize(`(${this.template.comment})`, Colors.fgWhite)}`
+        if (comment !== undefined) comment = ` ${colorize(`(${comment})`, Colors.fgWhite)}`
 
         return `${colorize(`<`, Colors.fgWhite)}${colorize(`internal`, Colors.fgMagenta)}${colorize(`>`, Colors.fgWhite)} ${colorize(`program`, Colors.fgBlue)}${comment}`
     }
@@ -202,7 +210,7 @@ export default class Context {
 
             const closure = buffer.list.slice(3)
             const continuation = new Internal({ closure, template : continuationTemplate })
-            const target = new Internal({ closure : closure, template : targetTemplate })
+            const target = new Internal({ closure, template : targetTemplate })
 
             closure.push(target)
 
@@ -245,17 +253,19 @@ export default class Context {
 
         if (int32) return int32
 
-        throw new Error // @todo
+        throw new Error(`Cannot fill name ${text}.`)
     }
 }
 
 type Anything = Nothing | Terminal | Template | Internal | External
 type Buffer = vm.Buffer<Anything>
 
-function toFormatString(something : Something) : string {
+export function toFormatString(something : Something) : string {
     const all = new Set<Something>()
     const ids = new Map<Something, string>()
 
+    const indent = (x : string) => x !== `` ? x.replace(/^/, `    `).replace(/\n/g, `\n    `) : ``
+    const array = (x : string) => `${colorize(`[`, Colors.fgWhite) + (x.length > 0 ? ` ${x} ` : ``) + colorize(`]`, Colors.fgWhite)}`
     const stringify = (something : Something) : string => {
         let id = ids.get(something)
 
@@ -279,7 +289,22 @@ function toFormatString(something : Something) : string {
 //
 //             text = colorize(`[`, Colors.fgWhite) + elements + colorize(`]`, Colors.fgWhite)
 //         }
-        if (something instanceof UTF8String) {
+//         if (something instanceof Internal) {
+//             let closure = something.closure.map(x => stringify(x)).join(`\n`)
+//
+//             closure = closure != ``
+//                 ? `{\n${indent(closure)}\n}`
+//                 : `{}`
+//
+//
+//             text = `${something.toString()} ${closure}`
+//         }
+        if (something instanceof Template) {
+            let elements = something.targets.map(x => colorize(`${x}`, Colors.fgYellow)).join(colorize(`, `, Colors.fgWhite))
+
+            text = `${something.toString()} ${array(`${elements}`)}`
+        }
+        else if (something instanceof UTF8String) {
             text = colorize(`${JSON.stringify(something.value)}`, Colors.fgRed)
         }
         else text = something.toString()

@@ -44,8 +44,30 @@ export default class Cli {
         stopwatch(() => {
             for (let i = 0; !machine.halted; ++i) {
                 // console.log(`step #${i}`)
-                // console.log(machine.buffer.list.map(x => indent(stringify(x))).join(`\n`))
-                // console.log(formatWithOptions({ colors : true, depth : 4 }, machine.buffer.first))
+
+                const { buffer } = machine
+
+//                 if (buffer != vm.terminal) buffer.list.forEach(x => console.log(std.toFormatString(x)))
+//
+//                 if (i === 8) {
+//                     console.log(`----------------------`)
+//
+//                     if (buffer != vm.terminal) {
+//                         const { first } = buffer
+//
+//                         if (first instanceof std.Internal) {
+//                             const x = [
+//                                 buffer.first,
+//                                 ...first.closure,
+//                                 ...buffer.tail,
+//                             ]
+//
+//                             x.forEach(x => console.log(std.toFormatString(x)))
+//                         }
+//                     }
+//
+//                     console.log(`----------------------`)
+//                 }
 
                 machine.step()
             }
