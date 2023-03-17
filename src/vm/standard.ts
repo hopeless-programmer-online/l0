@@ -184,18 +184,26 @@ export class UTF8String extends Primitive<string> {
 }
 
 export default class Context {
-    public readonly nothing : Nothing
     public readonly terminal : Terminal
-    public readonly true : Boolean
-    public readonly false : Boolean
     public readonly bind : External
     public readonly print : External
+
+    public readonly nothing : Nothing
+
+    public readonly true : Boolean
+    public readonly false : Boolean
+    public readonly not : External
+    public readonly and : External
+    public readonly or : External
+
+    public readonly add : External
+    public readonly sub : External
+    public readonly mul : External
+    public readonly div : External
 
     public constructor() {
         const nothing = new Nothing
         const terminal = new Terminal
-        const true_ = Boolean.from(true)
-        const false_ = Boolean.from(false)
 
         function pack(list : Anything[]) {
             return new vm.Buffer({ nothing, list })
@@ -222,12 +230,66 @@ export default class Context {
             return pack([ next, next ])
         })
 
+        const true_ = Boolean.from(true)
+        const false_ = Boolean.from(false)
+        const not = External.from(`not`, ([ _, next, a ]) => {
+            if (!(a instanceof Boolean)) throw new Error // @todo
+
+            return pack([ next, next, new Boolean({ value : !a.value }) ])
+        })
+        const and = External.from(`and`, ([ _, next, a, b ]) => {
+            if (!(a instanceof Boolean)) throw new Error // @todo
+            if (!(b instanceof Boolean)) throw new Error // @todo
+
+            return pack([ next, next, new Boolean({ value : a.value && b.value }) ])
+        })
+        const or = External.from(`or`, ([ _, next, a, b ]) => {
+            if (!(a instanceof Boolean)) throw new Error // @todo
+            if (!(b instanceof Boolean)) throw new Error // @todo
+
+            return pack([ next, next, new Boolean({ value : a.value || b.value }) ])
+        })
+
+        const add = External.from(`+`, ([ _, next, a, b ]) => {
+            if (!(a instanceof Int32)) throw new Error // @todo
+            if (!(b instanceof Int32)) throw new Error // @todo
+
+            return pack([ next, next, new Int32({ value : a.value + b.value }) ])
+        })
+        const sub = External.from(`-`, ([ _, next, a, b ]) => {
+            if (!(a instanceof Int32)) throw new Error // @todo
+            if (!(b instanceof Int32)) throw new Error // @todo
+
+            return pack([ next, next, new Int32({ value : a.value - b.value }) ])
+        })
+        const mul = External.from(`*`, ([ _, next, a, b ]) => {
+            if (!(a instanceof Int32)) throw new Error // @todo
+            if (!(b instanceof Int32)) throw new Error // @todo
+
+            return pack([ next, next, new Int32({ value : a.value * b.value }) ])
+        })
+        const div = External.from(`/`, ([ _, next, a, b ]) => {
+            if (!(a instanceof Int32)) throw new Error // @todo
+            if (!(b instanceof Int32)) throw new Error // @todo
+
+            return pack([ next, next, new Int32({ value : Math.floor(a.value / b.value) }) ])
+        })
+
         this.nothing = nothing
         this.terminal = terminal
-        this.true = true_
-        this.false = false_
         this.bind = bind
         this.print = print
+
+        this.true = true_
+        this.false = false_
+        this.not = not
+        this.and = and
+        this.or = or
+
+        this.add = add
+        this.sub = sub
+        this.mul = mul
+        this.div = div
     }
 
     public resolve(value : semantics.Value) : Anything {
@@ -240,11 +302,22 @@ export default class Context {
         const text = name.toString()
 
         switch (text) {
-            case `super` : return this.terminal
-            case `bind`  : return this.bind
-            case `print` : return this.print
-            case `true`  : return this.true
-            case `false` : return this.false
+            case `super`   : return this.terminal
+            case `bind`    : return this.bind
+            case `print`   : return this.print
+
+            case `nothing` : return this.nothing
+
+            case `true`    : return this.true
+            case `false`   : return this.false
+            case `not`     : return this.not
+            case `and`     : return this.and
+            case `or`      : return this.or
+
+            case `+`       : return this.add
+            case `-`       : return this.sub
+            case `*`       : return this.mul
+            case `/`       : return this.div
         }
 
         if (name.words.length === 1 && name.words[0].symbol === syntax.QuotedWord.symbol) return UTF8String.from(name.words[0])
