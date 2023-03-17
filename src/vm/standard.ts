@@ -192,6 +192,8 @@ export default class Context {
 
     public readonly true : Boolean
     public readonly false : Boolean
+    public readonly isEqual : External
+    public readonly isNotEqual : External
     public readonly not : External
     public readonly and : External
     public readonly or : External
@@ -232,6 +234,18 @@ export default class Context {
 
         const true_ = Boolean.from(true)
         const false_ = Boolean.from(false)
+        const isEqual = External.from(`==`, ([ _, next, a, b ]) => {
+            if (a instanceof Boolean && b instanceof Boolean) return pack([ next, next, a.value === b.value ? true_ : false_ ])
+            if (a instanceof Int32 && b instanceof Int32) return pack([ next, next, a.value === b.value ? true_ : false_ ])
+
+            return pack([ next, next, false_ ])
+        })
+        const isNotEqual = External.from(`!=`, ([ _, next, a, b ]) => {
+            if (a instanceof Boolean && b instanceof Boolean) return pack([ next, next, a.value !== b.value ? true_ : false_ ])
+            if (a instanceof Int32 && b instanceof Int32) return pack([ next, next, a.value !== b.value ? true_ : false_ ])
+
+            return pack([ next, next, true_ ])
+        })
         const not = External.from(`not`, ([ _, next, a ]) => {
             if (!(a instanceof Boolean)) throw new Error // @todo
 
@@ -282,6 +296,8 @@ export default class Context {
 
         this.true = true_
         this.false = false_
+        this.isEqual = isEqual
+        this.isNotEqual = isNotEqual
         this.not = not
         this.and = and
         this.or = or
@@ -310,6 +326,8 @@ export default class Context {
 
             case `true`    : return this.true
             case `false`   : return this.false
+            case `==`      : return this.isEqual
+            case `!=`      : return this.isNotEqual
             case `not`     : return this.not
             case `and`     : return this.and
             case `or`      : return this.or
