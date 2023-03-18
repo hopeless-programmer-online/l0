@@ -232,6 +232,7 @@ export default class Context {
     public readonly not        : External
     public readonly and        : External
     public readonly or         : External
+    public readonly if         : External
 
     public readonly Int32      : External
     public readonly add        : External
@@ -367,6 +368,15 @@ export default class Context {
 
             return pack([ next, next, new Boolean({ value : left1.value || right1.value }) ])
         })
+        const if_ = External.from(`if`, ([ _, next, condition, then ]) => {
+            const condition1 = toConstant(condition)
+
+            if (!(condition1 instanceof Boolean)) throw new Error // @todo
+
+            return condition1.value
+                ? pack([ then, next ])
+                : pack([ next, next ])
+        })
 
         const Int32_ = External.from(`Int32`, ([ _, next, target ]) => {
             const target1 = toConstant(target)
@@ -448,6 +458,7 @@ export default class Context {
         this.not        = not
         this.and        = and
         this.or         = or
+        this.if         = if_
 
         this.Int32      = Int32_
         this.add        = add
@@ -491,6 +502,7 @@ export default class Context {
             case `not`        : return this.not
             case `and`        : return this.and
             case `or`         : return this.or
+            case `if`         : return this.if
 
             case `Int32`      : return this.Int32
             case `+`          : return this.add
