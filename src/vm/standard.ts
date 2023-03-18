@@ -209,38 +209,42 @@ export class Variable extends Something {
 }
 
 export default class Context {
-    public readonly terminal   : Terminal
-    public readonly bind       : External
-    public readonly print      : External
+    public readonly terminal       : Terminal
+    public readonly bind           : External
+    public readonly print          : External
 
-    public readonly nothing    : Nothing
+    public readonly nothing        : Nothing
 
-    public readonly type       : External
+    public readonly type           : External
 
-    public readonly var        : External
-    public readonly equal      : External
+    public readonly var            : External
+    public readonly equal          : External
 
-    public readonly Internal   : External
+    public readonly Internal       : External
 
-    public readonly External   : External
+    public readonly External       : External
 
-    public readonly Boolean    : External
-    public readonly true       : Boolean
-    public readonly false      : Boolean
-    public readonly isEqual    : External
-    public readonly isNotEqual : External
-    public readonly not        : External
-    public readonly and        : External
-    public readonly or         : External
-    public readonly if         : External
+    public readonly Boolean        : External
+    public readonly true           : Boolean
+    public readonly false          : Boolean
+    public readonly isEqual        : External
+    public readonly isNotEqual     : External
+    public readonly not            : External
+    public readonly and            : External
+    public readonly or             : External
+    public readonly if             : External
 
-    public readonly Int32      : External
-    public readonly add        : External
-    public readonly sub        : External
-    public readonly mul        : External
-    public readonly div        : External
+    public readonly Int32          : External
+    public readonly add            : External
+    public readonly sub            : External
+    public readonly mul            : External
+    public readonly div            : External
+    public readonly less           : External
+    public readonly lessOrEqual    : External
+    public readonly greater        : External
+    public readonly greaterOrEqual : External
 
-    public readonly UTF8String : External
+    public readonly UTF8String     : External
 
     public constructor() {
         function pack(list : Anything[]) {
@@ -423,6 +427,46 @@ export default class Context {
 
             throw new Error // @todo
         })
+        const less = External.from(`<`, ([ _, next, left, right ]) => {
+            const left1 = toConstant(left)
+            const right1 = toConstant(right)
+
+            if (left1 instanceof Boolean && right1 instanceof Boolean) return pack([ next, next, new Boolean({ value : left1.value < right1.value }) ])
+            if (left1 instanceof Int32 && right1 instanceof Int32) return pack([ next, next, new Boolean({ value : left1.value < right1.value }) ])
+            if (left1 instanceof UTF8String && right1 instanceof UTF8String) return pack([ next, next, new Boolean({ value : left1.value < right1.value }) ])
+
+            throw new Error // @todo
+        })
+        const lessOrEqual = External.from(`<=`, ([ _, next, left, right ]) => {
+            const left1 = toConstant(left)
+            const right1 = toConstant(right)
+
+            if (left1 instanceof Boolean && right1 instanceof Boolean) return pack([ next, next, new Boolean({ value : left1.value <= right1.value }) ])
+            if (left1 instanceof Int32 && right1 instanceof Int32) return pack([ next, next, new Boolean({ value : left1.value <= right1.value }) ])
+            if (left1 instanceof UTF8String && right1 instanceof UTF8String) return pack([ next, next, new Boolean({ value : left1.value <= right1.value }) ])
+
+            throw new Error // @todo
+        })
+        const greater = External.from(`>`, ([ _, next, left, right ]) => {
+            const left1 = toConstant(left)
+            const right1 = toConstant(right)
+
+            if (left1 instanceof Boolean && right1 instanceof Boolean) return pack([ next, next, new Boolean({ value : left1.value > right1.value }) ])
+            if (left1 instanceof Int32 && right1 instanceof Int32) return pack([ next, next, new Boolean({ value : left1.value > right1.value }) ])
+            if (left1 instanceof UTF8String && right1 instanceof UTF8String) return pack([ next, next, new Boolean({ value : left1.value > right1.value }) ])
+
+            throw new Error // @todo
+        })
+        const greaterOrEqual = External.from(`>=`, ([ _, next, left, right ]) => {
+            const left1 = toConstant(left)
+            const right1 = toConstant(right)
+
+            if (left1 instanceof Boolean && right1 instanceof Boolean) return pack([ next, next, new Boolean({ value : left1.value >= right1.value }) ])
+            if (left1 instanceof Int32 && right1 instanceof Int32) return pack([ next, next, new Boolean({ value : left1.value >= right1.value }) ])
+            if (left1 instanceof UTF8String && right1 instanceof UTF8String) return pack([ next, next, new Boolean({ value : left1.value >= right1.value }) ])
+
+            throw new Error // @todo
+        })
 
         const UTF8String_ = External.from(`UTF8String`, ([ _, next, target ]) => {
             const target1 = toConstant(target)
@@ -435,38 +479,42 @@ export default class Context {
             return pack([ next, next, true_ ])
         })
 
-        this.terminal   = terminal
-        this.bind       = bind
-        this.print      = print
+        this.terminal       = terminal
+        this.bind           = bind
+        this.print          = print
 
-        this.nothing    = nothing
+        this.nothing        = nothing
 
-        this.type       = type
+        this.type           = type
 
-        this.var        = var_
-        this.equal      = equal
+        this.var            = var_
+        this.equal          = equal
 
-        this.Internal   = Internal_
+        this.Internal       = Internal_
 
-        this.External   = External_
+        this.External       = External_
 
-        this.Boolean    = Boolean_
-        this.true       = true_
-        this.false      = false_
-        this.isEqual    = isEqual
-        this.isNotEqual = isNotEqual
-        this.not        = not
-        this.and        = and
-        this.or         = or
-        this.if         = if_
+        this.Boolean        = Boolean_
+        this.true           = true_
+        this.false          = false_
+        this.isEqual        = isEqual
+        this.isNotEqual     = isNotEqual
+        this.not            = not
+        this.and            = and
+        this.or             = or
+        this.if             = if_
 
-        this.Int32      = Int32_
-        this.add        = add
-        this.sub        = sub
-        this.mul        = mul
-        this.div        = div
+        this.Int32          = Int32_
+        this.add            = add
+        this.sub            = sub
+        this.mul            = mul
+        this.div            = div
+        this.less           = less
+        this.lessOrEqual    = lessOrEqual
+        this.greater        = greater
+        this.greaterOrEqual = greaterOrEqual
 
-        this.UTF8String = UTF8String_
+        this.UTF8String     = UTF8String_
     }
 
     public resolve(value : semantics.Value) : Anything {
@@ -509,6 +557,10 @@ export default class Context {
             case `-`          : return this.sub
             case `*`          : return this.mul
             case `/`          : return this.div
+            case `<`          : return this.less
+            case `<=`         : return this.lessOrEqual
+            case `>`          : return this.greater
+            case `>=`         : return this.greaterOrEqual
 
             case `UTF8String` : return this.UTF8String
         }
