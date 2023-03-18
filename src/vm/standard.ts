@@ -209,31 +209,35 @@ export class Variable extends Something {
 }
 
 export default class Context {
-    public readonly terminal : Terminal
-    public readonly bind : External
-    public readonly print : External
+    public readonly terminal   : Terminal
+    public readonly bind       : External
+    public readonly print      : External
 
-    public readonly nothing : Nothing
+    public readonly nothing    : Nothing
 
-    public readonly type : Nothing
+    public readonly type       : External
 
-    public readonly var : External
-    public readonly equal : External
+    public readonly var        : External
+    public readonly equal      : External
 
-    public readonly Boolean : External
-    public readonly true : Boolean
-    public readonly false : Boolean
-    public readonly isEqual : External
+    public readonly Internal   : External
+
+    public readonly External   : External
+
+    public readonly Boolean    : External
+    public readonly true       : Boolean
+    public readonly false      : Boolean
+    public readonly isEqual    : External
     public readonly isNotEqual : External
-    public readonly not : External
-    public readonly and : External
-    public readonly or : External
+    public readonly not        : External
+    public readonly and        : External
+    public readonly or         : External
 
-    public readonly Int32 : External
-    public readonly add : External
-    public readonly sub : External
-    public readonly mul : External
-    public readonly div : External
+    public readonly Int32      : External
+    public readonly add        : External
+    public readonly sub        : External
+    public readonly mul        : External
+    public readonly div        : External
 
     public readonly UTF8String : External
 
@@ -270,6 +274,8 @@ export default class Context {
         const type = External.from(`type`, ([ _, next, target ]) => {
             const target1 = toConstant(target)
 
+            if (target1 instanceof Internal) return pack([ next, next, Internal_ ])
+            if (target1 instanceof External) return pack([ next, next, External_ ])
             if (target1 instanceof Boolean) return pack([ next, next, Boolean_ ])
             if (target1 instanceof Int32) return pack([ next, next, Int32_ ])
             if (target1 instanceof UTF8String) return pack([ next, next, UTF8String_ ])
@@ -288,6 +294,22 @@ export default class Context {
             variable.value = toConstant(value)
 
             return pack([ next, next ])
+        })
+
+        const Internal_ = External.from(`Internal`, ([ _, next, target ]) => {
+            const target1 = toConstant(target)
+
+            if (target1 instanceof Internal) return pack([ next, next, target ])
+
+            return pack([ next, next, nothing ])
+        })
+
+        const External_ = External.from(`External`, ([ _, next, target ]) => {
+            const target1 = toConstant(target)
+
+            if (target1 instanceof External) return pack([ next, next, target ])
+
+            return pack([ next, next, nothing ])
         })
 
         const Boolean_ = External.from(`Boolean`, ([ _, next, target ]) => {
@@ -360,6 +382,7 @@ export default class Context {
             const left1 = toConstant(left)
             const right1 = toConstant(right)
 
+            if (left1 instanceof Boolean && right1 instanceof Boolean) return pack([ next, next, new Boolean({ value : left1.value || right1.value }) ])
             if (left1 instanceof Int32 && right1 instanceof Int32) return pack([ next, next, new Int32({ value : left1.value + right1.value }) ])
             if (left1 instanceof UTF8String && right1 instanceof UTF8String) return pack([ next, next, new UTF8String({ value : left1.value + right1.value }) ])
 
@@ -377,6 +400,7 @@ export default class Context {
             const left1 = toConstant(left)
             const right1 = toConstant(right)
 
+            if (left1 instanceof Boolean && right1 instanceof Boolean) return pack([ next, next, new Boolean({ value : left1.value && right1.value }) ])
             if (left1 instanceof Int32 && right1 instanceof Int32) return pack([ next, next, new Int32({ value : left1.value * right1.value }) ])
 
             throw new Error // @todo
@@ -401,31 +425,35 @@ export default class Context {
             return pack([ next, next, true_ ])
         })
 
-        this.terminal = terminal
-        this.bind = bind
-        this.print = print
+        this.terminal   = terminal
+        this.bind       = bind
+        this.print      = print
 
-        this.nothing = nothing
+        this.nothing    = nothing
 
-        this.type = type
+        this.type       = type
 
-        this.var = var_
-        this.equal = equal
+        this.var        = var_
+        this.equal      = equal
 
-        this.Boolean = Boolean_
-        this.true = true_
-        this.false = false_
-        this.isEqual = isEqual
+        this.Internal   = Internal_
+
+        this.External   = External_
+
+        this.Boolean    = Boolean_
+        this.true       = true_
+        this.false      = false_
+        this.isEqual    = isEqual
         this.isNotEqual = isNotEqual
-        this.not = not
-        this.and = and
-        this.or = or
+        this.not        = not
+        this.and        = and
+        this.or         = or
 
-        this.Int32 = Int32_
-        this.add = add
-        this.sub = sub
-        this.mul = mul
-        this.div = div
+        this.Int32      = Int32_
+        this.add        = add
+        this.sub        = sub
+        this.mul        = mul
+        this.div        = div
 
         this.UTF8String = UTF8String_
     }
@@ -450,6 +478,10 @@ export default class Context {
 
             case `var`        : return this.var
             case `=`          : return this.equal
+
+            case `Internal`   : return this.Internal
+
+            case `External`   : return this.External
 
             case `Boolean`    : return this.Boolean
             case `true`       : return this.true
