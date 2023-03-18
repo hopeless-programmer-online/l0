@@ -35,7 +35,7 @@ export default class Cli {
         const entry = stopwatch(() => semanticsAnalyzer.analyze(main), `semantic analysis completed`)
         const context = new Context
         const closure = entry.dependencies.map(value => context.resolve(value))
-        const buffer = new vm.Buffer({
+        const buffer = new vm.Buffer<std.Anything>({
             nothing : context.nothing,
             list : [ new std.Internal({ closure, template : std.Template.from(entry.entryTemplate) }) ],
         })

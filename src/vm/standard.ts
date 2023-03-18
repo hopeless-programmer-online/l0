@@ -3,6 +3,8 @@ import * as semantics from '../semantics'
 import { neverThrow } from '../utilities'
 import * as vm from '../vm'
 
+const mutability : unique symbol = Symbol(`l0.vm.standard.mutability`)
+
 type State = Buffer | typeof vm.terminal
 
 export abstract class Something extends vm.Anything<Anything> {
@@ -19,13 +21,19 @@ export abstract class Something extends vm.Anything<Anything> {
     }
 }
 
-export class Nothing extends Something {
+export class Constant extends Something {
+    public static readonly mutability : unique symbol = Symbol(`l0.vm.standard.Constant.mutability`)
+
+    public [mutability] : typeof Constant.mutability = Constant.mutability
+}
+
+export class Nothing extends Constant {
     public toString() : string {
         return colorize(`nothing`, Colors.fgMagenta)
     }
 }
 
-export class Terminal extends Something {
+export class Terminal extends Constant {
     public call(buffer : Buffer) : typeof vm.terminal {
         return vm.terminal
     }
@@ -35,7 +43,7 @@ export class Terminal extends Something {
     }
 }
 
-export class Template extends Something {
+export class Template extends Constant {
     public static from(template : semantics.Template) {
         return new Template({ targets : template.targets.slice(), comment : template.comment })
     }
@@ -65,7 +73,7 @@ export class Template extends Something {
     }
 }
 
-export class Internal extends Something {
+export class Internal extends Constant {
     public readonly template : Template
     public readonly closure : Anything[]
 
@@ -107,7 +115,7 @@ export class Internal extends Something {
     }
 }
 
-export class External extends Something {
+export class External extends Constant {
     public static from(name : string, callback : (buffer : Buffer) => Buffer) {
         return new External({ name, callback })
     }
@@ -137,7 +145,7 @@ export class External extends Something {
     }
 }
 
-class Primitive<Value> extends Something {
+class Primitive<Value> extends Constant {
     public readonly value : Value
 
     public constructor({ value } : { value : Value }) {
@@ -183,6 +191,23 @@ export class UTF8String extends Primitive<string> {
     }
 }
 
+export class Variable extends Something {
+    public static readonly mutability : unique symbol = Symbol(`l0.vm.standard.Variable.mutability`)
+
+    public [mutability] : typeof Variable.mutability = Variable.mutability
+    public value : Constant
+
+    public constructor({ value } : { value : Constant }) {
+        super()
+
+        this.value = value
+    }
+
+    public toString() {
+        return this.value.toString()
+    }
+}
+
 export default class Context {
     public readonly terminal : Terminal
     public readonly bind : External
@@ -191,6 +216,9 @@ export default class Context {
     public readonly nothing : Nothing
 
     public readonly type : Nothing
+
+    public readonly var : External
+    public readonly equal : External
 
     public readonly Boolean : External
     public readonly true : Boolean
@@ -216,8 +244,8 @@ export default class Context {
 
         const terminal = new Terminal
         const bind = External.from(`bind`, buffer => {
-            const continuationTemplate = buffer.get(1)
-            const targetTemplate = buffer.get(2)
+            const continuationTemplate = toConstant(buffer.get(1))
+            const targetTemplate = toConstant(buffer.get(2))
 
             if (!(continuationTemplate instanceof Template)) throw new Error // @todo
             if (!(targetTemplate instanceof Template)) throw new Error // @todo
@@ -230,97 +258,145 @@ export default class Context {
 
             return pack([ continuation ])
         })
-        const print = External.from(`print`, ([ _, next, ...params ]) => {
-            console.log(...params.map(x => toFormatString(x)))
+        const print = External.from(`print`, buffer => {
+            const [ _, next ] = buffer
+            console.log(...buffer.list.slice(2).map(x => toFormatString(x)))
 
             return pack([ next, next ])
         })
 
         const nothing = new Nothing
 
-        const type = External.from(`type`, ([ _, next, a ]) => {
-            if (a instanceof Boolean) return pack([ next, next, Boolean_ ])
-            if (a instanceof Int32) return pack([ next, next, Int32_ ])
-            if (a instanceof UTF8String) return pack([ next, next, UTF8String_ ])
+        const type = External.from(`type`, ([ _, next, target ]) => {
+            const target1 = toConstant(target)
+
+            if (target1 instanceof Boolean) return pack([ next, next, Boolean_ ])
+            if (target1 instanceof Int32) return pack([ next, next, Int32_ ])
+            if (target1 instanceof UTF8String) return pack([ next, next, UTF8String_ ])
 
             return pack([ next, next, nothing ])
         })
 
-        const Boolean_ = External.from(`Boolean`, ([ _, next, a ]) => {
-            if (a instanceof Nothing) return pack([ next, next, false_ ])
-            if (a instanceof Boolean) return pack([ next, next, a ])
-            if (a instanceof Int32) return pack([ next, next, a.value > 0 ? true_ : false_ ])
-            if (a instanceof UTF8String) return pack([ next, next, a.value.length > 0 ? true_ : false_ ])
+        const var_ = External.from(`var`, ([ _, next, target ]) => {
+            const value = toConstant(target)
+
+            return pack([ next, next, new Variable({ value }) ])
+        })
+        const equal = External.from(`=`, ([ _, next, variable, value ]) => {
+            if (!(variable instanceof Variable)) throw new Error(`Cannot set a constant.`)
+
+            variable.value = toConstant(value)
+
+            return pack([ next, next ])
+        })
+
+        const Boolean_ = External.from(`Boolean`, ([ _, next, target ]) => {
+            const target1 = toConstant(target)
+
+            if (target1 instanceof Nothing) return pack([ next, next, false_ ])
+            if (target1 instanceof Boolean) return pack([ next, next, target1 ])
+            if (target1 instanceof Int32) return pack([ next, next, target1.value > 0 ? true_ : false_ ])
+            if (target1 instanceof UTF8String) return pack([ next, next, target1.value.length > 0 ? true_ : false_ ])
 
             return pack([ next, next, true_ ])
         })
         const true_ = Boolean.from(true)
         const false_ = Boolean.from(false)
-        const isEqual = External.from(`==`, ([ _, next, a, b ]) => {
-            if (a instanceof Boolean && b instanceof Boolean) return pack([ next, next, a.value === b.value ? true_ : false_ ])
-            if (a instanceof Int32 && b instanceof Int32) return pack([ next, next, a.value === b.value ? true_ : false_ ])
+        const isEqual = External.from(`==`, ([ _, next, left, right ]) => {
+            const left1 = toConstant(left)
+            const right1 = toConstant(right)
+
+            if (left1 instanceof Boolean && right1 instanceof Boolean) return pack([ next, next, left1.value === right1.value ? true_ : false_ ])
+            if (left1 instanceof Int32 && right1 instanceof Int32) return pack([ next, next, left1.value === right1.value ? true_ : false_ ])
 
             return pack([ next, next, false_ ])
         })
-        const isNotEqual = External.from(`!=`, ([ _, next, a, b ]) => {
-            if (a instanceof Boolean && b instanceof Boolean) return pack([ next, next, a.value !== b.value ? true_ : false_ ])
-            if (a instanceof Int32 && b instanceof Int32) return pack([ next, next, a.value !== b.value ? true_ : false_ ])
+        const isNotEqual = External.from(`!=`, ([ _, next, left, right ]) => {
+            const left1 = toConstant(left)
+            const right1 = toConstant(right)
+
+            if (left1 instanceof Boolean && right1 instanceof Boolean) return pack([ next, next, left1.value !== right1.value ? true_ : false_ ])
+            if (left1 instanceof Int32 && right1 instanceof Int32) return pack([ next, next, left1.value !== right1.value ? true_ : false_ ])
 
             return pack([ next, next, true_ ])
         })
-        const not = External.from(`not`, ([ _, next, a ]) => {
-            if (!(a instanceof Boolean)) throw new Error // @todo
+        const not = External.from(`not`, ([ _, next, target ]) => {
+            const target1 = toConstant(target)
 
-            return pack([ next, next, new Boolean({ value : !a.value }) ])
+            if (!(target1 instanceof Boolean)) throw new Error // @todo
+
+            return pack([ next, next, new Boolean({ value : !target1.value }) ])
         })
-        const and = External.from(`and`, ([ _, next, a, b ]) => {
-            if (!(a instanceof Boolean)) throw new Error // @todo
-            if (!(b instanceof Boolean)) throw new Error // @todo
+        const and = External.from(`and`, ([ _, next, left, right ]) => {
+            const left1 = toConstant(left)
+            const right1 = toConstant(right)
 
-            return pack([ next, next, new Boolean({ value : a.value && b.value }) ])
+            if (!(left1 instanceof Boolean)) throw new Error // @todo
+            if (!(right1 instanceof Boolean)) throw new Error // @todo
+
+            return pack([ next, next, new Boolean({ value : left1.value && right1.value }) ])
         })
-        const or = External.from(`or`, ([ _, next, a, b ]) => {
-            if (!(a instanceof Boolean)) throw new Error // @todo
-            if (!(b instanceof Boolean)) throw new Error // @todo
+        const or = External.from(`or`, ([ _, next, left, right ]) => {
+            const left1 = toConstant(left)
+            const right1 = toConstant(right)
 
-            return pack([ next, next, new Boolean({ value : a.value || b.value }) ])
+            if (!(left1 instanceof Boolean)) throw new Error // @todo
+            if (!(right1 instanceof Boolean)) throw new Error // @todo
+
+            return pack([ next, next, new Boolean({ value : left1.value || right1.value }) ])
         })
 
-        const Int32_ = External.from(`Int32`, ([ _, next, a ]) => {
-            if (a instanceof Nothing) return pack([ next, next, new Int32({ value : 0 }) ])
-            if (a instanceof Boolean) return pack([ next, next, new Int32({ value : a.value ? 1 : 0 }) ])
-            if (a instanceof Int32) return pack([ next, next, a ])
-            if (a instanceof UTF8String) return pack([ next, next, new Int32({ value : a.value.length }) ])
+        const Int32_ = External.from(`Int32`, ([ _, next, target ]) => {
+            const target1 = toConstant(target)
+
+            if (target1 instanceof Nothing) return pack([ next, next, new Int32({ value : 0 }) ])
+            if (target1 instanceof Boolean) return pack([ next, next, new Int32({ value : target1.value ? 1 : 0 }) ])
+            if (target1 instanceof Int32) return pack([ next, next, target1 ])
+            if (target1 instanceof UTF8String) return pack([ next, next, new Int32({ value : target1.value.length }) ])
 
             return pack([ next, next, true_ ])
         })
-        const add = External.from(`+`, ([ _, next, a, b ]) => {
-            if (a instanceof Int32 && b instanceof Int32) return pack([ next, next, new Int32({ value : a.value + b.value }) ])
-            if (a instanceof UTF8String && b instanceof UTF8String) return pack([ next, next, new UTF8String({ value : a.value + b.value }) ])
+        const add = External.from(`+`, ([ _, next, left, right ]) => {
+            const left1 = toConstant(left)
+            const right1 = toConstant(right)
+
+            if (left1 instanceof Int32 && right1 instanceof Int32) return pack([ next, next, new Int32({ value : left1.value + right1.value }) ])
+            if (left1 instanceof UTF8String && right1 instanceof UTF8String) return pack([ next, next, new UTF8String({ value : left1.value + right1.value }) ])
 
             throw new Error // @todo
         })
-        const sub = External.from(`-`, ([ _, next, a, b ]) => {
-            if (a instanceof Int32 && b instanceof Int32) return pack([ next, next, new Int32({ value : a.value - b.value }) ])
+        const sub = External.from(`-`, ([ _, next, left, right ]) => {
+            const left1 = toConstant(left)
+            const right1 = toConstant(right)
+
+            if (left1 instanceof Int32 && right1 instanceof Int32) return pack([ next, next, new Int32({ value : left1.value - right1.value }) ])
 
             throw new Error // @todo
         })
-        const mul = External.from(`*`, ([ _, next, a, b ]) => {
-            if (a instanceof Int32 && b instanceof Int32) return pack([ next, next, new Int32({ value : a.value * b.value }) ])
+        const mul = External.from(`*`, ([ _, next, left, right ]) => {
+            const left1 = toConstant(left)
+            const right1 = toConstant(right)
+
+            if (left1 instanceof Int32 && right1 instanceof Int32) return pack([ next, next, new Int32({ value : left1.value * right1.value }) ])
 
             throw new Error // @todo
         })
-        const div = External.from(`/`, ([ _, next, a, b ]) => {
-            if (a instanceof Int32 && b instanceof Int32) return pack([ next, next, new Int32({ value : a.value / b.value }) ])
+        const div = External.from(`/`, ([ _, next, left, right ]) => {
+            const left1 = toConstant(left)
+            const right1 = toConstant(right)
+
+            if (left1 instanceof Int32 && right1 instanceof Int32) return pack([ next, next, new Int32({ value : left1.value / right1.value }) ])
 
             throw new Error // @todo
         })
 
-        const UTF8String_ = External.from(`UTF8String`, ([ _, next, a ]) => {
-            if (a instanceof Nothing) return pack([ next, next, new UTF8String({ value : `nothing` }) ])
-            if (a instanceof Boolean) return pack([ next, next, new UTF8String({ value : a.value ? `true` : `false` }) ])
-            if (a instanceof Int32) return pack([ next, next, new UTF8String({ value : `${a.value}` }) ])
-            if (a instanceof UTF8String) return pack([ next, next, a ])
+        const UTF8String_ = External.from(`UTF8String`, ([ _, next, target ]) => {
+            const target1 = toConstant(target)
+
+            if (target1 instanceof Nothing) return pack([ next, next, new UTF8String({ value : `nothing` }) ])
+            if (target1 instanceof Boolean) return pack([ next, next, new UTF8String({ value : target1.value ? `true` : `false` }) ])
+            if (target1 instanceof Int32) return pack([ next, next, new UTF8String({ value : `${target1.value}` }) ])
+            if (target1 instanceof UTF8String) return pack([ next, next, target1 ])
 
             return pack([ next, next, true_ ])
         })
@@ -332,6 +408,9 @@ export default class Context {
         this.nothing = nothing
 
         this.type = type
+
+        this.var = var_
+        this.equal = equal
 
         this.Boolean = Boolean_
         this.true = true_
@@ -369,6 +448,9 @@ export default class Context {
 
             case `type`       : return this.type
 
+            case `var`        : return this.var
+            case `=`          : return this.equal
+
             case `Boolean`    : return this.Boolean
             case `true`       : return this.true
             case `false`      : return this.false
@@ -397,16 +479,24 @@ export default class Context {
     }
 }
 
-type Anything = Nothing | Terminal | Template | Internal | External
-type Buffer = vm.Buffer<Anything>
+export type Anything = Nothing | Terminal | Template | Internal | External | Boolean | Int32 | UTF8String | Variable
+export type Buffer = vm.Buffer<Anything>
 
-export function toFormatString(something : Something) : string {
-    const all = new Set<Something>()
-    const ids = new Map<Something, string>()
+function toConstant(anything : Anything) : Constant {
+    return (
+        anything[mutability] === Constant.mutability ? anything :
+        anything[mutability] === Variable.mutability ? anything.value :
+        neverThrow(anything, new Error) // @todo
+    )
+}
+
+export function toFormatString(something : Anything) : string {
+    const all = new Set<Constant>()
+    const ids = new Map<Constant, string>()
 
     const indent = (x : string) => x !== `` ? x.replace(/^/, `    `).replace(/\n/g, `\n    `) : ``
     const array = (x : string) => `${colorize(`[`, Colors.fgWhite) + (x.length > 0 ? ` ${x} ` : ``) + colorize(`]`, Colors.fgWhite)}`
-    const stringify = (something : Something) : string => {
+    const stringify = (something : Constant) : string => {
         let id = ids.get(something)
 
         if (id !== undefined) return id
@@ -420,7 +510,7 @@ export function toFormatString(something : Something) : string {
         }
         else all.add(something)
 
-        let text = ``;
+        let text = ``
 
 //         if (something instanceof List_) {
 //             let elements = something.elements.map(stringify).join(colorize(`, `, Colors.fgWhite))
@@ -457,7 +547,7 @@ export function toFormatString(something : Something) : string {
         return `${id}${text}`
     }
 
-    return stringify(something)
+    return stringify(toConstant(something))
 }
 
 enum Colors {

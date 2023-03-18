@@ -34,6 +34,8 @@ export class Buffer<Anything_ extends Anything<Anything_>> {
 
     public * [Symbol.iterator]() {
         yield * this._list
+
+        while (true) yield this.nothing
     }
 
     public get(index : number) : Anything_ {
