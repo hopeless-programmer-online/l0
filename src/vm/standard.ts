@@ -191,6 +191,16 @@ export class UTF8String extends Primitive<string> {
     }
 }
 
+export class List extends Constant {
+    public readonly elements : Anything[]
+
+    public constructor({ elements = [] } : { elements? : Anything[] } = {}) {
+        super()
+
+        this.elements = elements
+    }
+}
+
 export class Variable extends Something {
     public static readonly mutability : unique symbol = Symbol(`l0.vm.standard.Variable.mutability`)
 
@@ -246,6 +256,9 @@ export default class Context {
 
     public readonly UTF8String     : External
 
+    public readonly List           : External
+    public readonly pushBack       : External
+
     public constructor() {
         function pack(list : Anything[]) {
             return new vm.Buffer({ nothing, list })
@@ -284,6 +297,7 @@ export default class Context {
             if (target1 instanceof Boolean) return pack([ next, next, Boolean_ ])
             if (target1 instanceof Int32) return pack([ next, next, Int32_ ])
             if (target1 instanceof UTF8String) return pack([ next, next, UTF8String_ ])
+            if (target1 instanceof List) return pack([ next, next, List_ ])
 
             return pack([ next, next, nothing ])
         })
@@ -479,6 +493,17 @@ export default class Context {
             return pack([ next, next, true_ ])
         })
 
+        const List_ = External.from(`List`, ([ _, next ]) => {
+            return pack([ next, next, new List ])
+        })
+        const pushBack = External.from(`push_back`, ([ _, next, list, element ]) => {
+            if (!(list instanceof List)) throw new Error //@todo
+
+            list.elements.push(element)
+
+            return pack([ next, next ])
+        })
+
         this.terminal       = terminal
         this.bind           = bind
         this.print          = print
@@ -515,6 +540,9 @@ export default class Context {
         this.greaterOrEqual = greaterOrEqual
 
         this.UTF8String     = UTF8String_
+
+        this.List           = List_
+        this.pushBack       = pushBack
     }
 
     public resolve(value : semantics.Value) : Anything {
@@ -563,6 +591,9 @@ export default class Context {
             case `>=`         : return this.greaterOrEqual
 
             case `UTF8String` : return this.UTF8String
+
+            case `List`       : return this.List
+            case `push_back`  : return this.pushBack
         }
 
         if (name.words.length === 1 && name.words[0].symbol === syntax.QuotedWord.symbol) return UTF8String.from(name.words[0])
@@ -608,24 +639,14 @@ export function toFormatString(something : Anything) : string {
 
         let text = ``
 
-//         if (something instanceof List_) {
-//             let elements = something.elements.map(stringify).join(colorize(`, `, Colors.fgWhite))
-//
-//             if (elements.length > 0) elements = ` ${elements} `
-//
-//             text = colorize(`[`, Colors.fgWhite) + elements + colorize(`]`, Colors.fgWhite)
-//         }
-//         if (something instanceof Internal) {
-//             let closure = something.closure.map(x => stringify(x)).join(`\n`)
-//
-//             closure = closure != ``
-//                 ? `{\n${indent(closure)}\n}`
-//                 : `{}`
-//
-//
-//             text = `${something.toString()} ${closure}`
-//         }
-        if (something instanceof Template) {
+        if (something instanceof List) {
+            let elements = something.elements.map(x => stringify(toConstant(x))).join(colorize(`,\n`, Colors.fgWhite))
+
+            if (elements.length > 0) elements = `\n${indent(elements)}\n`
+
+            text = colorize(`[`, Colors.fgWhite) + elements + colorize(`]`, Colors.fgWhite)
+        }
+        else if (something instanceof Template) {
             let elements = something.targets.map(x => colorize(`${x}`, Colors.fgYellow)).join(colorize(`, `, Colors.fgWhite))
 
             text = `${something.toString()} ${array(`${elements}`)}`
