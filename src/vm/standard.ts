@@ -505,6 +505,8 @@ export default class Context {
             return pack([ next, next, new List ])
         })
         const length = External.from(`length`, ([ _, next, list ]) => {
+            list = toConstant(list)
+
             if (list instanceof List) {
                 return pack([ next, next, new Int32({ value : list.elements.length }) ])
             }
@@ -512,12 +514,19 @@ export default class Context {
             throw new Error //@todo
         })
         const get = External.from(`get`, ([ _, next, list, index ]) => {
+            list = toConstant(list)
+            index = toConstant(index)
+
             if (!(list instanceof List)) throw new Error //@todo
             if (!(index instanceof Int32)) throw new Error //@todo
 
             return pack([ next, next, list.elements[index.value] || nothing ])
         })
         const set = External.from(`set`, ([ _, next, list, index, value ]) => {
+            list = toConstant(list)
+            index = toConstant(index)
+            value = toConstant(value)
+
             if (!(list instanceof List)) throw new Error //@todo
             if (!(index instanceof Int32)) throw new Error //@todo
 
@@ -526,6 +535,9 @@ export default class Context {
             return pack([ next, next ])
         })
         const pushBack = External.from(`push_back`, ([ _, next, list, element ]) => {
+            list = toConstant(list)
+            element = toConstant(element)
+
             if (!(list instanceof List)) throw new Error //@todo
 
             list.elements.push(element)
@@ -533,6 +545,9 @@ export default class Context {
             return pack([ next, next ])
         })
         const pushFront = External.from(`push_front`, ([ _, next, list, element ]) => {
+            list = toConstant(list)
+            element = toConstant(element)
+
             if (!(list instanceof List)) throw new Error //@todo
 
             list.elements.unshift(element)
@@ -540,16 +555,24 @@ export default class Context {
             return pack([ next, next ])
         })
         const popBack = External.from(`pop_back`, ([ _, next, list ]) => {
+            list = toConstant(list)
+
             if (!(list instanceof List)) throw new Error //@todo
 
             return pack([ next, next, list.elements.pop() || nothing ])
         })
         const popFront = External.from(`pop_front`, ([ _, next, list ]) => {
+            list = toConstant(list)
+
             if (!(list instanceof List)) throw new Error //@todo
 
             return pack([ next, next, list.elements.shift() || nothing ])
         })
         const insert = External.from(`insert`, ([ _, next, list, index, value ]) => {
+            list = toConstant(list)
+            index = toConstant(index)
+            value = toConstant(value)
+
             if (!(list instanceof List)) throw new Error //@todo
             if (!(index instanceof Int32)) throw new Error //@todo
 
@@ -558,6 +581,9 @@ export default class Context {
             return pack([ next, next ])
         })
         const remove = External.from(`remove`, ([ _, next, list, index ]) => {
+            list = toConstant(list)
+            index = toConstant(index)
+
             if (!(list instanceof List)) throw new Error //@todo
             if (!(index instanceof Int32)) throw new Error //@todo
 
