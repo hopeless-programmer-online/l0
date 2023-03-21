@@ -231,6 +231,10 @@ export default class Context {
     public readonly equal          : External
 
     public readonly Internal       : External
+    public readonly getClosure     : External
+    public readonly getTemplate    : External
+    public readonly Template       : External
+    public readonly getTargets     : External
 
     public readonly External       : External
 
@@ -306,6 +310,7 @@ export default class Context {
             if (target1 instanceof Int32) return pack([ next, next, Int32_ ])
             if (target1 instanceof UTF8String) return pack([ next, next, UTF8String_ ])
             if (target1 instanceof List) return pack([ next, next, List_ ])
+            if (target1 instanceof Template) return pack([ next, next, Template_ ])
 
             return pack([ next, next, nothing ])
         })
@@ -329,6 +334,30 @@ export default class Context {
             if (target1 instanceof Internal) return pack([ next, next, target ])
 
             return pack([ next, next, nothing ])
+        })
+        const getClosure = External.from(`get_closure`, ([ _, next, target ]) => {
+            const target1 = toConstant(target)
+
+            if (!(target1 instanceof Internal)) throw new Error // @todo
+
+            return pack([ next, next, new List({ elements : target1.closure.slice() }) ])
+        })
+        const getTemplate = External.from(`get_template`, ([ _, next, target ]) => {
+            const target1 = toConstant(target)
+
+            if (!(target1 instanceof Internal)) throw new Error // @todo
+
+            return pack([ next, next, target1.template ])
+        })
+        const Template_ = External.from(`Template`, ([ _, next ]) => {
+            throw new Error // @todo
+        })
+        const getTargets = External.from(`get_targets`, ([ _, next, target ]) => {
+            const target1 = toConstant(target)
+
+            if (!(target1 instanceof Template)) throw new Error // @todo
+
+            return pack([ next, next, new List({ elements : target1.targets.map(value => new Int32({ value })) }) ])
         })
 
         const External_ = External.from(`External`, ([ _, next, target ]) => {
@@ -604,6 +633,10 @@ export default class Context {
         this.equal          = equal
 
         this.Internal       = Internal_
+        this.getClosure     = getClosure
+        this.getTemplate    = getTemplate
+        this.Template       = Template_
+        this.getTargets     = getTargets
 
         this.External       = External_
 
@@ -651,53 +684,57 @@ export default class Context {
         const text = name.toString()
 
         switch (text) {
-            case `super`      : return this.terminal
-            case `bind`       : return this.bind
-            case `print`      : return this.print
+            case `super`        : return this.terminal
+            case `bind`         : return this.bind
+            case `print`        : return this.print
 
-            case `nothing`    : return this.nothing
+            case `nothing`      : return this.nothing
 
-            case `type`       : return this.type
+            case `type`         : return this.type
 
-            case `var`        : return this.var
-            case `=`          : return this.equal
+            case `var`          : return this.var
+            case `=`            : return this.equal
 
-            case `Internal`   : return this.Internal
+            case `Internal`     : return this.Internal
+            case `get_closure`  : return this.getClosure
+            case `get_template` : return this.getTemplate
+            case `Template`     : return this.Template
+            case `get_targets`  : return this.getTargets
 
-            case `External`   : return this.External
+            case `External`     : return this.External
 
-            case `Boolean`    : return this.Boolean
-            case `true`       : return this.true
-            case `false`      : return this.false
-            case `==`         : return this.isEqual
-            case `!=`         : return this.isNotEqual
-            case `not`        : return this.not
-            case `and`        : return this.and
-            case `or`         : return this.or
-            case `if`         : return this.if
+            case `Boolean`      : return this.Boolean
+            case `true`         : return this.true
+            case `false`        : return this.false
+            case `==`           : return this.isEqual
+            case `!=`           : return this.isNotEqual
+            case `not`          : return this.not
+            case `and`          : return this.and
+            case `or`           : return this.or
+            case `if`           : return this.if
 
-            case `Int32`      : return this.Int32
-            case `+`          : return this.add
-            case `-`          : return this.sub
-            case `*`          : return this.mul
-            case `/`          : return this.div
-            case `<`          : return this.less
-            case `<=`         : return this.lessOrEqual
-            case `>`          : return this.greater
-            case `>=`         : return this.greaterOrEqual
+            case `Int32`        : return this.Int32
+            case `+`            : return this.add
+            case `-`            : return this.sub
+            case `*`            : return this.mul
+            case `/`            : return this.div
+            case `<`            : return this.less
+            case `<=`           : return this.lessOrEqual
+            case `>`            : return this.greater
+            case `>=`           : return this.greaterOrEqual
 
-            case `UTF8String` : return this.UTF8String
+            case `UTF8String`   : return this.UTF8String
 
-            case `length`     : return this.length
-            case `get`        : return this.get
-            case `set`        : return this.set
-            case `List`       : return this.List
-            case `push_back`  : return this.pushBack
-            case `push_front` : return this.pushFront
-            case `pop_back`   : return this.popBack
-            case `pop_front`  : return this.popFront
-            case `insert`     : return this.insert
-            case `remove`     : return this.remove
+            case `length`       : return this.length
+            case `get`          : return this.get
+            case `set`          : return this.set
+            case `List`         : return this.List
+            case `push_back`    : return this.pushBack
+            case `push_front`   : return this.pushFront
+            case `pop_back`     : return this.popBack
+            case `pop_front`    : return this.popFront
+            case `insert`       : return this.insert
+            case `remove`       : return this.remove
         }
 
         if (name.words.length === 1 && name.words[0].symbol === syntax.QuotedWord.symbol) return UTF8String.from(name.words[0])
