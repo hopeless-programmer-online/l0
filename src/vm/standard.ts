@@ -257,7 +257,15 @@ export default class Context {
     public readonly UTF8String     : External
 
     public readonly List           : External
+    public readonly length         : External
+    public readonly get            : External
+    public readonly set            : External
     public readonly pushBack       : External
+    public readonly pushFront      : External
+    public readonly popBack        : External
+    public readonly popFront       : External
+    public readonly insert         : External
+    public readonly remove         : External
 
     public constructor() {
         function pack(list : Anything[]) {
@@ -496,10 +504,64 @@ export default class Context {
         const List_ = External.from(`List`, ([ _, next ]) => {
             return pack([ next, next, new List ])
         })
+        const length = External.from(`length`, ([ _, next, list ]) => {
+            if (list instanceof List) {
+                return pack([ next, next, new Int32({ value : list.elements.length }) ])
+            }
+
+            throw new Error //@todo
+        })
+        const get = External.from(`get`, ([ _, next, list, index ]) => {
+            if (!(list instanceof List)) throw new Error //@todo
+            if (!(index instanceof Int32)) throw new Error //@todo
+
+            return pack([ next, next, list.elements[index.value] || nothing ])
+        })
+        const set = External.from(`set`, ([ _, next, list, index, value ]) => {
+            if (!(list instanceof List)) throw new Error //@todo
+            if (!(index instanceof Int32)) throw new Error //@todo
+
+            list.elements[index.value] = value
+
+            return pack([ next, next ])
+        })
         const pushBack = External.from(`push_back`, ([ _, next, list, element ]) => {
             if (!(list instanceof List)) throw new Error //@todo
 
             list.elements.push(element)
+
+            return pack([ next, next ])
+        })
+        const pushFront = External.from(`push_front`, ([ _, next, list, element ]) => {
+            if (!(list instanceof List)) throw new Error //@todo
+
+            list.elements.unshift(element)
+
+            return pack([ next, next ])
+        })
+        const popBack = External.from(`pop_back`, ([ _, next, list ]) => {
+            if (!(list instanceof List)) throw new Error //@todo
+
+            return pack([ next, next, list.elements.pop() || nothing ])
+        })
+        const popFront = External.from(`pop_front`, ([ _, next, list ]) => {
+            if (!(list instanceof List)) throw new Error //@todo
+
+            return pack([ next, next, list.elements.shift() || nothing ])
+        })
+        const insert = External.from(`insert`, ([ _, next, list, index, value ]) => {
+            if (!(list instanceof List)) throw new Error //@todo
+            if (!(index instanceof Int32)) throw new Error //@todo
+
+            list.elements.splice(index.value, 0, value)
+
+            return pack([ next, next ])
+        })
+        const remove = External.from(`remove`, ([ _, next, list, index ]) => {
+            if (!(list instanceof List)) throw new Error //@todo
+            if (!(index instanceof Int32)) throw new Error //@todo
+
+            list.elements.splice(index.value, 1)
 
             return pack([ next, next ])
         })
@@ -542,7 +604,15 @@ export default class Context {
         this.UTF8String     = UTF8String_
 
         this.List           = List_
+        this.length         = length
+        this.get            = get
+        this.set            = set
         this.pushBack       = pushBack
+        this.pushFront      = pushFront
+        this.popBack        = popBack
+        this.popFront       = popFront
+        this.insert         = insert
+        this.remove         = remove
     }
 
     public resolve(value : semantics.Value) : Anything {
@@ -592,8 +662,16 @@ export default class Context {
 
             case `UTF8String` : return this.UTF8String
 
+            case `length`     : return this.length
+            case `get`        : return this.get
+            case `set`        : return this.set
             case `List`       : return this.List
             case `push_back`  : return this.pushBack
+            case `push_front` : return this.pushFront
+            case `pop_back`   : return this.popBack
+            case `pop_front`  : return this.popFront
+            case `insert`     : return this.insert
+            case `remove`     : return this.remove
         }
 
         if (name.words.length === 1 && name.words[0].symbol === syntax.QuotedWord.symbol) return UTF8String.from(name.words[0])
