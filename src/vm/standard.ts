@@ -533,23 +533,33 @@ export default class Context {
         const List_ = External.from(`List`, ([ _, next ]) => {
             return pack([ next, next, new List ])
         })
-        const length = External.from(`length`, ([ _, next, list ]) => {
-            list = toConstant(list)
+        const length = External.from(`length`, ([ _, next, target ]) => {
+            target = toConstant(target)
 
-            if (list instanceof List) {
-                return pack([ next, next, new Int32({ value : list.elements.length }) ])
+            if (target instanceof List) {
+                return pack([ next, next, new Int32({ value : target.elements.length }) ])
+            }
+            if (target instanceof UTF8String) {
+                return pack([ next, next, new Int32({ value : target.value.length }) ])
             }
 
             throw new Error //@todo
         })
-        const get = External.from(`get`, ([ _, next, list, index ]) => {
-            list = toConstant(list)
+        const get = External.from(`get`, ([ _, next, target, index ]) => {
+            target = toConstant(target)
             index = toConstant(index)
 
-            if (!(list instanceof List)) throw new Error //@todo
             if (!(index instanceof Int32)) throw new Error //@todo
+            if (target instanceof List) {
+                return pack([ next, next, target.elements[index.value] || nothing ])
+            }
+            if (target instanceof UTF8String) {
+                const value = target.value[index.value]
 
-            return pack([ next, next, list.elements[index.value] || nothing ])
+                return pack([ next, next, value !== undefined ? new UTF8String({ value }) : nothing ])
+            }
+
+            throw new Error //@todo
         })
         const set = External.from(`set`, ([ _, next, list, index, value ]) => {
             list = toConstant(list)
