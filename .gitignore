@@ -1,2 +1,4 @@
 /.jest
+/.ts
+/dist
 /node_modules

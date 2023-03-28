@@ -8,10 +8,11 @@
   ],
   "compilerOptions": {
     "target": "ES5",
-    "module": "CommonJS",
+    "module": "ESNext",
     "lib": [
       "ESNext",
     ],
+    "outDir": ".ts",
     "allowJs": false,
     "declaration": true,
     "downlevelIteration": true,
