@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import { readFile } from 'fs-extra'
 import * as lexis from './lexis'
 import * as syntax from './syntax'
