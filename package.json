@@ -47,8 +47,5 @@
   },
   "dependencies": {
     "fs-extra": "^11.1.0"
-  },
-  "engines": {
-    "node": "^14.15.0"
   }
 }
