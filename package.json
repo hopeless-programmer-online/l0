@@ -9,6 +9,7 @@
   },
   "scripts": {
     "build": "tsc && rollup -c",
+    "install": "npm run build",
     "test": "jest"
   },
   "repository": {
@@ -48,6 +49,6 @@
     "fs-extra": "^11.1.0"
   },
   "engines": {
-    "node": "^14.15.4"
+    "node": "^14.15.0"
   }
 }
