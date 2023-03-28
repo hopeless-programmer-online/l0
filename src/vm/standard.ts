@@ -218,6 +218,12 @@ export class Variable extends Something {
     }
 }
 
+export class Console {
+    public log(...text : string[]) {
+        console.log(...text)
+    }
+}
+
 export default class Context {
     public readonly terminal       : Terminal
     public readonly bind           : External
@@ -271,7 +277,7 @@ export default class Context {
     public readonly insert         : External
     public readonly remove         : External
 
-    public constructor() {
+    public constructor({ console = new Console } : { console? : Console } = {}) {
         function pack(list : Anything[]) {
             return new vm.Buffer({ nothing, list })
         }
