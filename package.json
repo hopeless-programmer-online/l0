@@ -9,7 +9,7 @@
   },
   "scripts": {
     "build": "tsc && rollup -c",
-    "install": "npm run build",
+    "prepare": "npm run build",
     "test": "jest"
   },
   "repository": {
