@@ -1,5 +1,3 @@
-export * as text from './text'
-export * as front from './front'
-export * as back from './back'
-export { default as parse } from './parse'
-export { default as translate } from './translate'
+export * as lexis from './lexis'
+export * as syntax from './syntax'
+export * as semantics from './semantics'

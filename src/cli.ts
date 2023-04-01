@@ -1,35 +1,97 @@
 #!/usr/bin/env node
 
-import { resolve } from 'path'
-import { readFileSync } from 'fs'
-import { parse, translate, back } from './l0'
+import { readFile } from 'fs-extra'
+import * as lexis from './lexis'
+import * as syntax from './syntax'
+import * as semantics from './semantics'
+import Machine, * as vm from './vm'
+import Context, * as std from './vm/standard'
 
-const url = process.argv[2]
+export type Path = string
 
-if (url) {
-    const text = readFileSync(resolve(url), 'utf8')
+export class Params {
+    public static fromProcess() {
+        const path = process.argv[2]
+        const params = new Params({ path })
 
-    // console.log(text)
+        return params
+    }
 
-    const program = parse(text)
-    const instruction = translate(program)
-    const bind = instruction.buffer[0]
+    public readonly path : Path
 
-    if (!(bind instanceof back.BindInstruction)) throw new Error
-
-    const filler = new back.Filler({ bind })
-    const machine = new back.Machine({ buffer : [
-        instruction,
-        ...program.parameters.explicit.map(parameter => filler.fill(parameter)),
-    ] })
-
-    const begin = new Date
-
-    while (!(machine.instruction instanceof back.TerminalInstruction)) machine.step()
-
-    const end = new Date
-    const time = (end.valueOf() - begin.valueOf()) / 1000
-
-    console.log(`completed in ${time} s`)
+    public constructor({ path } : { path : Path }) {
+        this.path = path
+    }
 }
 
+export default class Cli {
+    public async run(params? : Params) {
+        if (!params) params = Params.fromProcess()
+
+        const text = await readFile(params.path, `utf8`)
+        const lexisAnalyzer = new lexis.Analyzer
+        const lexemes = stopwatch(() => lexisAnalyzer.analyze(text), `lexis analysis completed`)
+        const syntaxAnalyzer = new syntax.Analyzer
+        const main = stopwatch(() => syntaxAnalyzer.analyze(lexemes), `syntax analysis completed`)
+        const semanticsAnalyzer = new semantics.Analyzer
+        const entry = stopwatch(() => semanticsAnalyzer.analyze(main), `semantic analysis completed`)
+        const context = new Context
+        const closure = entry.dependencies.map(value => context.resolve(value))
+        const buffer = new vm.Buffer<std.Anything>({
+            nothing : context.nothing,
+            list : [ new std.Internal({ closure, template : std.Template.from(entry.entryTemplate) }) ],
+        })
+        const machine = new Machine({ buffer })
+
+        stopwatch(() => {
+            for (let i = 0; !machine.halted; ++i) {
+                // console.log(`step #${i}`)
+
+                const { buffer } = machine
+
+//                 if (buffer != vm.terminal) buffer.list.forEach(x => console.log(std.toFormatString(x)))
+//
+//                 if (i === 8) {
+//                     console.log(`----------------------`)
+//
+//                     if (buffer != vm.terminal) {
+//                         const { first } = buffer
+//
+//                         if (first instanceof std.Internal) {
+//                             const x = [
+//                                 buffer.first,
+//                                 ...first.closure,
+//                                 ...buffer.tail,
+//                             ]
+//
+//                             x.forEach(x => console.log(std.toFormatString(x)))
+//                         }
+//                     }
+//
+//                     console.log(`----------------------`)
+//                 }
+
+                machine.step()
+            }
+        }, `executed`)
+    }
+}
+
+function stopwatch<T>(callback : () => T, title : string) {
+    const begin = new Date
+    const result = callback()
+    const end = new Date
+    const delta = end.valueOf() - begin.valueOf()
+
+    console.log(`${title} in ${delta} ms`)
+
+    return result
+}
+
+async function main() {
+    const cli = new Cli
+
+    await cli.run()
+}
+
+main()

@@ -4,7 +4,7 @@ import shebang from 'rollup-plugin-preserve-shebang'
 
 export default [
     {
-        input: 'src/l0.ts',
+        input: '.ts/l0.js',
         output: {
             file: 'dist/l0.js',
             format: 'cjs',
@@ -18,7 +18,7 @@ export default [
             format: 'cjs',
         },
         plugins: [ shebang() ],
-        external: [ 'path', 'fs' ],
+        external: [ 'fs-extra' ],
     },
     {
         input: '.ts/l0.d.ts',
