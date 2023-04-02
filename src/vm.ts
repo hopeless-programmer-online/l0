@@ -1,4 +1,3 @@
-export * as standard from './vm/standard'
 export const call : unique symbol = Symbol(`l0.vm.Something.call`)
 export const terminal : unique symbol = Symbol(`l0.vm.Something.terminal`)
 
@@ -84,3 +83,5 @@ export default class VirtualMachine<Anything_ extends Anything<Anything_>> {
 //         })
     }
 }
+
+export * as standard from './vm/standard'
