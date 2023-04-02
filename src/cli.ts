@@ -4,8 +4,8 @@ import { readFile } from 'fs-extra'
 import * as lexis from './lexis'
 import * as syntax from './syntax'
 import * as semantics from './semantics'
-import Machine, * as vm from './vm'
-import Context, * as std from './vm/standard'
+import * as vm from './vm'
+import * as std from './vm/standard'
 
 export type Path = string
 
@@ -24,7 +24,7 @@ export class Params {
     }
 }
 
-export default class Cli {
+export class Cli {
     public async run(params? : Params) {
         if (!params) params = Params.fromProcess()
 
@@ -35,13 +35,13 @@ export default class Cli {
         const main = stopwatch(() => syntaxAnalyzer.analyze(lexemes), `syntax analysis completed`)
         const semanticsAnalyzer = new semantics.Analyzer
         const entry = stopwatch(() => semanticsAnalyzer.analyze(main), `semantic analysis completed`)
-        const context = new Context
+        const context = new std.Context
         const closure = entry.dependencies.map(value => context.resolve(value))
         const buffer = new vm.Buffer<std.Anything>({
             nothing : context.nothing,
             list : [ new std.Internal({ closure, template : std.Template.from(entry.entryTemplate) }) ],
         })
-        const machine = new Machine({ buffer })
+        const machine = new vm.Machine({ buffer })
 
         stopwatch(() => {
             for (let i = 0; !machine.halted; ++i) {

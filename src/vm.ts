@@ -43,7 +43,7 @@ export class Buffer<Anything_ extends Anything<Anything_>> {
     }
 }
 
-export default class VirtualMachine<Anything_ extends Anything<Anything_>> {
+export class Machine<Anything_ extends Anything<Anything_>> {
     public buffer : Buffer<Anything_> | typeof terminal
     public readonly nothing : Anything<Anything_>
 
