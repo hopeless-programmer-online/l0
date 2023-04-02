@@ -224,7 +224,7 @@ export class Console {
     }
 }
 
-export default class Context {
+export class Context {
     public readonly terminal       : Terminal
     public readonly bind           : External
     public readonly print          : External
