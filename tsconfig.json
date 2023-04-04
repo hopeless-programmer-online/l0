@@ -5,14 +5,15 @@
   ],
   "exclude": [
     "node_modules",
+    "./src/**/**.test.ts"
   ],
   "compilerOptions": {
     "target": "ES5",
-    "module": "ESNext",
+    "module": "CommonJS",
     "lib": [
       "ESNext",
     ],
-    "outDir": ".ts",
+    "outDir": "dist",
     "allowJs": false,
     "declaration": true,
     "downlevelIteration": true,
