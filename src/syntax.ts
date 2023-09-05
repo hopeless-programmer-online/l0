@@ -579,6 +579,9 @@ export class Analyzer {
         const main = new MainProgram
         const globalScope = new Scope
         let walker = new ProgramWalker1({ lexemes, scope : new Scope, program : main })
+
+        for (const parameter of main.parameters) walker.scope.add(parameter.name, parameter)
+
         const nesting : ProgramWalker1[] = [ walker ]
 
         function findReference(name : Name) {

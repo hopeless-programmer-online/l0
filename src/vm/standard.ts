@@ -392,6 +392,7 @@ export class Context {
 
             if (left1 instanceof Boolean && right1 instanceof Boolean) return pack([ next, next, left1.value === right1.value ? true_ : false_ ])
             if (left1 instanceof Int32 && right1 instanceof Int32) return pack([ next, next, left1.value === right1.value ? true_ : false_ ])
+            if (left1 instanceof UTF8String && right1 instanceof UTF8String) return pack([ next, next, left1.value === right1.value ? true_ : false_ ])
 
             return pack([ next, next, false_ ])
         })
@@ -401,6 +402,7 @@ export class Context {
 
             if (left1 instanceof Boolean && right1 instanceof Boolean) return pack([ next, next, left1.value !== right1.value ? true_ : false_ ])
             if (left1 instanceof Int32 && right1 instanceof Int32) return pack([ next, next, left1.value !== right1.value ? true_ : false_ ])
+            if (left1 instanceof UTF8String && right1 instanceof UTF8String) return pack([ next, next, left1.value !== right1.value ? true_ : false_ ])
 
             return pack([ next, next, true_ ])
         })
