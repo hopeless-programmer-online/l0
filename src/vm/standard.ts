@@ -355,7 +355,9 @@ export class Context {
 
             return pack([ next, next, target1.template ])
         })
-        const Template_ = External.from(`Template`, ([ _, next ]) => {
+        const Template_ = External.from(`Template`, ([ _, next, targets ]) => {
+            if (!(targets instanceof List)) throw new Error // @todo
+
             throw new Error // @todo
         })
         const getTargets = External.from(`get_targets`, ([ _, next, target ]) => {
@@ -394,7 +396,7 @@ export class Context {
             if (left1 instanceof Int32 && right1 instanceof Int32) return pack([ next, next, left1.value === right1.value ? true_ : false_ ])
             if (left1 instanceof UTF8String && right1 instanceof UTF8String) return pack([ next, next, left1.value === right1.value ? true_ : false_ ])
 
-            return pack([ next, next, false_ ])
+            return pack([ next, next, new Boolean({ value : left1 === right1 }) ])
         })
         const isNotEqual = External.from(`!=`, ([ _, next, left, right ]) => {
             const left1 = toConstant(left)
@@ -404,7 +406,7 @@ export class Context {
             if (left1 instanceof Int32 && right1 instanceof Int32) return pack([ next, next, left1.value !== right1.value ? true_ : false_ ])
             if (left1 instanceof UTF8String && right1 instanceof UTF8String) return pack([ next, next, left1.value !== right1.value ? true_ : false_ ])
 
-            return pack([ next, next, true_ ])
+            return pack([ next, next, new Boolean({ value : left1 !== right1 }) ])
         })
         const not = External.from(`not`, ([ _, next, target ]) => {
             const target1 = toConstant(target)
@@ -458,6 +460,7 @@ export class Context {
             if (left1 instanceof Boolean && right1 instanceof Boolean) return pack([ next, next, new Boolean({ value : left1.value || right1.value }) ])
             if (left1 instanceof Int32 && right1 instanceof Int32) return pack([ next, next, new Int32({ value : left1.value + right1.value }) ])
             if (left1 instanceof UTF8String && right1 instanceof UTF8String) return pack([ next, next, new UTF8String({ value : left1.value + right1.value }) ])
+            if (left1 instanceof List && right1 instanceof List) return pack([ next, next, new List({ elements : [ ...left1.elements, ...right1.elements ] }) ])
 
             throw new Error // @todo
         })
