@@ -300,7 +300,7 @@ export class Context {
         })
         const print = External.from(`print`, buffer => {
             const [ _, next ] = buffer
-            console.log(...buffer.list.slice(2).map(x => toFormatString(x)))
+            console.log(buffer.list.slice(2).map(x => toFormatString(x)).join(``))
 
             return pack([ next, next ])
         })
