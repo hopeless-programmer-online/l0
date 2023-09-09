@@ -780,6 +780,9 @@ function toConstant(anything : Anything) : Constant {
 }
 
 export function toFormatString(something : Anything) : string {
+    if (something instanceof UTF8String) return something.value
+    if (something instanceof Variable && something.value instanceof UTF8String) return something.value.value
+
     const all = new Set<Constant>()
     const ids = new Map<Constant, string>()
 
