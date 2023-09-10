@@ -91,10 +91,14 @@ export class Internal extends Constant {
     }
 
     public call(buffer : Buffer) : Buffer {
+        const { first } = buffer
+
+        if (first != this) throw new Error // @tod
+
         const restored : Buffer = new vm.Buffer({
             nothing : buffer.nothing,
             list : [
-                buffer.first,
+                first,
                 ...this.closure,
                 ...buffer.tail,
             ],
