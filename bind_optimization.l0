@@ -1,0 +1,207 @@
+f() {
+    print("lol")
+}
+
+for_range(begin, end, callback) {
+    i : var(begin)
+
+    iterate() {
+        is : >=(i, end)
+        if (is, /super)
+
+        callback(i)
+
+        i1 : +(i, 1)
+        =(i, i1)
+
+        iterate()
+    }
+
+    iterate()
+}
+
+for_each(list, callback) {
+    i : var(0)
+    l : length(list)
+
+    iterate() {
+        is : >=(i, l)
+        if (is, /super)
+
+        x : get(list, i)
+
+        callback(x, i)
+
+        i1 : +(i, 1)
+        =(i, i1)
+
+        iterate()
+    }
+
+    iterate()
+}
+
+in(x, list) {
+    then() {
+        /super(true)
+    }
+    callback(y) {
+        is : ==(x, y)
+        if (is, then)
+    }
+
+    for_each(list, callback)
+
+    super(false)
+}
+
+filter(list, rule) {
+    result : List()
+
+    callback(x, i) {
+        then() {
+            push_back(result, x)
+        }
+        is : rule(x, i)
+        if (is, then)
+    }
+
+    for_each(list, callback)
+
+    super(result)
+}
+
+map(list, replace) {
+    result : List()
+
+    callback(x, i) {
+        x : replace(x, i)
+
+        push_back(result, x)
+    }
+
+    for_each(list, callback)
+
+    super(result)
+}
+
+optimize(program) {
+    process_internal() {
+        print("process internal")
+
+        restore_buffer() {
+            closure : get_closure(program) ; print(closure)
+            closure_length : length(closure)
+            buffer : List()
+
+            push_back(buffer, f)
+
+            buffer : +(buffer, closure)
+
+            super(buffer, closure_length)
+        }
+        restore_targets() {
+            template : get_template(program) ; print(template)
+            targets : get_targets(template) ; print(targets)
+
+            super(targets)
+        }
+
+        buffer, closure_length : restore_buffer()
+        buffer_length : length(buffer) ; print("buffer length: ", buffer_length)
+        targets : restore_targets()
+        targets_length : length(targets) ; print("targets length: ", targets_length)
+
+        get_param(index) {
+            index : get(targets, index)
+            param : get(buffer, index)
+
+            super(param, index)
+        }
+
+        target : get_param(0)
+
+        process_bind() {
+            print("process bind")
+
+            storage_length : -(targets_length, 3)
+            continuation_template, continuation_template_index : get_param(1)
+            continuation_targets : get_targets(continuation_template) ; print(continuation_targets)
+            declaration_template, declaration_template_index : get_param(2)
+            declaration_targets : get_targets(declaration_template) ; print(declaration_targets)
+
+            used_indices : List()
+
+            add(x) {
+                is : in(x, used_indices)
+                if (is, super)
+                push_back(used_indices, x)
+            }
+
+            add(continuation_template_index)
+            add(declaration_template_index)
+
+            gather_used_index(x) {
+                ; skip values not stored in buffer
+                then() {
+                    print(x, " out of bounds")
+                    /super()
+                }
+                is_current : <(x, 1)
+                is_outside : >(x, storage_length)
+                is : or(is_outside, is_current)
+                if (is, then)
+
+                ; restore index in buffer before bind call
+                x : +(x, 2)
+                x : get(targets, x)
+
+                add(x)
+            }
+
+            for_each(continuation_targets, gather_used_index)
+            for_each(declaration_targets, gather_used_index)
+
+            ; print("used indices: ", used_indices)
+
+            is_in_closure(i) {
+                is_not_current : >(i, 0)
+                is_not_param : <=(i, closure_length)
+                is : or(is_not_current, is_not_param)
+
+                super(is)
+            }
+
+            closure_indices : filter(used_indices, is_in_closure)
+
+            ; print("closure indices: ", closure_indices)
+
+            callback(x) {
+                x : get(buffer, x)
+
+                super(x)
+            }
+
+            reduced_closure : map(closure_indices, callback)
+
+            print("reduced closure: ", reduced_closure)
+
+            //super()
+        }
+
+        is : ==(target, bind) if (is, process_bind)
+
+        print("failed to process call target ", target)
+
+        /super()
+    }
+
+    program_type : type(program)
+    is : ==(program_type, Internal) if (is, process_internal)
+
+    print("failed to process program ", program)
+
+    /super()
+}
+
+optimize(f)
