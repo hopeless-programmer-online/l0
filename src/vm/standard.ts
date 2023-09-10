@@ -69,7 +69,7 @@ export class Template extends Constant {
 
         if (comment !== undefined) comment = ` ${colorize(`(${comment})`, Colors.fgWhite)}`
 
-        return `${colorize(`<`, Colors.fgWhite)}${colorize(`template`, Colors.fgGreen)}${colorize(`>`, Colors.fgWhite)}${comment}`
+        return `${colorize(`<`, Colors.fgWhite)}${colorize(`template`, Colors.fgGreen)}${colorize(`>`, Colors.fgWhite)}${comment || ``}`
     }
 }
 
@@ -359,10 +359,23 @@ export class Context {
 
             return pack([ next, next, target1.template ])
         })
-        const Template_ = External.from(`Template`, ([ _, next, targets ]) => {
+        const Template_ = External.from(`Template`, ([ _, next, targets, comment ]) => {
             if (!(targets instanceof List)) throw new Error // @todo
 
-            throw new Error // @todo
+            const { elements } = targets
+
+            const templateTargets = elements.map(x => {
+                if (!(x instanceof Int32)) throw new Error // @todo
+
+                return x.value
+            })
+
+            const template = new Template({
+                targets : templateTargets,
+                comment : comment instanceof UTF8String ? comment.value : undefined,
+            })
+
+            return pack([ next, next, template ])
         })
         const getTargets = External.from(`get_targets`, ([ _, next, target ]) => {
             const target1 = toConstant(target)

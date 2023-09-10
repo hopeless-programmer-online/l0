@@ -85,6 +85,46 @@ map(list, replace) {
     super(result)
 }
 
+index_of(list, value) {
+    callback(x, i) {
+        then() {
+            //super(i)
+        }
+        is : ==(value, x)
+        if (is, then)
+    }
+
+    for_each(list, callback)
+
+    super(false)
+}
+
+push_back_unique(list, x) {
+    is : in(x, list)
+    if (is, super)
+
+    push_back(list, x)
+}
+
+push_front_unique(list, x) {
+    is : in(x, list)
+    if (is, super)
+
+    push_front(list, x)
+}
+
+copy_list(list) {
+    copy : List()
+
+    callback(x) {
+        push_back(copy, x)
+    }
+
+    for_each(list, callback)
+
+    super(copy)
+}
+
 optimize(program) {
     process_internal() {
         print("process internal")
@@ -125,66 +165,134 @@ optimize(program) {
             print("process bind")
 
             storage_length : -(targets_length, 3)
+            bind_index : get(targets, 0)
             continuation_template, continuation_template_index : get_param(1)
             continuation_targets : get_targets(continuation_template) ; print(continuation_targets)
             declaration_template, declaration_template_index : get_param(2)
             declaration_targets : get_targets(declaration_template) ; print(declaration_targets)
 
-            used_indices : List()
+            gather_used_params_indices_from_buffer() {
+                used : List()
 
-            add(x) {
-                is : in(x, used_indices)
-                if (is, super)
-                push_back(used_indices, x)
-            }
+                gather_used_index(x) {
+                    ; skip values not stored in buffer
+                    then() {
+                        print(x, " out of bounds")
+                        /super()
+                    }
+                    is_current : <(x, 1)
+                    is_outside : >(x, storage_length)
+                    is : or(is_outside, is_current)
+                    if (is, then)
 
-            add(continuation_template_index)
-            add(declaration_template_index)
+                    ; restore index in buffer before bind call
+                    x : +(x, 2)
+                    x : get(targets, x)
 
-            gather_used_index(x) {
-                ; skip values not stored in buffer
-                then() {
-                    print(x, " out of bounds")
-                    /super()
+                    push_back_unique(used, x)
                 }
-                is_current : <(x, 1)
-                is_outside : >(x, storage_length)
-                is : or(is_outside, is_current)
-                if (is, then)
 
-                ; restore index in buffer before bind call
-                x : +(x, 2)
-                x : get(targets, x)
+                for_each(continuation_targets, gather_used_index)
+                for_each(declaration_targets, gather_used_index)
 
-                add(x)
+                super(used)
             }
 
-            for_each(continuation_targets, gather_used_index)
-            for_each(declaration_targets, gather_used_index)
+            used_params_indices : gather_used_params_indices_from_buffer()
 
-            ; print("used indices: ", used_indices)
+            print("used params indices: ", used_params_indices)
 
-            is_in_closure(i) {
-                is_not_current : >(i, 0)
-                is_not_param : <=(i, closure_length)
-                is : or(is_not_current, is_not_param)
+            gather_used_buffer_indices() {
+                used_buffer_indices : copy_list(used_params_indices)
 
-                super(is)
+                push_front_unique(used_buffer_indices, declaration_template_index)
+                push_front_unique(used_buffer_indices, continuation_template_index)
+                push_front_unique(used_buffer_indices, bind_index)
+
+                super(used_buffer_indices)
             }
 
-            closure_indices : filter(used_indices, is_in_closure)
+            used_buffer_indices : gather_used_buffer_indices()
 
-            ; print("closure indices: ", closure_indices)
+            print("used buffer indices: ", used_buffer_indices)
 
-            callback(x) {
-                x : get(buffer, x)
+            ; @todo: replace continuation & declaration templates
+            compile_reduced_closure() {
+                callback(x) {
+                    x : get(buffer, x)
 
-                super(x)
+                    super(x)
+                }
+
+                reduced_closure : map(used_buffer_indices, callback)
+
+                super(reduced_closure)
             }
 
-            reduced_closure : map(closure_indices, callback)
+            reduced_closure : compile_reduced_closure()
 
             print("reduced closure: ", reduced_closure)
+
+            compile_reduced_template() {
+                reduced_targets : List()
+
+                reduced_bind_index : index_of(used_buffer_indices, bind_index) ; print("reduced bind index", reduced_bind_index)
+                reduced_bind_index : +(reduced_bind_index, 1)
+                reduced_continuation_template_index : index_of(used_buffer_indices, continuation_template_index) ; print("reduced continuation template index", reduced_continuation_template_index)
+                reduced_continuation_template_index : +(reduced_continuation_template_index, 1)
+                reduced_declaration_template_index : index_of(used_buffer_indices, declaration_template_index) ; print("reduced declaration template index", reduced_declaration_template_index)
+                reduced_declaration_template_index : +(reduced_declaration_template_index, 1)
+
+                push_back(reduced_targets, reduced_bind_index)
+                push_back(reduced_targets, reduced_continuation_template_index)
+                push_back(reduced_targets, reduced_declaration_template_index)
+
+                buffer_length : length(buffer)
+                reduced_closure_length : length(reduced_closure)
+                differece : -(buffer_length, reduced_closure_length)
+                differece : -(differece, 1)
+
+                callback(x) {
+                    ; adjust indices outside closure range
+                    then() {
+                        x : -(x, differece)
+
+                        super(x)
+                    }
+                    is : >=(x, buffer_length)
+                    if (is, then)
+
+                    ; return 0 for current instruction
+                    then() {
+                        super(x)
+                    }
+                    is : ==(x, 0)
+                    if (is, then)
+
+                    ; lookup for reduced closure
+                    x : index_of(used_buffer_indices, x)
+
+                    super(x)
+                }
+
+                targets : map(used_params_indices, callback)
+
+                callback(x) {
+                    push_back(reduced_targets, x)
+                }
+
+                for_each(targets, callback)
+
+                print("reduced targets: ", reduced_targets)
+
+                template : Template(reduced_targets)
+
+                super(template)
+            }
+
+            reduced_template : compile_reduced_template()
+
+            print(reduced_template)
 
             //super()
         }
