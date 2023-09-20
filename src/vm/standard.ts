@@ -67,7 +67,7 @@ export class Template extends Constant {
     public toString() : string {
         let { comment } = this
 
-        if (comment !== undefined) comment = ` ${colorize(`(${comment})`, Colors.fgWhite)}`
+        if (comment !== undefined) comment = ` ${colorize(`${comment}`, Colors.fgWhite)}`
 
         return `${colorize(`<`, Colors.fgWhite)}${colorize(`template`, Colors.fgGreen)}${colorize(`>`, Colors.fgWhite)}${comment || ``}`
     }
@@ -245,6 +245,7 @@ export class Context {
     public readonly getTemplate    : External
     public readonly Template       : External
     public readonly getTargets     : External
+    public readonly getComment     : External
 
     public readonly External       : External
 
@@ -314,6 +315,7 @@ export class Context {
         const type = External.from(`type`, ([ _, next, target ]) => {
             const target1 = toConstant(target)
 
+            if (target1 instanceof Nothing) return pack([ next, next, nothing ])
             if (target1 instanceof Internal) return pack([ next, next, Internal_ ])
             if (target1 instanceof External) return pack([ next, next, External_ ])
             if (target1 instanceof Boolean) return pack([ next, next, Boolean_ ])
@@ -370,9 +372,11 @@ export class Context {
                 return x.value
             })
 
+            const comment1 = toConstant(comment)
+
             const template = new Template({
                 targets : templateTargets,
-                comment : comment instanceof UTF8String ? comment.value : undefined,
+                comment : comment1 instanceof UTF8String ? comment1.value : undefined,
             })
 
             return pack([ next, next, template ])
@@ -383,6 +387,17 @@ export class Context {
             if (!(target1 instanceof Template)) throw new Error // @todo
 
             return pack([ next, next, new List({ elements : target1.targets.map(value => new Int32({ value })) }) ])
+        })
+        const getComment = External.from(`get_comment`, (buffer) => {
+            const [ _, next, target ] = buffer
+
+            const target1 = toConstant(target)
+
+            if (!(target1 instanceof Template)) throw new Error // @todo
+
+            const { comment } = target1
+
+            return pack([ next, next, comment ? new UTF8String({ value : comment }) : buffer.nothing ])
         })
 
         const External_ = External.from(`External`, ([ _, next, target ]) => {
@@ -409,6 +424,7 @@ export class Context {
             const left1 = toConstant(left)
             const right1 = toConstant(right)
 
+            if (left1 instanceof Nothing ) return pack([ next, next, right1 instanceof Nothing ? true_ : false_ ])
             if (left1 instanceof Boolean && right1 instanceof Boolean) return pack([ next, next, left1.value === right1.value ? true_ : false_ ])
             if (left1 instanceof Int32 && right1 instanceof Int32) return pack([ next, next, left1.value === right1.value ? true_ : false_ ])
             if (left1 instanceof UTF8String && right1 instanceof UTF8String) return pack([ next, next, left1.value === right1.value ? true_ : false_ ])
@@ -675,6 +691,7 @@ export class Context {
         this.getTemplate    = getTemplate
         this.Template       = Template_
         this.getTargets     = getTargets
+        this.getComment     = getComment
 
         this.External       = External_
 
@@ -738,6 +755,7 @@ export class Context {
             case `get_template` : return this.getTemplate
             case `Template`     : return this.Template
             case `get_targets`  : return this.getTargets
+            case `get_comment`  : return this.getComment
 
             case `External`     : return this.External
 
@@ -808,16 +826,24 @@ export function toFormatString(something : Anything) : string {
     const stringify = (something : Constant) : string => {
         let id = ids.get(something)
 
-        if (id !== undefined) return id
+        if (!(
+            something instanceof Boolean ||
+            something instanceof Int32 ||
+            something instanceof UTF8String
+        )) {
+            if (id !== undefined) return id
 
-        if (all.has(something)) {
-            const id = colorize(colorize(`<ref ${ids.size + 1}>`, Colors.fgBlack), Colors.bgRed)
+            if (all.has(something)) {
+                const id = colorize(colorize(`<ref ${ids.size + 1}>`, Colors.fgBlack), Colors.bgRed)
 
-            ids.set(something, id)
+                ids.set(something, id)
 
-            return id
+                console.log(something, id)
+
+                return id
+            }
+            else all.add(something)
         }
-        else all.add(something)
 
         let text = ``
 

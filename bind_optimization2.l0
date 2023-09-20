@@ -1,0 +1,371 @@
+f() {
+    print("lol")
+}
+
+for_each(list, callback) {
+    i : var(0)
+    l : length(list)
+
+    iterate() {
+        is : >=(i, l)
+        if (is, /super)
+
+        x : get(list, i)
+
+        callback(x, i)
+
+        i1 : +(i, 1)
+        =(i, i1)
+
+        iterate()
+    }
+
+    iterate()
+}
+
+in(x, list) {
+    callback(y, i) {
+        then() {
+            //super(true, i)
+        }
+        is : ==(x, y)
+        if (is, then)
+    }
+
+    for_each(list, callback)
+
+    super(false)
+}
+
+map(list, replace) {
+    result : List()
+
+    callback(x, i) {
+        x : replace(x, i)
+
+        push_back(result, x)
+    }
+
+    for_each(list, callback)
+
+    super(result)
+}
+
+index_of(list, value) {
+    callback(x, i) {
+        then() {
+            //super(i)
+        }
+        is : ==(value, x)
+        if (is, then)
+    }
+
+    for_each(list, callback)
+
+    super(false)
+}
+
+push_back_unique(list, x) {
+    is : in(x, list)
+    if (is, super)
+
+    push_back(list, x)
+}
+
+push_front_unique(list, x) {
+    is : in(x, list)
+    if (is, super)
+
+    push_front(list, x)
+}
+
+copy_list(list) {
+    copy : List()
+
+    callback(x) {
+        push_back(copy, x)
+    }
+
+    for_each(list, callback)
+
+    super(copy)
+}
+
+optimize(program) {
+    optimize_internal() {
+        print("optimize internal")
+
+        closure : get_closure(program) ; print("closure: ", closure)
+        closure_length : length(closure) ; print("closure length: ", closure_length)
+        template : get_template(program) ; print("template: ", template)
+        targets : get_targets(template) ; print("targets: ", targets)
+        stored_length : length(targets) stored_length : -(stored_length, 3)
+
+        get_target(i) {
+            i : get(targets, i)
+            index : -(i, 1)
+            value : get(closure, index)
+
+            super(value, index)
+        }
+
+        current, current_index : get_target(0)
+
+        optimize_bind() {
+            print("optimize bind")
+
+            continuation_template, continuation_template_index : get_target(1) ; print("continuation template: ", continuation_template)
+            continuation_targets : get_targets(continuation_template)
+            declaration_template, declaration_template_index : get_target(2) ; print("declaration template: ", declaration_template)
+            declaration_targets : get_targets(declaration_template)
+
+            used_closure_indices_in_stored : List()
+            used_buffer_indices_in_stored : List()
+
+            gather_closure_index_in_stored(index_in_template) {
+                skip_current() {
+                    ; print("skipped current")
+
+                    /super()
+                }
+                is_current : <(index_in_template, 1)
+                if (is_current, skip_current)
+
+                index_in_stored : -(index_in_template, 1)
+
+                skip_param() {
+                    ; print("skipped param ", index_in_template)
+
+                    /super()
+                }
+                is_param : >=(index_in_stored, stored_length)
+                if (is_param, skip_param)
+
+                index_in_targets : +(index_in_stored, 3)
+                index_in_buffer : get(targets, index_in_targets)
+
+                push_back_unique(used_buffer_indices_in_stored, index_in_buffer)
+
+                ; x : -(index_in_buffer, 1)
+                ; x : get(closure, x)
+                ; print(x)
+
+                skip_current() {
+                    ; print("skipped current")
+
+                    /super()
+                }
+                is_current : <(index_in_buffer, 1)
+                if (is_current, skip_current)
+
+                index_in_closure : -(index_in_buffer, 1)
+
+                skip_param() {
+                    ; print("skipped param ", index_in_closure)
+
+                    /super()
+                }
+                is_param : >=(index_in_closure, closure_length)
+                if (is_param, skip_param)
+
+                ; x : get(closure, index_in_closure) print(x)
+
+                push_back_unique(used_closure_indices_in_stored, index_in_closure)
+            }
+
+            for_each(continuation_targets, gather_closure_index_in_stored)
+            for_each(declaration_targets, gather_closure_index_in_stored)
+
+            ; print("used closure indices in stored: ", used_closure_indices_in_stored)
+            print("used buffer indices in stored: ", used_buffer_indices_in_stored)
+
+            used_buffer_indices_in_stored_length : length(used_buffer_indices_in_stored)
+
+            all_used_closure_indices : copy_list(used_closure_indices_in_stored)
+
+            push_front_unique(all_used_closure_indices, declaration_template_index)
+            push_front_unique(all_used_closure_indices, continuation_template_index)
+            push_front_unique(all_used_closure_indices, current_index)
+
+            ; print("all used closure indices: ", all_used_closure_indices)
+
+            all_used_closure_indices_length : length(all_used_closure_indices)
+            reduced_template_targets : List()
+
+            fill_target(index_in_closure) {
+                skip_param() {
+                    i : -(index_in_closure, closure_length)
+                    i : +(i, all_used_closure_indices_length)
+                    i : +(i, 1)
+
+                    push_back_unique(reduced_template_targets, i)
+
+                    /super()
+                }
+                is_param : >=(index_in_closure, closure_length)
+                if (is_param, skip_param)
+
+                index_in_reduced_closure : index_of(all_used_closure_indices, index_in_closure)
+                index_in_reduced_buffer : +(index_in_reduced_closure, 1)
+
+                push_back_unique(reduced_template_targets, index_in_reduced_buffer)
+            }
+
+            fill_target(current_index)
+            fill_target(continuation_template_index)
+            fill_target(declaration_template_index)
+
+            fill_target(index_in_buffer) {
+                skip_current() {
+                    ; print("skipped current")
+
+                    push_back(reduced_template_targets, 0)
+
+                    /super()
+                }
+                is_current : <(index_in_buffer, 1)
+                if (is_current, skip_current)
+
+                index_in_closure : -(index_in_buffer, 1)
+
+                skip_param() {
+                    i : -(index_in_closure, closure_length)
+                    i : +(i, all_used_closure_indices_length)
+                    i : +(i, 1)
+
+                    push_back_unique(reduced_template_targets, i)
+
+                    /super()
+                }
+                is_param : >=(index_in_closure, closure_length)
+                if (is_param, skip_param)
+
+                index_in_reduced_closure : index_of(all_used_closure_indices, index_in_closure)
+
+                skip_unused() {
+                    /super()
+                }
+                is_unused : ==(index_in_reduced_closure, false)
+                if (is_unused, skip_unused)
+
+                index_in_reduced_buffer : +(index_in_reduced_closure, 1)
+
+                ; print(index_in_template, " -> ", index_in_reduced_buffer)
+
+                push_back_unique(reduced_template_targets, index_in_reduced_buffer)
+            }
+
+            for_each(used_buffer_indices_in_stored, fill_target)
+
+            reduce_comment(template) {
+                comment : get_comment(template)
+
+                then() {
+                    super()
+                }
+                is : ==(comment, nothing)
+                if (is, then)
+
+                comment : +(comment, " (reduced)")
+
+                super(comment)
+            }
+
+            comment : reduce_comment(template)
+            reduced_template : Template(reduced_template_targets, comment)
+
+            ; print("reduced template targets: ", reduced_template_targets)
+            print("reduced template: ", reduced_template)
+
+            fill_closure(i) {
+                then() {
+                    print(i, " out of bounds ", closure_length)
+                }
+                is : >=(i, closure_length)
+                if (is, then)
+
+                value : get(closure, i)
+
+                super(value)
+            }
+
+            reduced_closure : map(all_used_closure_indices, fill_closure)
+
+            print("reduced closure: ", reduced_closure)
+
+            fill_target(index_in_template) {
+                skip_current() {
+                    ; print("skipped current")
+
+                    /super(0)
+                }
+                is_current : <(index_in_template, 1)
+                if (is_current, skip_current)
+
+                index_in_stored : -(index_in_template, 1)
+
+                skip_param() {
+                    i : -(index_in_stored, stored_length)
+                    i : +(i, used_buffer_indices_in_stored_length)
+                    i : +(i, 1)
+
+                    print("internal param: ", i)
+
+                    /super(i)
+                }
+                is_param : >=(index_in_stored, stored_length)
+                if (is_param, skip_param)
+
+                index_in_targets : +(index_in_stored, 3)
+                index_in_buffer : get(targets, index_in_targets)
+                index_in_closure : -(index_in_buffer, 1)
+
+                process_param() {
+                    i : -(index_in_closure, closure_length)
+                    i : +(i, used_buffer_indices_in_stored_length)
+                    i : +(i, 1)
+
+                    print("param: ", i)
+
+                    /super(i)
+                }
+                is_param : >=(index_in_closure, closure_length)
+                if (is_param, process_param)
+
+                index_in_reduced_stored : index_of(used_buffer_indices_in_stored, index_in_buffer)
+                index_in_final_buffer : +(index_in_reduced_stored, 1)
+
+                print("stored: ", index_in_final_buffer)
+
+                super(index_in_final_buffer)
+            }
+
+            reduced_continuation_targets : map(continuation_targets, fill_target)
+            comment : reduce_comment(continuation_template)
+            reduced_continuation_template : Template(reduced_continuation_targets, comment)
+
+            ; print("reduced continuation targets: ", reduced_continuation_targets)
+            print("reduced continuation template: ", reduced_continuation_template)
+
+            reduced_declaration_targets : map(declaration_targets, fill_target)
+            comment : reduce_comment(declaration_template)
+            reduced_declaration_template : Template(reduced_declaration_targets, comment)
+
+            ; print("reduced declaration targets: ", reduced_declaration_targets)
+            print("reduced declaration template: ", reduced_declaration_template)
+
+            //super()
+        }
+
+        is : ==(current, bind) if (is, optimize_bind)
+
+        /super()
+    }
+
+    program_type : type(program)
+    is : ==(program_type, Internal) if (is, optimize_internal)
+
+    print("failed to process program ", program)
+}
+
+optimize(f)
