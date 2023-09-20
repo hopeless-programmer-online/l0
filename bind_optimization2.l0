@@ -93,7 +93,7 @@ copy_list(list) {
 
 optimize(program) {
     optimize_internal() {
-        print("optimize internal")
+        ; print("optimize internal")
 
         closure : get_closure(program) ; print("closure: ", closure)
         closure_length : length(closure) ; print("closure length: ", closure_length)
@@ -112,7 +112,7 @@ optimize(program) {
         current, current_index : get_target(0)
 
         optimize_bind() {
-            print("optimize bind")
+            ; print("optimize bind")
 
             continuation_template, continuation_template_index : get_target(1) ; print("continuation template: ", continuation_template)
             continuation_targets : get_targets(continuation_template)
@@ -177,7 +177,7 @@ optimize(program) {
             for_each(declaration_targets, gather_closure_index_in_stored)
 
             ; print("used closure indices in stored: ", used_closure_indices_in_stored)
-            print("used buffer indices in stored: ", used_buffer_indices_in_stored)
+            ; print("used buffer indices in stored: ", used_buffer_indices_in_stored)
 
             used_buffer_indices_in_stored_length : length(used_buffer_indices_in_stored)
 
@@ -275,7 +275,7 @@ optimize(program) {
             reduced_template : Template(reduced_template_targets, comment)
 
             ; print("reduced template targets: ", reduced_template_targets)
-            print("reduced template: ", reduced_template)
+            ; print("reduced template: ", reduced_template)
 
             fill_closure(i) {
                 then() {
@@ -291,7 +291,7 @@ optimize(program) {
 
             reduced_closure : map(all_used_closure_indices, fill_closure)
 
-            print("reduced closure: ", reduced_closure)
+            ; print("reduced closure: ", reduced_closure)
 
             fill_target(index_in_template) {
                 skip_current() {
@@ -309,7 +309,7 @@ optimize(program) {
                     i : +(i, used_buffer_indices_in_stored_length)
                     i : +(i, 1)
 
-                    print("internal param: ", i)
+                    ; print("internal param: ", i)
 
                     /super(i)
                 }
@@ -325,7 +325,7 @@ optimize(program) {
                     i : +(i, used_buffer_indices_in_stored_length)
                     i : +(i, 1)
 
-                    print("param: ", i)
+                    ; print("param: ", i)
 
                     /super(i)
                 }
@@ -335,7 +335,7 @@ optimize(program) {
                 index_in_reduced_stored : index_of(used_buffer_indices_in_stored, index_in_buffer)
                 index_in_final_buffer : +(index_in_reduced_stored, 1)
 
-                print("stored: ", index_in_final_buffer)
+                ; print("stored: ", index_in_final_buffer)
 
                 super(index_in_final_buffer)
             }
@@ -345,16 +345,26 @@ optimize(program) {
             reduced_continuation_template : Template(reduced_continuation_targets, comment)
 
             ; print("reduced continuation targets: ", reduced_continuation_targets)
-            print("reduced continuation template: ", reduced_continuation_template)
+            ; print("reduced continuation template: ", reduced_continuation_template)
 
             reduced_declaration_targets : map(declaration_targets, fill_target)
             comment : reduce_comment(declaration_template)
             reduced_declaration_template : Template(reduced_declaration_targets, comment)
 
             ; print("reduced declaration targets: ", reduced_declaration_targets)
-            print("reduced declaration template: ", reduced_declaration_template)
+            ; print("reduced declaration template: ", reduced_declaration_template)
 
-            //super()
+            i : index_of(reduced_closure, continuation_template) ; print(i)
+            set(reduced_closure, i, reduced_continuation_template)
+
+            i : index_of(reduced_closure, declaration_template) ; print(i)
+            set(reduced_closure, i, reduced_declaration_template)
+
+            ; print("reduced closure: ", reduced_closure)
+
+            optimized : Internal(reduced_template, reduced_closure)
+
+            //super(optimized)
         }
 
         is : ==(current, bind) if (is, optimize_bind)
@@ -368,4 +378,6 @@ optimize(program) {
     print("failed to process program ", program)
 }
 
-optimize(f)
+f : optimize(f)
+
+print(f)

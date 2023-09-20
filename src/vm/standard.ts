@@ -305,6 +305,7 @@ export class Context {
         })
         const print = External.from(`print`, buffer => {
             const [ _, next ] = buffer
+
             console.log(buffer.list.slice(2).map(x => toFormatString(x)).join(``))
 
             return pack([ next, next ])
@@ -340,12 +341,19 @@ export class Context {
             return pack([ next, next ])
         })
 
-        const Internal_ = External.from(`Internal`, ([ _, next, target ]) => {
-            const target1 = toConstant(target)
+        const Internal_ = External.from(`Internal`, ([ _, next, template, closure ]) => {
+            const template1 = toConstant(template)
+            const closure1 = toConstant(closure)
 
-            if (target1 instanceof Internal) return pack([ next, next, target ])
+            if (!(template1 instanceof Template)) throw new Error // @todo
+            if (!(closure1 instanceof List)) throw new Error // @todo
 
-            return pack([ next, next, nothing ])
+            const internal = new Internal({
+                template : template1,
+                closure : closure1.elements,
+            })
+
+            return pack([ next, next, internal ])
         })
         const getClosure = External.from(`get_closure`, ([ _, next, target ]) => {
             const target1 = toConstant(target)
@@ -838,7 +846,7 @@ export function toFormatString(something : Anything) : string {
 
                 ids.set(something, id)
 
-                console.log(something, id)
+                // console.log(something, id)
 
                 return id
             }
@@ -853,6 +861,18 @@ export function toFormatString(something : Anything) : string {
             if (elements.length > 0) elements = `\n${indent(elements)}\n`
 
             text = colorize(`[`, Colors.fgWhite) + elements + colorize(`]`, Colors.fgWhite)
+        }
+        else if (something instanceof Internal) {
+            let closure = something.closure.map(x => stringify(toConstant(x))).join(colorize(`,\n`, Colors.fgWhite))
+
+            if (closure.length > 0) closure = `\n${indent(closure)}\n`
+
+            const closure_text = colorize(`[`, Colors.fgWhite) + closure + colorize(`]`, Colors.fgWhite)
+
+            text = colorize(`program`, Colors.fgBlue) + ` ` + colorize(`{`, Colors.fgWhite) + `\n` +
+                `    ${colorize(`template`, Colors.fgWhite)} : ${stringify(something.template)}\n` +
+                `    ${colorize(`closure `, Colors.fgWhite)} : ${closure_text}\n` +
+                colorize(`}`, Colors.fgWhite) + `\n`
         }
         else if (something instanceof Template) {
             let elements = something.targets.map(x => colorize(`${x}`, Colors.fgYellow)).join(colorize(`, `, Colors.fgWhite))
