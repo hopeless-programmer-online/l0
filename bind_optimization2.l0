@@ -99,7 +99,10 @@ optimize(program) {
         closure_length : length(closure) ; print("closure length: ", closure_length)
         template : get_template(program) ; print("template: ", template)
         targets : get_targets(template) ; print("targets: ", targets)
-        stored_length : length(targets) stored_length : -(stored_length, 3)
+        stored_length : length(targets)
+        stored_length : -(stored_length, 3) ; first 3 targets are bind, continuation and declaration templates
+        stored_length : +(stored_length, 1) ; additional 1 for declared program added by bind
+        declared_in_stored_index : -(stored_length, 1)
 
         get_target(i) {
             i : get(targets, i)
@@ -123,6 +126,8 @@ optimize(program) {
             used_buffer_indices_in_stored : List()
 
             gather_closure_index_in_stored(index_in_template) {
+                ; print("gather_closure_index_in_stored(", index_in_template, ")")
+
                 skip_current() {
                     ; print("skipped current")
 
@@ -140,6 +145,14 @@ optimize(program) {
                 }
                 is_param : >=(index_in_stored, stored_length)
                 if (is_param, skip_param)
+
+                skip_declared() {
+                    ; print("skip declared")
+
+                    /super()
+                }
+                is_declared : ==(index_in_stored, declared_in_stored_index)
+                if (is_declared, skip_declared)
 
                 index_in_targets : +(index_in_stored, 3)
                 index_in_buffer : get(targets, index_in_targets)
@@ -193,6 +206,8 @@ optimize(program) {
             reduced_template_targets : List()
 
             fill_target(index_in_closure) {
+                ; print("fill_target(", index_in_closure, ")")
+
                 skip_param() {
                     i : -(index_in_closure, closure_length)
                     i : +(i, all_used_closure_indices_length)
@@ -294,6 +309,8 @@ optimize(program) {
             ; print("reduced closure: ", reduced_closure)
 
             fill_target(index_in_template) {
+                ; print("fill_target(", index_in_template, ")")
+
                 skip_current() {
                     ; print("skipped current")
 
@@ -305,7 +322,7 @@ optimize(program) {
                 index_in_stored : -(index_in_template, 1)
 
                 skip_param() {
-                    i : -(index_in_stored, stored_length)
+                    i : -(index_in_stored, stored_length) ; print(i)
                     i : +(i, used_buffer_indices_in_stored_length)
                     i : +(i, 1)
 
@@ -315,6 +332,18 @@ optimize(program) {
                 }
                 is_param : >=(index_in_stored, stored_length)
                 if (is_param, skip_param)
+
+                skip_declared() {
+                    i : -(index_in_stored, stored_length) ; print(i)
+                    i : +(i, used_buffer_indices_in_stored_length)
+                    i : +(i, 1)
+
+                    ; print("declared: ", i)
+
+                    /super(i)
+                }
+                is_declared : ==(index_in_stored, declared_in_stored_index)
+                if (is_declared, skip_declared)
 
                 index_in_targets : +(index_in_stored, 3)
                 index_in_buffer : get(targets, index_in_targets)
@@ -345,14 +374,14 @@ optimize(program) {
             reduced_continuation_template : Template(reduced_continuation_targets, comment)
 
             ; print("reduced continuation targets: ", reduced_continuation_targets)
-            ; print("reduced continuation template: ", reduced_continuation_template)
+            print("reduced continuation template: ", reduced_continuation_template)
 
             reduced_declaration_targets : map(declaration_targets, fill_target)
             comment : reduce_comment(declaration_template)
             reduced_declaration_template : Template(reduced_declaration_targets, comment)
 
             ; print("reduced declaration targets: ", reduced_declaration_targets)
-            ; print("reduced declaration template: ", reduced_declaration_template)
+            print("reduced declaration template: ", reduced_declaration_template)
 
             i : index_of(reduced_closure, continuation_template) ; print(i)
             set(reduced_closure, i, reduced_continuation_template)
@@ -381,3 +410,7 @@ optimize(program) {
 f : optimize(f)
 
 print(f)
+
+f()
+
+print("done")

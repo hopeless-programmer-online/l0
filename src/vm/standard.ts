@@ -511,7 +511,7 @@ export class Context {
 
             if (left1 instanceof Int32 && right1 instanceof Int32) return pack([ next, next, new Int32({ value : left1.value - right1.value }) ])
 
-            throw new Error // @todo
+            throw new Error(`Cannot perform ${left1} - ${right1}`)
         })
         const mul = External.from(`*`, ([ _, next, left, right ]) => {
             const left1 = toConstant(left)
@@ -538,7 +538,7 @@ export class Context {
             if (left1 instanceof Int32 && right1 instanceof Int32) return pack([ next, next, new Boolean({ value : left1.value < right1.value }) ])
             if (left1 instanceof UTF8String && right1 instanceof UTF8String) return pack([ next, next, new Boolean({ value : left1.value < right1.value }) ])
 
-            throw new Error // @todo
+            throw new Error(`Cannot perform ${left1} < ${right1}`)
         })
         const lessOrEqual = External.from(`<=`, ([ _, next, left, right ]) => {
             const left1 = toConstant(left)
