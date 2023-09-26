@@ -306,7 +306,12 @@ export class Context {
         const print = External.from(`print`, buffer => {
             const [ _, next ] = buffer
 
-            console.log(buffer.list.slice(2).map(x => toFormatString(x)).join(``))
+            console.log(buffer.list.slice(2).map(x => {
+                if (x instanceof UTF8String) return x.value
+                if (x instanceof Variable && x.value instanceof UTF8String) return x.value.value
+
+                return to_format_string(x)
+            }).join(``))
 
             return pack([ next, next ])
         })
@@ -895,6 +900,134 @@ export function toFormatString(something : Anything) : string {
     return stringify(toConstant(something))
 }
 
+type Stringifyable = boolean | number | string | Stringifyable[] | { [key : string] : Stringifyable } | Anything
+
+export function to_format_string(something : Stringifyable) : string {
+    const cache = new Map<Stringifyable, string>()
+    const used = new Set<Stringifyable>()
+
+    function stringify(something : Stringifyable) : () => string {
+        if (typeof something == `boolean`) return stringify_plain(something)
+        if (typeof something == `number`) return stringify_plain(something)
+        if (typeof something == `string`) return stringify_plain(something)
+        if (something instanceof Something) {
+            const constant = toConstant(something)
+
+            if (constant instanceof Nothing) return stringify_plain(constant)
+            if (constant instanceof Terminal) return stringify_plain(constant)
+            if (constant instanceof Boolean) return stringify_plain(constant)
+            if (constant instanceof Int32) return stringify_plain(constant)
+            if (constant instanceof UTF8String) return stringify_plain(constant)
+        }
+
+        const cached = cache.get(something)
+
+        if (cached) {
+            used.add(something)
+
+            return () => cached
+        }
+
+        const ref = colorize(`<ref ${cache.size + 1}>`, Colors.bgRed, Colors.fgWhite)
+
+        cache.set(something, ref)
+
+        const get_text = stringify_plain(something)
+
+        return () => {
+            let text = get_text()
+
+            if (used.has(something)) text = `${ref} ${text}`
+
+            return text
+        }
+    }
+    function indent(text : string, space = `  `) {
+        return text
+            .replace(/\n/g, `\n${space}`)
+            .replace(/^/, space)
+    }
+    function wrap_content(text : string, begin : string, end : string) {
+        if (text.length > 0) text = `\n${indent(text)}\n`
+
+        return `${begin}${text}${end}`
+    }
+    function wrap_map(map : { [key : string] : string }) {
+        const l = [ ...Object.keys(map) ]
+            .reduce((a, x) => Math.max(a, x.length), 0)
+        const content = [ ...Object.entries(map) ]
+            .map(([ k, v ]) => `${$c(k.padEnd(l, ` `))} ${$w`:`} ${v}`)
+            .join(`,\n`)
+
+        return wrap_content(
+            content,
+            $w`{`,
+            $w`}`,
+        )
+    }
+    function stringify_plain(something : Stringifyable) : () => string {
+        if (typeof something == `boolean`) return () => $b(`${something}`)
+        if (typeof something == `number`) return () => $y(`${something}`)
+        if (typeof something == `string`) return () => $r(`${JSON.stringify(something)}`)
+        if (Array.isArray(something)) {
+            const content = something
+                .map(stringify)
+
+            return () => wrap_content(
+                content
+                    .map(x => x())
+                    .join(`,\n`),
+                $w`[`,
+                $w`]`,
+            )
+        }
+        if (!(something instanceof Something)) {
+            const l = [ ...Object.keys(something) ]
+                .reduce((a, x) => Math.max(a, x.length), 0)
+            const content = [ ...Object.entries(something) ]
+                .map(([ k, v ]) => () => `${$c(k.padEnd(l, ` `))} ${$w`:`} ${stringify(v)}`)
+
+            return () => wrap_content(
+                content
+                    .map(x => x())
+                    .join(`,\n`),
+                $w`{`,
+                $w`}`,
+            )
+        }
+
+        const constant = toConstant(something)
+
+        if (constant instanceof Nothing) return () => $m`nothing`
+        if (constant instanceof Terminal) return () => `${br($m`terminal`)} ${$b`program`}`
+        if (constant instanceof Template) {
+            const targets = stringify(constant.targets)
+
+            return () => `${br($g`template`)}${constant.comment ? ` ${$w(constant.comment)}` : ``} ` + wrap_map({
+                targets : targets(),
+            })
+        }
+        if (constant instanceof Internal) {
+            const template = stringify(constant.template)
+            const closure  = stringify(constant.closure)
+
+            return () => `${br($g`internal`)} ${$b`program`} ` + wrap_map({
+                template : template(),
+                closure  : closure(),
+            })
+        }
+        if (constant instanceof External) return () => `${br($g`external`)} ${$b`program`} ${$w(constant.name)}`
+        if (constant instanceof Boolean) return stringify(constant.value)
+        if (constant instanceof Int32) return stringify(constant.value)
+        if (constant instanceof UTF8String) return stringify(constant.value)
+        if (constant instanceof List) return stringify(constant.elements)
+
+        return () => $m`something`
+    }
+
+    return stringify(something)()
+}
+
 enum Colors {
     reset      = 0,
     bright     = 1,
@@ -923,6 +1056,30 @@ enum Colors {
     bgWhite    = 47,
 }
 
-function colorize(text : string, color : Colors = Colors.reset) {
-    return `\x1b[${color}m${text}\x1b[${Colors.reset}m`
+function colorize(text : string, ...colors : Colors[]) {
+    return `${colors.map(x => `\x1b[${x}m`).join(``)}${text}\x1b[${Colors.reset}m`
+}
+function $r(text : any) {
+    return colorize(String(text), Colors.fgRed)
+}
+function $g(text : any) {
+    return colorize(String(text), Colors.fgGreen)
+}
+function $b(text : any) {
+    return colorize(String(text), Colors.fgBlue)
+}
+function $c(text : any) {
+    return colorize(String(text), Colors.fgCyan)
+}
+function $m(text : any) {
+    return colorize(String(text), Colors.fgMagenta)
+}
+function $y(text : any) {
+    return colorize(String(text), Colors.fgYellow)
+}
+function $w(text : any) {
+    return colorize(String(text), Colors.fgWhite)
+}
+function br(text : any) {
+    return `${$w`<`}${String(text)}${$w`>`}`
 }
