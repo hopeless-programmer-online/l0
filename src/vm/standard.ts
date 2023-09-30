@@ -508,7 +508,7 @@ export class Context {
             if (left1 instanceof UTF8String && right1 instanceof UTF8String) return pack([ next, next, new UTF8String({ value : left1.value + right1.value }) ])
             if (left1 instanceof List && right1 instanceof List) return pack([ next, next, new List({ elements : [ ...left1.elements, ...right1.elements ] }) ])
 
-            throw new Error // @todo
+            throw new Error(`Cannot perform ${left1} + ${right1}`)
         })
         const sub = External.from(`-`, ([ _, next, left, right ]) => {
             const left1 = toConstant(left)
