@@ -531,7 +531,10 @@ export class Context {
             const left1 = toConstant(left)
             const right1 = toConstant(right)
 
-            if (left1 instanceof Int32 && right1 instanceof Int32) return pack([ next, next, new Int32({ value : left1.value / right1.value }) ])
+            if (left1 instanceof Int32 && right1 instanceof Int32) return pack([ next, next,
+                new Int32({ value : Math.floor(left1.value / right1.value) }),
+                new Int32({ value : left1.value % right1.value }),
+            ])
 
             throw new Error // @todo
         })
