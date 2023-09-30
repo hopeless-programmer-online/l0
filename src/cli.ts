@@ -42,6 +42,12 @@ export class Cli {
             list : [ new std.Internal({ closure, template : std.Template.from(entry.entryTemplate) }) ],
         })
         const machine = new vm.Machine({ buffer })
+        const statistics = {
+            buffer : new Set<number>(),
+            closure : new Set<number>(),
+            internals : 0,
+            total : 0,
+        }
 
         stopwatch(() => {
             for (let i = 0; !machine.halted; ++i) {
@@ -49,31 +55,62 @@ export class Cli {
 
                 const { buffer } = machine
 
-//                 if (buffer != vm.terminal) buffer.list.forEach(x => console.log(std.toFormatString(x)))
-//
-//                 if (i === 8) {
-//                     console.log(`----------------------`)
-//
-//                     if (buffer != vm.terminal) {
-//                         const { first } = buffer
-//
-//                         if (first instanceof std.Internal) {
-//                             const x = [
-//                                 buffer.first,
-//                                 ...first.closure,
-//                                 ...buffer.tail,
-//                             ]
-//
-//                             x.forEach(x => console.log(std.toFormatString(x)))
-//                         }
-//                     }
-//
-//                     console.log(`----------------------`)
-//                 }
+                if (buffer instanceof vm.Buffer) {
+                    statistics.buffer.add(buffer.list.length)
+
+                    const { first } = buffer
+
+                    if (first instanceof std.Internal) {
+                        ++statistics.internals
+
+                        statistics.closure.add(first.closure.length)
+                    }
+                }
+
+                ++statistics.total
 
                 machine.step()
             }
         }, `executed`)
+
+        /*{
+            const lengths = [ ...statistics.buffer.values() ].sort()
+            const min = lengths.reduce((a, x) => Math.min(a, x), +Infinity)
+            const max = lengths.reduce((a, x) => Math.max(a, x), -Infinity)
+            const mean = lengths.reduce((a, x) => a + x, 0) / lengths.length
+            const mae = lengths.reduce((a, x) => a + Math.abs(x - mean), 0) / lengths.length
+            const sd = lengths.reduce((a, x) => a + (x - mean)**2, 0)**0.5
+            const median = lengths[Math.floor(lengths.length / 2)]
+
+            console.log(`buffer lengths statistics:`)
+            console.log(` - records : ${lengths.length}`)
+            console.log(` - min     : ${min}`)
+            console.log(` - max     : ${max}`)
+            console.log(` - mean    : ${mean}`)
+            console.log(` - median  : ${median}`)
+            console.log(` - mae     : ${mae}`)
+            console.log(` - sd      : ${sd}`)
+        }
+        {
+            const lengths = [ ...statistics.closure.values() ].sort()
+            const min = lengths.reduce((a, x) => Math.min(a, x), +Infinity)
+            const max = lengths.reduce((a, x) => Math.max(a, x), -Infinity)
+            const mean = lengths.reduce((a, x) => a + x, 0) / lengths.length
+            const mae = lengths.reduce((a, x) => a + Math.abs(x - mean), 0) / lengths.length
+            const sd = lengths.reduce((a, x) => a + (x - mean)**2, 0)**0.5
+            const median = lengths[Math.floor(lengths.length / 2)]
+
+            console.log(`closure lengths statistics:`)
+            console.log(` - records : ${lengths.length}`)
+            console.log(` - min     : ${min}`)
+            console.log(` - max     : ${max}`)
+            console.log(` - mean    : ${mean}`)
+            console.log(` - median  : ${median}`)
+            console.log(` - mae     : ${mae}`)
+            console.log(` - sd      : ${sd}`)
+        }
+
+        console.log(`internal / all: ${statistics.internals / statistics.total}`)*/
     }
 }
 
