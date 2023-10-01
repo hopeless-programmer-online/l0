@@ -370,6 +370,10 @@ export class Inputs {
         this.list = list
     }
 
+    public * [Symbol.iterator]() {
+        return yield * this.list
+    }
+
     public map<T>(callback : (input : Input, index : number, inputs : Inputs) => T) {
         return this.list.map((input, index) => callback(input, index, this))
     }

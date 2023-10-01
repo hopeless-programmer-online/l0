@@ -198,7 +198,25 @@ function findPlaceholder(placeholders : TemplatePlaceholder[], callback : (place
 
     return placeholder
 }
-function fillTemplates(program : Program, state : BufferElement[], placeholders : TemplatePlaceholder[], lookup : Map<TemplatePlaceholder, Template> = new Map) {
+function fillTemplates(
+    program : Program, state : BufferElement[],
+    templatePlaceholders : TemplatePlaceholder[],
+    used : Map<Command, BufferSet>,
+    statistics? : {
+        bind : {
+            total : number
+            filtered : number
+        }
+    },
+    lookup : Map<TemplatePlaceholder, Template> = new Map
+) {
+    if (!statistics) statistics = {
+        bind : {
+            total : 0,
+            filtered : 0,
+        },
+    }
+
     state = [ ...state, ...program.parameters ]
 
     function printState(state : BufferElement[]) {
@@ -242,11 +260,25 @@ function fillTemplates(program : Program, state : BufferElement[], placeholders 
     }
 
     for (const command of program.commands) {
+        // console.log(`processing ${command}`)
+
         const continuationIndex = findContinuationIndex(state, command)
 
+        const usedByCommand = used.get(command)
+
+        if (!usedByCommand) throw new Error // @todo
+
         if (command.symbol === Declaration.symbol) {
+            const stored = state
+                .map((target, index) => ({ target, index }))
+                .slice(1)
+                .filter(x => usedByCommand.has(x.target))
+
+            statistics.bind.total += state.length - 1
+            statistics.bind.filtered += stored.length
+
             lookup.set(
-                findPlaceholder(placeholders, x => x.symbol === DeclarationTemplatePlaceholder.symbol && x.command === command),
+                findPlaceholder(templatePlaceholders, x => x.symbol === DeclarationTemplatePlaceholder.symbol && x.command === command),
                 new Template({
                     source : command,
                     comment : `Declaration of ${command.name} program.`,
@@ -258,18 +290,30 @@ function fillTemplates(program : Program, state : BufferElement[], placeholders 
                         // pass template of the target program
                         findHeadIndex(state, command.program),
                         // pass all elements in the buffer, except current command
-                        ...state.slice(1).map((x, i) => i + 1),
+                        ...stored.map(x => x.index),
                     ],
                 }),
             )
 
-            state.push(command.program)
+            state = [
+                new CurrentInstructionPlaceholder,
+                ...stored.map(x => x.target),
+                command.program,
+            ]
 
-            fillTemplates(command.program, state, placeholders, lookup)
+            fillTemplates(command.program, state, templatePlaceholders, used, statistics, lookup)
         }
         else if (command.symbol === Call.symbol) {
+            const stored = state
+                .map((target, index) => ({ target, index }))
+                .slice(1)
+                .filter(x => usedByCommand.has(x.target))
+
+            statistics.bind.total += state.length - 1
+            statistics.bind.filtered += stored.length
+
             lookup.set(
-                findPlaceholder(placeholders, x => x.symbol === ContinuationBidingTemplatePlaceholder.symbol && x.command === command),
+                findPlaceholder(templatePlaceholders, x => x.symbol === ContinuationBidingTemplatePlaceholder.symbol && x.command === command),
                 new Template({
                     source : command,
                     comment : `Continuation binding for ${command.target.name} call.`,
@@ -281,15 +325,19 @@ function fillTemplates(program : Program, state : BufferElement[], placeholders 
                         // pass template for the next command
                         continuationIndex,
                         // pass all elements in the buffer, except current command
-                        ...state.slice(1).map((x, i) => i + 1),
+                        ...stored.map(x => x.index),
                     ],
                 }),
             )
 
-            state.push(new ContinuationBidingPlaceholder({ command }))
+            state = [
+                new CurrentInstructionPlaceholder,
+                ...stored.map(x => x.target),
+                new ContinuationBidingPlaceholder({ command }),
+            ]
 
             lookup.set(
-                findPlaceholder(placeholders, x => x.symbol === ControlPassingTemplatePlaceholder.symbol && x.command === command),
+                findPlaceholder(templatePlaceholders, x => x.symbol === ControlPassingTemplatePlaceholder.symbol && x.command === command),
                 new Template({
                     source : command,
                     comment : `Control passing for ${command.target.name} call.`,
@@ -310,7 +358,7 @@ function fillTemplates(program : Program, state : BufferElement[], placeholders 
     }
 
     lookup.set(
-        findPlaceholder(placeholders, x => x.symbol === LoopTemplatePlaceholder.symbol && x.program === program),
+        findPlaceholder(templatePlaceholders, x => x.symbol === LoopTemplatePlaceholder.symbol && x.program === program),
         new Template({
             source : program,
             comment : `Loop for ${program.symbol === Main.symbol ? `main` : program.declaration.name} program.`,
@@ -323,7 +371,7 @@ function fillTemplates(program : Program, state : BufferElement[], placeholders 
         }),
     )
 
-    return lookup
+    return { lookup, statistics }
 }
 function findEntryTemplate(main : Main, lookup : Map<TemplatePlaceholder, Template>) {
     const entries = Array.from(lookup)
@@ -341,12 +389,114 @@ function findEntryTemplate(main : Main, lookup : Map<TemplatePlaceholder, Templa
 
     return entry[1]
 }
+function find<T>(collection : T[], callback : (element : T) => boolean) {
+    for (const element of collection) if (callback(element)) return element
+
+    throw new Error(`Cannot find element.`)
+}
+function optimizePlaceholders(program : Program, placeholders : Placeholder[], lookup? : Map<Command, BufferSet>) {
+    if (!lookup) lookup = new Map
+
+    const { commands } = program
+
+    const used = new BufferSet()
+
+    const bind = find(placeholders, x => x.symbol === BindPlaceholder.symbol)
+
+    // add bind
+    used.add(bind)
+
+    const loop = find(placeholders, x => x.symbol === LoopTemplatePlaceholder.symbol && x.program === program)
+
+    // add program loop template
+    used.add(loop)
+
+    // add super
+    used.add(program.parameters.super)
+
+    for (let command = commands.last; command; command = command.previous) {
+        if (command.symbol === Declaration.symbol) {
+            const { program } = command
+
+            const [ usedByProgram ] = optimizePlaceholders(program, placeholders, lookup)
+
+            for (const x of usedByProgram) used.add(x)
+
+            const bind = find(placeholders, x => x.symbol === BindPlaceholder.symbol)
+
+            // add bind
+            used.add(bind)
+
+            const { first } = program.commands
+
+            const entry =
+                !first ? find(placeholders, x => x.symbol === LoopTemplatePlaceholder.symbol && x.program === program) :
+                first.symbol === Declaration.symbol ? find(placeholders, x => x.symbol === DeclarationTemplatePlaceholder.symbol && x.command === first) :
+                first.symbol === Call.symbol ? find(placeholders, x => x.symbol === ContinuationBidingTemplatePlaceholder.symbol && x.command === first) :
+                neverThrow(first, new Error(`Unexpected command ${first}.`))
+
+            // add template for first command of declared program
+            used.add(entry)
+        }
+        else if (command.symbol === Call.symbol) {
+            const bind = find(placeholders, x => x.symbol === BindPlaceholder.symbol)
+
+            // add bind
+            used.add(bind)
+
+            // add target
+            used.add(command.target.target)
+
+            // add inputs
+            for (const input of command.inputs) used.add(input.reference.target)
+
+            const continuationTemplate = find(placeholders, x => x.symbol === ContinuationBidingTemplatePlaceholder.symbol && x.command === command)
+
+            // add continuation template
+            used.add(continuationTemplate)
+
+            const passingTemplate = find(placeholders, x => x.symbol === ControlPassingTemplatePlaceholder.symbol && x.command === command)
+
+            // add control passing template
+            used.add(passingTemplate)
+
+            const continuation = new ContinuationBidingPlaceholder({ command })
+
+            // add continuation placeholder
+            used.add(continuation)
+
+            // @todo
+        }
+        else neverThrow(command, new Error(`Unexpected command: ${command}.`))
+
+        const { next } = command
+
+        if (next) {
+            const entry =
+                next.symbol === Declaration.symbol ? find(placeholders, x => x.symbol === DeclarationTemplatePlaceholder.symbol && x.command === next) :
+                next.symbol === Call.symbol ? find(placeholders, x => x.symbol === ContinuationBidingTemplatePlaceholder.symbol && x.command === next) :
+                neverThrow(next, new Error(`Unexpected command ${next}.`))
+
+            // add continuation
+            used.add(entry)
+        }
+
+        lookup.set(command, new BufferSet(used))
+    }
+
+    return [ used, lookup ] as const
+}
 
 export class Analyzer {
     public analyze(main : Main) {
-        const placeholders = collectTemplates(main)
-        const lookup = fillTemplates(main, [ new CurrentInstructionPlaceholder, ...placeholders, new BindPlaceholder ], placeholders)
-        const templates = placeholders.map(placeholder => {
+        const templatePlaceholders = collectTemplates(main)
+        const placeholders = [ new CurrentInstructionPlaceholder, ...templatePlaceholders, new BindPlaceholder ]
+        const used = optimizePlaceholders(main, placeholders)[1]
+        const { lookup, statistics } = fillTemplates(main, placeholders, templatePlaceholders, used)
+
+        console.log(`${statistics.bind.filtered} / ${statistics.bind.total} filtered ${(statistics.bind.filtered / statistics.bind.total * 100).toFixed()}%`)
+
+        const templates = templatePlaceholders.map(placeholder => {
             const template = lookup.get(placeholder)
 
             if (!template) {
@@ -369,5 +519,37 @@ export class Analyzer {
         ]
 
         return new Entry({ dependencies, entryTemplate })
+    }
+}
+
+function is_equal(a : BufferElement, b : BufferElement) {
+    if (a.symbol === ContinuationBidingPlaceholder.symbol) {
+        return b.symbol === ContinuationBidingPlaceholder.symbol && a.command === b.command
+    }
+
+    return a === b
+}
+
+class BufferSet {
+    private list : BufferElement[]
+
+    public constructor(list? : BufferElement[] | BufferSet) {
+        if (!list) list = []
+        else if (list instanceof BufferSet) list = list.list
+
+        this.list = list
+    }
+
+    public * [Symbol.iterator]() {
+        yield * this.list
+    }
+
+    public add(x : BufferElement) {
+        if (this.list.find(y => is_equal(x, y))) return
+
+        this.list.push(x)
+    }
+    public has(x : BufferElement) {
+        return this.list.find(y => is_equal(x, y)) !== undefined
     }
 }
