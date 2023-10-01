@@ -1,0 +1,97 @@
+bin_search(x, list) {
+    print("search for ", x)
+
+    l : var(0)
+    r : length(list)
+    r : -(r, 1)
+    r : var(r)
+
+    iterate() {
+        then() {
+            //super(false, l)
+        }
+        is : >(l, r)
+        if (is, then)
+
+        i : +(l, r)
+        i : /(i, 2)
+        y : get(list, i)
+
+        ; print(i)
+
+        then() {
+            i : +(i, 1)
+            =(l, i)
+
+            iterate()
+        }
+        is : <(y, x)
+        if (is, then)
+
+        then() {
+            i : -(i, 1)
+            =(r, i)
+
+            iterate()
+        }
+        is : >(y, x)
+        if (is, then)
+
+        /super(true, i)
+    }
+
+    iterate()
+}
+
+a : List()
+
+push_back(a, 0)
+push_back(a, 1)
+push_back(a, 2)
+push_back(a, 3)
+push_back(a, 4)
+push_back(a, 5)
+push_back(a, 6)
+push_back(a, 7)
+push_back(a, 8)
+push_back(a, 9)
+push_back(a, 10)
+push_back(a, 11)
+push_back(a, 12)
+push_back(a, 13)
+push_back(a, 14)
+push_back(a, 15)
+push_back(a, 16)
+push_back(a, 17)
+push_back(a, 18)
+push_back(a, 19)
+push_back(a, 20)
+push_back(a, 21)
+push_back(a, 22)
+push_back(a, 23)
+push_back(a, 24)
+push_back(a, 25)
+push_back(a, 26)
+push_back(a, 27)
+push_back(a, 28)
+push_back(a, 29)
+
+x, y : bin_search(4, a) print(x, ", ", y)
+x, y : bin_search(29, a) print(x, ", ", y)
+x, y : bin_search(14, a) print(x, ", ", y)
+x, y : bin_search(8, a) print(x, ", ", y)
+x, y : bin_search(0, a) print(x, ", ", y)
+
+a : List()
+
+push_back(a, 0)
+push_back(a, 10)
+push_back(a, 20)
+push_back(a, 30)
+
+x, y : bin_search(4, a) print(x, ", ", y)
+x, y : bin_search(29, a) print(x, ", ", y)
+x, y : bin_search(10, a) print(x, ", ", y)
+x, y : bin_search(14, a) print(x, ", ", y)
+x, y : bin_search(8, a) print(x, ", ", y)
+x, y : bin_search(0, a) print(x, ", ", y)
