@@ -479,13 +479,15 @@ export class Context {
 
             return pack([ next, next, new Boolean({ value : left1.value || right1.value }) ])
         })
-        const if_ = External.from(`if`, ([ _, next, condition, then ]) => {
+        const if_ = External.from(`if`, buffer => {
+            const [ _, next, condition, then ] = buffer
+            const params = buffer.list.slice(4)
             const condition1 = toConstant(condition)
 
             if (!(condition1 instanceof Boolean)) throw new Error // @todo
 
             return condition1.value
-                ? pack([ then, next ])
+                ? pack([ then, next, ...params ])
                 : pack([ next, next ])
         })
 
