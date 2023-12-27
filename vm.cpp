@@ -1,9 +1,9 @@
 enum class Type : public uint32_t  {
-    Nothing,
-    Int32,
-    ASCII,
-    List,
-    Variable,
+    Nothing  = 0,
+    Variable = 1,
+    Int32    = 2,
+    ASCII    = 3,
+    List     = 4,
 }
 
 struct Anything {

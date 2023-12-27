@@ -1,5 +1,5 @@
 (module
-    (import "console" "print" (func $print (param i32)))
+    (import "print" "number" (func $print.number (param i32)))
 
     (memory $memory 1)
     (data (i32.const 0)     "\00\00\00\00") ;; begin.prev = &begin (0)
@@ -197,9 +197,82 @@
         call $mem.node.next.set
     )
 
+    (func $something.type (param $something i32) (result i32)
+        local.get $something
+        i32.load
+        return
+    )
+    (func $something.type.set (param $something i32) (param $type i32)
+        local.get $something
+        local.get $type
+        i32.store
+    )
+
+    (func $sizeof.Int32 (result i32)
+        i32.const 8
+        return
+    )
+    (func $Int32.type (result i32)
+        i32.const 2
+        return
+    )
+    (func $Int32.value (param $int32 i32) (result i32)
+        local.get $int32
+        i32.const 4
+        i32.add
+        i32.load
+        return
+    )
+    (func $Int32.value.set (param $int32 i32) (param $value i32)
+        local.get $int32
+        i32.const 4
+        i32.add
+        local.get $value
+        i32.store
+    )
+    (func $Int32.constructor (param $value i32) (result i32)
+        (local $int32 i32)
+        ;; allocate
+        call $sizeof.Int32
+        call $mem.allocate
+        local.set $int32
+        ;; int32.type = Int32.type
+        local.get $int32
+        call $Int32.type
+        call $something.type.set
+        ;; int32.value = value
+        local.get $int32
+        local.get $value
+        call $Int32.value.set
+        ;; return int32
+        local.get $int32
+        return
+    )
+
+    (func $print (param $something i32)
+        (block $print_int32
+            ;; if something.type != Int32.type then break
+            local.get $something
+            call $something.type
+            call $Int32.type
+            i32.ne
+            br_if $print_int32
+
+            local.get $something
+            call $Int32.value
+            call $print.number
+
+            return
+        )
+    )
+
     (func $run (result i32)
         i32.const 42
+        call $Int32.constructor
         call $print
+
+        ;; i32.const 42
+        ;; call $print.number
 
         i32.const 0
         return
