@@ -12,6 +12,7 @@
     "module": "CommonJS",
     "lib": [
       "ESNext",
+      "DOM",
     ],
     "outDir": "dist",
     "allowJs": false,
