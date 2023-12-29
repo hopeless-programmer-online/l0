@@ -504,32 +504,28 @@
 
             return
         )
+        (block $print_ascii
+            local.get $something
+            call $something.type
+            call $ASCII.type
+            i32.ne
+            br_if $print_ascii
+
+            local.get $something
+            call $ASCII.data
+            local.get $something
+            call $ASCII.length
+            call $print.ascii
+
+            return
+        )
     )
 
     (func $run (result i32)
-        (local $ascii i32)
-
         i32.const 12342
         call $Int32.constructor
         call $Int32.ASCII
-        local.set $ascii
-
-        ;; local.get $ascii
-        ;; call $ASCII.data
-        ;; call $print.int32
-
-        local.get $ascii
-        call $ASCII.data
-        local.get $ascii
-        call $ASCII.length
-        call $print.ascii
-
-        ;; i32.const 0
-        ;; i32.const 13
-        ;; call $print.ascii
-
-        ;; i32.const 42
-        ;; call $print.int32
+        call $print
 
         i32.const 0
         return
