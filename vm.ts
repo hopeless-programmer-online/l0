@@ -9,8 +9,17 @@ export default async function main() {
     const module = await WebAssembly.compile(wasm)
     const imports = {
         print : {
-            number(value : number) {
+            int32(value : number) {
                 console.log(value)
+            },
+            ascii(begin : number, length : number) {
+                // console.log({ begin, length })
+
+                const text = Buffer.from(memory.buffer)
+                    .subarray(begin, begin + length)
+                    .toString(`ascii`)
+
+                console.log(text)
             },
         },
     }

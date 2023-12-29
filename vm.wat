@@ -1,12 +1,14 @@
 (module
-    (import "print" "number" (func $print.number (param i32)))
+    (import "print" "int32" (func $print.int32 (param i32)))
+    (import "print" "ascii" (func $print.ascii (param i32) (param i32)))
 
     (memory $memory 1)
-    (data (i32.const 0)     "\00\00\00\00") ;; begin.prev = &begin (0)
-    (data (i32.const 4)     "\FF\F4\00\00") ;; begin.next = &end (65524)
-    (data (i32.const 8)     "\00\00\00\00") ;; begin.size = 0
-    (data (i32.const 65524) "\00\00\00\00") ;; begin.prev = &begin (0)
-    (data (i32.const 65528) "\FF\F4\00\00") ;; begin.next = &end (65524)
+    (data (i32.const 0) "unknown")
+    (data (i32.const 1024)  "\00\04\00\00") ;; begin.prev = &begin (1024)
+    (data (i32.const 1028)  "\F4\Ff\00\00") ;; begin.next = &end (65524)
+    (data (i32.const 1032)  "\00\00\00\00") ;; begin.size = 0
+    (data (i32.const 65524) "\00\04\00\00") ;; begin.prev = &begin (1024)
+    (data (i32.const 65528) "\F4\Ff\00\00") ;; begin.next = &end (65524)
     (data (i32.const 65532) "\00\00\00\00") ;; begin.size = 0
 
     (func $memory_size (result i32)
@@ -16,47 +18,93 @@
         return
     )
     (func $heap.begin (result i32)
-        i32.const 0
+        i32.const 1024
         return
     )
     (func $heap.end (result i32)
         i32.const 65524
         return
     )
+    (func $heap.print
+        (local $node i32)
+        call $heap.begin
+        local.set $node
+
+        (block $end_loop (loop $print_node
+            local.get $node
+            call $heap.end
+            i32.eq
+            br_if $end_loop
+
+            local.get $node
+            call $mem.node.mem
+            call $print.int32
+
+            local.get $node
+            call $mem.node.size
+            call $print.int32
+
+            local.get $node
+            call $mem.node.next
+            local.set $node
+
+            br $print_node
+        ))
+    )
     (func $sizeof.node (result i32)
         i32.const 12
         return
     )
+    (func $mem.node.prev.offset (result i32)
+        i32.const 0
+    )
     (func $mem.node.prev (param $node i32) (result i32)
         local.get $node
+        call $mem.node.prev.offset
+        i32.add
         i32.load
         return
     )
     (func $mem.node.prev.set (param $node i32) (param $prev i32)
         local.get $node
+        call $mem.node.prev.offset
+        i32.add
         local.get $prev
         i32.store
     )
+    (func $mem.node.next.offset (result i32)
+        i32.const 4
+    )
     (func $mem.node.next (param $node i32) (result i32)
         local.get $node
-        i32.const 4
+        call $mem.node.next.offset
         i32.add
         i32.load
         return
     )
     (func $mem.node.next.set (param $node i32) (param $next i32)
         local.get $node
-        i32.const 4
+        call $mem.node.next.offset
         i32.add
         local.get $next
         i32.store
     )
+    (func $mem.node.size.offset (result i32)
+        i32.const 8
+    )
     (func $mem.node.size (param $node i32) (result i32)
         local.get $node
-        i32.const 8
+        call $mem.node.size.offset
         i32.add
         i32.load
         return
+    )
+    (func $mem.node.size.set (param $node i32) (param $size i32)
+        local.get $node
+        call $mem.node.size.offset
+        i32.add
+        local.get $size
+        i32.store
     )
     (func $mem.node.capacity (param $node i32) (result i32)
         (local $capacity i32)
@@ -99,30 +147,24 @@
         ;; new.prev = node
         local.get $new
         local.get $node
-        i32.store
+        call $mem.node.prev.set
         ;; new.next = next
         local.get $new
-        i32.const 4
-        i32.add
         local.get $node
         call $mem.node.next
-        local.tee $next
-        i32.store
+        call $mem.node.next.set
         ;; new.next.prev = new
         local.get $next
         local.get $new
-        i32.store
+        call $mem.node.prev.set
         ;; new.size = size
         local.get $new
-        i32.const 8
-        i32.add
         local.get $size
-        i32.store
+        call $mem.node.size.set
         ;; node.next = new
         local.get $node
-        i32.const 4
         local.get $new
-        i32.store
+        call $mem.node.next.set
 
         ;; return new
         local.get $new
@@ -248,6 +290,204 @@
         local.get $int32
         return
     )
+    (func $Int32.ASCII (param $int32 i32) (result i32)
+        (local $value i32)
+        (local $den i32)
+        (local $length i32)
+        (local $data i32)
+        (local $ascii i32)
+
+        local.get $int32
+        call $Int32.value
+        local.set $value
+
+        ;; look for minus
+        (local.set $length (i32.const 10))
+        (block $scan_minus
+            local.get $value
+            i32.const 0
+            i32.ge_s
+            br_if $scan_minus
+
+            (local.set $length (i32.const 11))
+            i32.const 0
+            local.get $value
+            i32.sub
+            local.set $value
+        )
+
+        ;; scan for value length
+        (local.set $den (i32.const 1000000000))
+        (block $break_digit (loop $scan_digit
+            local.get $value
+            local.get $den
+            i32.ge_s
+            br_if $break_digit
+
+            ;; den /= 10
+            local.get $den
+            i32.const 10
+            i32.div_s
+            local.set $den
+
+            ;; length -= 1
+            local.get $length
+            i32.const 1
+            i32.sub
+            local.set $length
+
+            br $scan_digit
+        ))
+
+        ;; if length < 1 then length = 1
+        (block $zero
+            local.get $length
+            i32.const 0
+            i32.gt_s
+            br_if $zero
+
+            i32.const 1
+            local.set $length
+        )
+
+        ;; allocate data
+        local.get $length
+        call $mem.allocate
+        local.set $data
+
+        ;; allocate ascii
+        local.get $length
+        local.get $data
+        call $ASCII.constructor
+        local.set $ascii
+
+        ;; add minus, reuse length as index
+        (block $add_minus
+            local.get $int32
+            call $Int32.value
+            i32.const 0
+            i32.ge_s
+            br_if $add_minus
+
+            local.get $data
+            i32.const 45 ;; '-' = 45
+            i32.store
+
+            local.get $data
+            i32.const 1
+            i32.add
+            local.set $data
+        )
+
+        ;; (local.set $den (i32.const 1000000000))
+        (loop $fill_digits
+            ;; data[i] = value / den + 48 ('0' = 48)
+            local.get $data
+            ;; erase single byte
+            local.get $data
+            i32.load
+            i32.const 0xFFFFFF00
+            i32.and
+            ;; value / den + 48
+            local.get $value
+            local.get $den
+            i32.div_u
+            i32.const 48
+            i32.add
+            i32.or
+            i32.store
+
+            ;; value = value % den
+            local.get $value
+            local.get $den
+            i32.rem_s
+            local.set $value
+
+            local.get $data
+            i32.const 1
+            i32.add
+            local.set $data
+
+            local.get $den
+            i32.const 10
+            i32.div_s
+            local.tee $den
+            i32.const 0
+            i32.gt_s
+
+            br_if $fill_digits
+        )
+
+        local.get $ascii
+        return
+    )
+
+    (func $sizeof.ASCII (result i32)
+        i32.const 12
+        return
+    )
+    (func $ASCII.type (result i32)
+        i32.const 3
+        return
+    )
+    (func $ASCII.length.offset (result i32)
+        i32.const 4
+        return
+    )
+    (func $ASCII.length (param $ascii i32) (result i32)
+        local.get $ascii
+        call $ASCII.length.offset
+        i32.add
+        i32.load
+        return
+    )
+    (func $ASCII.length.set (param $ascii i32) (param $length i32)
+        local.get $ascii
+        call $ASCII.length.offset
+        i32.add
+        local.get $length
+        i32.store
+    )
+    (func $ASCII.data.offset (result i32)
+        i32.const 8
+        return
+    )
+    (func $ASCII.data (param $ascii i32) (result i32)
+        local.get $ascii
+        call $ASCII.data.offset
+        i32.add
+        i32.load
+        return
+    )
+    (func $ASCII.data.set (param $ascii i32) (param $data i32)
+        local.get $ascii
+        call $ASCII.data.offset
+        i32.add
+        local.get $data
+        i32.store
+    )
+    (func $ASCII.constructor (param $length i32) (param $data i32) (result i32)
+        (local $ascii i32)
+        ;; allocate
+        call $sizeof.ASCII
+        call $mem.allocate
+        local.set $ascii
+        ;; ascii.type = ASCII.type
+        local.get $ascii
+        call $ASCII.type
+        call $something.type.set
+        ;; ascii.value = value
+        local.get $ascii
+        local.get $length
+        call $ASCII.length.set
+        ;; ascii.data = data
+        local.get $ascii
+        local.get $data
+        call $ASCII.data.set
+        ;; return ascii
+        local.get $ascii
+        return
+    )
 
     (func $print (param $something i32)
         (block $print_int32
@@ -260,19 +500,36 @@
 
             local.get $something
             call $Int32.value
-            call $print.number
+            call $print.int32
 
             return
         )
     )
 
     (func $run (result i32)
-        i32.const 42
+        (local $ascii i32)
+
+        i32.const 12342
         call $Int32.constructor
-        call $print
+        call $Int32.ASCII
+        local.set $ascii
+
+        ;; local.get $ascii
+        ;; call $ASCII.data
+        ;; call $print.int32
+
+        local.get $ascii
+        call $ASCII.data
+        local.get $ascii
+        call $ASCII.length
+        call $print.ascii
+
+        ;; i32.const 0
+        ;; i32.const 13
+        ;; call $print.ascii
 
         ;; i32.const 42
-        ;; call $print.number
+        ;; call $print.int32
 
         i32.const 0
         return
