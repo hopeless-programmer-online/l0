@@ -23,8 +23,9 @@ struct ASCII : public Anything {
 };
 
 struct List : public Anything {
-    uint32_t length;
-    uint32_t capacity;
+    Anything* first;
+    uint32_t  length;
+    uint32_t  capacity;
 };
 
 struct Variable : public Anything {

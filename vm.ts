@@ -10,7 +10,7 @@ export default async function main() {
     const imports = {
         print : {
             int32(value : number) {
-                console.log(value)
+                process.stdout.write(`${value}`)
             },
             ascii(begin : number, length : number) {
                 // console.log({ begin, length })
@@ -19,12 +19,13 @@ export default async function main() {
                     .subarray(begin, begin + length)
                     .toString(`ascii`)
 
-                console.log(text)
+                process.stdout.write(`${text}`)
             },
         },
     }
     const instance = await WebAssembly.instantiate(module, imports)
     const memory = instance.exports.memory as WebAssembly.Memory
+
     const run = instance.exports.run as () => number
 
     run()

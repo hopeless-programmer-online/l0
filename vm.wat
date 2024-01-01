@@ -3,12 +3,12 @@
     (import "print" "ascii" (func $print.ascii (param i32) (param i32)))
 
     (memory $memory 1)
-    (data (i32.const 0) "unknown")
+    (data (i32.const 0) "\nunknown[],")
     (data (i32.const 1024)  "\00\04\00\00") ;; begin.prev = &begin (1024)
-    (data (i32.const 1028)  "\F4\Ff\00\00") ;; begin.next = &end (65524)
+    (data (i32.const 1028)  "\F4\FF\00\00") ;; begin.next = &end (65524)
     (data (i32.const 1032)  "\00\00\00\00") ;; begin.size = 0
     (data (i32.const 65524) "\00\04\00\00") ;; begin.prev = &begin (1024)
-    (data (i32.const 65528) "\F4\Ff\00\00") ;; begin.next = &end (65524)
+    (data (i32.const 65528) "\F4\FF\00\00") ;; begin.next = &end (65524)
     (data (i32.const 65532) "\00\00\00\00") ;; begin.size = 0
 
     (func $memory_size (result i32)
@@ -152,8 +152,9 @@
         local.get $new
         local.get $node
         call $mem.node.next
+        local.tee $next
         call $mem.node.next.set
-        ;; new.next.prev = new
+        ;; next.prev = new
         local.get $next
         local.get $new
         call $mem.node.prev.set
@@ -219,6 +220,7 @@
         ))
 
         i32.const 0
+        return
     )
     (func $mem.free (param $mem i32)
         (local $node i32)
@@ -489,7 +491,129 @@
         return
     )
 
+    (func $sizeof.List (result i32)
+        i32.const 16
+        return
+    )
+    (func $List.type (result i32)
+        i32.const 4
+        return
+    )
+    (func $List.first.offset (result i32)
+        i32.const 4
+        return
+    )
+    (func $List.first (param $list i32) (result i32)
+        local.get $list
+        call $List.first.offset
+        i32.add
+        i32.load
+        return
+    )
+    (func $List.first.set (param $list i32) (param $first i32)
+        local.get $list
+        call $List.first.offset
+        i32.add
+        local.get $first
+        i32.store
+    )
+    (func $List.length.offset (result i32)
+        i32.const 8
+        return
+    )
+    (func $List.length (param $list i32) (result i32)
+        local.get $list
+        call $List.length.offset
+        i32.add
+        i32.load
+        return
+    )
+    (func $List.length.set (param $list i32) (param $length i32)
+        local.get $list
+        call $List.length.offset
+        i32.add
+        local.get $length
+        i32.store
+    )
+    (func $List.capacity.offset (result i32)
+        i32.const 12
+        return
+    )
+    (func $List.capacity (param $list i32) (result i32)
+        local.get $list
+        call $List.capacity.offset
+        i32.add
+        i32.load
+        return
+    )
+    (func $List.capacity.set (param $list i32) (param $capacity i32)
+        local.get $list
+        call $List.capacity.offset
+        i32.add
+        local.get $capacity
+        i32.store
+    )
+    (func $List.constructor (param $length i32) (param $capacity i32) (result i32)
+        (local $list i32)
+        ;; allocate list
+        call $sizeof.List
+        call $mem.allocate
+        local.set $list
+        ;; list.type = List.type
+        local.get $list
+        call $List.type
+        call $something.type.set
+        ;; list.first = mem.allocate(capacity * 4)
+        local.get $list
+        local.get $capacity
+        i32.const 4
+        i32.mul
+        call $mem.allocate
+        call $List.first.set
+        ;; list.length = length
+        local.get $list
+        local.get $length
+        call $List.length.set
+        ;; list.capacity = capacity
+        local.get $list
+        local.get $capacity
+        call $List.capacity.set
+        ;; return
+        local.get $list
+        return
+    )
+    (func $List.get (param $list i32) (param $i i32) (result i32)
+        ;; return [list.first + i * 4]
+        local.get $list
+        call $List.first
+        local.get $i
+        i32.const 4
+        i32.mul
+        i32.add
+        i32.load
+        return
+    )
+    (func $List.set (param $list i32) (param $i i32) (param $element i32)
+        ;; [list.first + i * 4] = element
+        local.get $list
+        call $List.first
+        local.get $i
+        i32.const 4
+        i32.mul
+        i32.add
+        local.get $element
+        i32.store
+    )
+
     (func $print (param $something i32)
+        local.get $something
+        call $print.something
+
+        i32.const 0
+        i32.const 1
+        call $print.ascii
+    )
+    (func $print.something (param $something i32)
         (block $print_int32
             ;; if something.type != Int32.type then break
             local.get $something
@@ -519,12 +643,103 @@
 
             return
         )
+        (block $print_list
+            local.get $something
+            call $something.type
+            call $List.type
+            i32.ne
+            br_if $print_list
+
+            local.get $something
+            call $print.List
+
+            return
+        )
+
+        i32.const 1
+        i32.const 7
+        call $print.ascii
+    )
+    (func $print.List (param $list i32)
+        (local $i i32)
+        (local $length i32)
+
+        i32.const 8 ;; [
+        i32.const 1
+        call $print.ascii
+
+        local.get $list
+        call $List.length
+        local.set $length
+        (block $check_first
+            local.get $length
+            i32.const 0
+            i32.le_u
+            br_if $check_first
+
+            local.get $list
+            i32.const 0
+            call $List.get
+            call $print.something
+
+            i32.const 1
+            local.set $i
+            (loop $print_content (block $break_print
+                local.get $i
+                local.get $length
+                i32.ge_u
+                br_if $break_print
+
+                i32.const 10 ;; [
+                i32.const 1
+                call $print.ascii
+
+                local.get $list
+                local.get $i
+                call $List.get
+                call $print.something
+
+                ;; ++i
+                local.get $i
+                i32.const 1
+                i32.add
+                local.set $i
+
+                br $print_content
+            ))
+        )
+
+        i32.const 9 ;; ]
+        i32.const 1
+        call $print.ascii
     )
 
     (func $run (result i32)
+        (local $list i32)
+
         i32.const 12342
         call $Int32.constructor
         call $Int32.ASCII
+        call $print
+
+        i32.const 2
+        i32.const 2
+        call $List.constructor
+        local.set $list
+
+        local.get $list
+        i32.const 0
+            i32.const 5
+            call $Int32.constructor
+        call $List.set
+
+        local.get $list
+        i32.const 1
+            i32.const 10
+            call $Int32.constructor
+        call $List.set
+
+        local.get $list
         call $print
 
         i32.const 0
