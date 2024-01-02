@@ -352,16 +352,15 @@
             local.set $length
         )
 
-        ;; allocate data
+        ;; create ascii
         local.get $length
-        call $mem.allocate
-        local.set $data
-
-        ;; allocate ascii
-        local.get $length
-        local.get $data
         call $ASCII.constructor
         local.set $ascii
+
+        ;; get ascii.data
+        local.get $ascii
+        call $ASCII.data
+        local.set $data
 
         ;; add minus, reuse length as index
         (block $add_minus
@@ -425,7 +424,7 @@
     )
 
     (func $sizeof.ASCII (result i32)
-        i32.const 12
+        i32.const 8
         return
     )
     (func $ASCII.type (result i32)
@@ -451,27 +450,21 @@
         i32.store
     )
     (func $ASCII.data.offset (result i32)
-        i32.const 8
+        call $sizeof.ASCII
         return
     )
     (func $ASCII.data (param $ascii i32) (result i32)
         local.get $ascii
         call $ASCII.data.offset
         i32.add
-        i32.load
         return
     )
-    (func $ASCII.data.set (param $ascii i32) (param $data i32)
-        local.get $ascii
-        call $ASCII.data.offset
-        i32.add
-        local.get $data
-        i32.store
-    )
-    (func $ASCII.constructor (param $length i32) (param $data i32) (result i32)
+    (func $ASCII.constructor (param $length i32) (result i32)
         (local $ascii i32)
-        ;; allocate
+        ;; mem.allocate( sizeof.ASCII + length )
         call $sizeof.ASCII
+        local.get $length
+        i32.add
         call $mem.allocate
         local.set $ascii
         ;; ascii.type = ASCII.type
@@ -482,10 +475,6 @@
         local.get $ascii
         local.get $length
         call $ASCII.length.set
-        ;; ascii.data = data
-        local.get $ascii
-        local.get $data
-        call $ASCII.data.set
         ;; return ascii
         local.get $ascii
         return
@@ -722,25 +711,25 @@
         call $Int32.ASCII
         call $print
 
-        i32.const 2
-        i32.const 2
-        call $List.constructor
-        local.set $list
+        ;; i32.const 2
+        ;; i32.const 2
+        ;; call $List.constructor
+        ;; local.set $list
 
-        local.get $list
-        i32.const 0
-            i32.const 5
-            call $Int32.constructor
-        call $List.set
+        ;; local.get $list
+        ;; i32.const 0
+        ;;     i32.const 5
+        ;;     call $Int32.constructor
+        ;; call $List.set
 
-        local.get $list
-        i32.const 1
-            i32.const 10
-            call $Int32.constructor
-        call $List.set
+        ;; local.get $list
+        ;; i32.const 1
+        ;;     i32.const 10
+        ;;     call $Int32.constructor
+        ;; call $List.set
 
-        local.get $list
-        call $print
+        ;; local.get $list
+        ;; call $print
 
         i32.const 0
         return
