@@ -4,6 +4,7 @@ enum class Type : public uint32_t  {
     Int32    = 2,
     ASCII    = 3,
     List     = 4,
+    Internal = 5,
 }
 
 struct Anything {
@@ -30,6 +31,13 @@ struct List : public Anything {
 
 struct Variable : public Anything {
     Anything* value;
+}
+
+struct Internal : public Anything {
+    uint32_t targets_length;
+    uint32_t buffer_length;
+    // uint32_t  targets[targets_length]
+    // Variable* buffer[buffer_length]
 }
 
 auto add(Anything* a, Anything* b) {
