@@ -40,6 +40,11 @@ struct Internal : public Anything {
     // Variable* buffer[buffer_length]
 }
 
+struct Array {
+    uint32_t  length;
+    // Anything first[length];
+};
+
 auto add(Anything* a, Anything* b) {
     if (a->type === Type.Int32 && b->type === Type.Int32) {
         const auto value = reinterpret_cast<Int32*>(a)->value + reinterpret_cast<Int32*>(b)->value;
