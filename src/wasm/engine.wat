@@ -3,7 +3,7 @@
     (import "print" "ascii" (func $print.ascii (param i32) (param i32)))
 
     (memory $memory 1)
-    (data (i32.const 0) "\nunknown[],internal|printtemplatebind")
+    (data (i32.const 0) "\nunknown[],internal|printtemplatebindterminal")
     (data (i32.const 1024)  "\00\04\00\00") ;; begin.prev = &begin (1024)
     (data (i32.const 1028)  "\F4\FF\00\00") ;; begin.next = &end (65524)
     (data (i32.const 1032)  "\00\00\00\00") ;; begin.size = 0
@@ -954,6 +954,19 @@
         call $print.ascii
     )
     (func $print.something (param $something i32)
+        (block $print_terminal
+            local.get $something
+            call $something.type
+            call $Terminal.type
+            i32.ne
+            br_if $print_terminal
+
+            i32.const 37
+            i32.const 8
+            call $print.ascii
+
+            return
+        )
         (block $print_int32
             ;; if something.type != Int32.type then break
             local.get $something
@@ -1024,7 +1037,7 @@
         (block $print_bind
             local.get $something
             call $something.type
-            call $Bind.type
+            call $external.Bind.type
             i32.ne
             br_if $print_bind
 
