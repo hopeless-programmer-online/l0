@@ -93,29 +93,30 @@ export class Context {
     private template(targets : number[]) {
         const template = this.Template(targets.length)
         const first = this.template_first(template)
-        const buffer = (new Uint32Array(this.memory.buffer.slice(first)))
+        const memory = Buffer.from(this.memory.buffer)
 
-        targets.forEach((x, i) => buffer[i] = x || 0)
+        targets.forEach((x, i) => memory.writeUInt32LE(x, first + i*4))
 
         return template
     }
     private internal(entry : semantics.Entry) {
         const { dependencies, entryTemplate : template } = entry
         const internal = this.Internal(template.targets.length, dependencies.length)
-        const targets = new Uint32Array(this.memory.buffer.slice(this.internal_targets(internal)))
-        const storage = new Uint32Array(this.memory.buffer.slice(this.internal_storage(internal)))
+        const first_targets = this.internal_targets(internal)
+        const first_storage = this.internal_storage(internal)
+        const memory = Buffer.from(this.memory.buffer)
 
         template.targets.forEach((target, i) => {
-            targets[i] = target || 0
+            memory.writeUInt32LE(target, first_targets + i*4)
         })
         dependencies.forEach((dependency, i) => {
-            console.log(dependency)
+            // console.log(dependency)
 
             const value = this.resolve(dependency)
 
-            this._print(value)
+            // this._print(value)
 
-            storage[i] = value || 0
+            memory.writeUInt32LE(value, first_storage + i*4)
         })
 
         return internal
