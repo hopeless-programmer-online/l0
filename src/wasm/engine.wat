@@ -1276,6 +1276,84 @@
         call $print.ascii
     )
 
+    (func $machine.step.internal.get
+        (param $target i32)
+        (param $storage_first i32) (param $storage_length i32)
+        (param $buffer_first i32) (param $buffer_length i32)
+        (param $internal i32) (param $nothing i32)
+        (result i32)
+        (local $j i32)
+
+        (block $process_current
+            local.get $target
+            i32.const 0
+            i32.ne
+            br_if $process_current
+
+            ;; i32.const 42
+            ;; call $print.int32
+            ;; i32.const 0
+            ;; i32.const 1
+            ;; call $print.ascii
+
+            local.get $internal
+            return
+        )
+        (block $process_storage
+            local.get $target
+            i32.const 1
+            i32.sub
+            local.tee $j
+            local.get $storage_length
+            i32.ge_u
+            br_if $process_storage
+
+            ;; i32.const 43
+            ;; call $print.int32
+            ;; i32.const 0
+            ;; i32.const 1
+            ;; call $print.ascii
+
+            local.get $storage_first
+            local.get $j
+            i32.const 4
+            i32.mul
+            i32.add
+            i32.load
+            return
+        )
+
+        ;; i32.const 44
+        ;; call $print.int32
+        ;; i32.const 0
+        ;; i32.const 1
+        ;; call $print.ascii
+
+        local.get $j
+        local.get $storage_length
+        i32.sub
+        i32.const 1 ;; compensate for missing 0 from buffer
+        i32.add
+        local.set $j
+
+        (block $check_overflow
+            local.get $j
+            local.get $buffer_length
+            i32.lt_u
+            br_if $check_overflow
+
+            local.get $nothing
+            return
+        )
+
+        local.get $buffer_first
+        local.get $j
+        i32.const 4
+        i32.mul
+        i32.add
+        i32.load
+        return
+    )
     (func $machine.step.internal (param $internal i32) (param $buffer i32) (param $nothing i32) (result i32)
         (local $buffer_length i32)
         (local $buffer_first i32)
@@ -1286,8 +1364,8 @@
         (local $targets_last i32)
         (local $storage_length i32)
         (local $storage_first i32)
-        (local $j i32)
         (local $target i32)
+        ;; (local $x i32)
 
         ;; allocate next buffer
         local.get $internal
@@ -1319,99 +1397,33 @@
         call $Array.first
         local.set $buffer_first
 
-        (loop $iterate_targets (block $break_targets
+        (loop $continue (block $break
             ;; if targets_i >= targets_last then break
             local.get $targets_i
             local.get $targets_last
             i32.ge_u
-            br_if $break_targets
+            br_if $break
 
             local.get $targets_i
             i32.load
             local.set $target
 
-            (block $check_target
-                (block $process_current
-                    local.get $target
-                    i32.const 0
-                    i32.ne
-                    br_if $process_current
-
-                    ;; i32.const 42
-                    ;; call $print.int32
-                    ;; i32.const 0
-                    ;; i32.const 1
-                    ;; call $print.ascii
-
-                    local.get $next_buffer_i
-                    local.get $internal
-                    i32.store
-
-                    br $check_target
-                )
-                (block $process_storage
-                    local.get $target
-                    i32.const 1
-                    i32.sub
-                    local.tee $j
-                    local.get $storage_length
-                    i32.ge_u
-                    br_if $process_storage
-
-                    ;; i32.const 43
-                    ;; call $print.int32
-                    ;; i32.const 0
-                    ;; i32.const 1
-                    ;; call $print.ascii
-
-                    local.get $next_buffer_i
-                        local.get $storage_first
-                        local.get $j
-                        i32.const 4
-                        i32.mul
-                        i32.add
-                        i32.load
-                    i32.store
-
-                    br $check_target
-                )
-
-                ;; i32.const 44
-                ;; call $print.int32
-                ;; i32.const 0
-                ;; i32.const 1
-                ;; call $print.ascii
-
-                local.get $j
+            local.get $next_buffer_i
+                local.get $target
+                local.get $storage_first
                 local.get $storage_length
-                i32.sub
-                i32.const 1
-                i32.add
-                local.set $j
+                local.get $buffer_first
+                local.get $buffer_length
+                local.get $internal
+                local.get $nothing
+                call $machine.step.internal.get
+                ;; local.tee $x
+                ;; call $print.int32
+                ;; local.get $x
+                ;; call $print
+                ;; local.get $x
+            i32.store
 
-                (block $check_overflow
-                    local.get $j
-                    local.get $buffer_length
-                    i32.lt_u
-                    br_if $check_overflow
-
-                    local.get $next_buffer_i
-                    local.get $nothing
-                    i32.store
-
-                    br $check_target
-                )
-
-                ;; @todo: check for buffer overflow
-                local.get $next_buffer_i
-                    local.get $buffer_first
-                    local.get $j
-                    i32.const 4
-                    i32.mul
-                    i32.add
-                    i32.load
-                i32.store
-            )
 
             ;; targets_i += 4
             local.get $targets_i
@@ -1425,7 +1437,7 @@
             i32.add
             local.set $next_buffer_i
 
-            br $iterate_targets
+            br $continue
         ))
 
         local.get $next_buffer
@@ -1519,7 +1531,8 @@
 
         ;; copy buffer -> internal storage
         local.get $buffer
-        i32.const 3
+        call $Array.first
+        i32.const 12 ;; 3*4
         i32.add
         local.get $internal
         call $Internal.storage.first
@@ -1648,7 +1661,7 @@
         local.get $buffer
         i32.const 1
         call $Array.get
-        local.tee $template
+        local.tee $template ;; @todo: check for template
         call $Template.length
         local.set $template_length
         local.get $template
@@ -1716,8 +1729,8 @@
         return
     )
     (func $machine.step.first (param $first i32) (param $type i32) (param $buffer i32) (param $nothing i32) (result i32)
-        local.get $first
-        call $print
+        ;; local.get $first
+        ;; call $print
 
         (block $check_terminal
             local.get $type
@@ -1735,18 +1748,19 @@
             i32.ne
             br_if $check_internal
 
-            ;; print "internal"
-            i32.const 11
-            i32.const 8
-            call $print.ascii
-            i32.const 0
-            i32.const 1
-            call $print.ascii
+            ;; ;; print "internal"
+            ;; i32.const 11
+            ;; i32.const 8
+            ;; call $print.ascii
+            ;; i32.const 0
+            ;; i32.const 1
+            ;; call $print.ascii
 
             local.get $first
             local.get $buffer
             local.get $nothing
             call $machine.step.internal
+
             return
         )
         (block $check_print
@@ -1755,13 +1769,13 @@
             i32.ne
             br_if $check_print
 
-            ;; print "print"
-            i32.const 20
-            i32.const 5
-            call $print.ascii
-            i32.const 0
-            i32.const 1
-            call $print.ascii
+            ;; ;; print "print"
+            ;; i32.const 20
+            ;; i32.const 5
+            ;; call $print.ascii
+            ;; i32.const 0
+            ;; i32.const 1
+            ;; call $print.ascii
             ;; @todo
 
             local.get $buffer
@@ -1775,13 +1789,13 @@
             i32.ne
             br_if $check_bind
 
-            ;; print "bind"
-            i32.const 33
-            i32.const 4
-            call $print.ascii
-            i32.const 0
-            i32.const 1
-            call $print.ascii
+            ;; ;; print "bind"
+            ;; i32.const 33
+            ;; i32.const 4
+            ;; call $print.ascii
+            ;; i32.const 0
+            ;; i32.const 1
+            ;; call $print.ascii
             ;; @todo
 
             local.get $buffer
@@ -1806,8 +1820,8 @@
         (local $first i32)
         (local $type i32)
 
-        local.get $buffer
-        call $Array.print
+        ;; local.get $buffer
+        ;; call $Array.print
 
         ;; local.get $buffer
         ;; call $print.int32
