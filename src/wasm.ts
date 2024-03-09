@@ -1,6 +1,7 @@
 import * as path from 'path'
 import { readFile } from 'fs-extra'
 import { default as Wabt } from 'wabt'
+import * as syntax from './syntax'
 import * as semantics from './semantics'
 
 type Address = number
@@ -46,6 +47,8 @@ export class Context {
     private readonly array             : (length : number) => Address
     private readonly array_set         : (array : Address, i : number, v : Address) => void
     private readonly int32             : (value : number) => Address
+    private readonly ascii             : (length : number) => Address
+    private readonly ascii_data        : (ascii : Address) => Address
     private readonly Internal          : (targets : number, storage : number) => Address
     private readonly internal_targets  : (internal : Address) => Address
     private readonly internal_storage  : (internal : Address) => Address
@@ -66,6 +69,8 @@ export class Context {
         const Array            = exports.Array as (length : number) => Address
         const array_set        = exports[`Array.set`] as (array : Address, i : number, v : Address) => void
         const Int32            = exports.Int32 as (value : number) => Address
+        const ASCII            = exports.ASCII as (length : number) => Address
+        const ASCII_data       = exports.ASCII_data as (ascii : Address) => Address
         const Internal         = exports.Internal as (targets : number, storage : number) => Address
         const internal_targets = exports[`Internal.targets`] as (internal : Address) => Address
         const internal_storage = exports[`Internal.storage`] as (internal : Address) => Address
@@ -83,6 +88,8 @@ export class Context {
         this.array            = Array
         this.array_set        = array_set
         this.int32            = Int32
+        this.ascii            = ASCII
+        this.ascii_data       = ASCII_data
         this.Internal         = Internal
         this.internal_targets = internal_targets
         this.internal_storage = internal_storage
@@ -186,7 +193,18 @@ export class Context {
         //     case `remove`       : return this.remove
         }
 
-        // if (name.words.length === 1 && name.words[0].symbol === syntax.QuotedWord.symbol) return UTF8String.from(name.words[0])
+        if (name.words.length === 1 && name.words[0].symbol === syntax.QuotedWord.symbol) {
+            const { unquoted : text } = name.words[0]
+            const ascii = this.ascii(text.length)
+            const memory = Buffer.from(this.memory.buffer)
+            const begin = this.ascii_data(ascii)
+
+            Array.from(text).forEach((x, i) => {
+                memory.writeUInt8(x.charCodeAt(0), begin + i)
+            })
+
+            return ascii
+        }
 
         const int32 = text.match(/^(?:-|\+)?\s*(?:\d\s*)+$/)
 

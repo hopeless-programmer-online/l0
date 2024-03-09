@@ -1922,6 +1922,7 @@
     (export "Terminal" (func $Terminal.constructor))
     (export "Int32" (func $Int32.constructor))
     (export "ASCII" (func $ASCII.constructor))
+    (export "ASCII_data" (func $ASCII.data))
     (export "List" (func $List.constructor))
     (export "Internal" (func $Internal.constructor))
     (export "Internal.targets" (func $Internal.targets.first))
