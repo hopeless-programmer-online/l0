@@ -3,13 +3,241 @@
     (import "print" "ascii" (func $print.ascii (param i32) (param i32)))
 
     (memory $memory 1)
-    (data (i32.const 0) "\nunknown[],internal|printtemplatebindterminal()")
+    ;; constants
+    (data (i32.const 0)  "\n")       ;; 0-1,   1
+    (data (i32.const 1)  "unknown")  ;; 1-8,   7
+    (data (i32.const 8)  "[")        ;; 8-9,   1
+    (data (i32.const 9)  "]")        ;; 9-10,  1
+    (data (i32.const 10) ",")        ;; 10-11, 1
+    (data (i32.const 11) "internal") ;; 11-19, 8
+    (data (i32.const 19) "|")        ;; 19-20, 1
+    (data (i32.const 20) "print")    ;; 20-25, 5
+    (data (i32.const 25) "template") ;; 25-33, 8
+    (data (i32.const 33) "bind")     ;; 33-37, 4
+    (data (i32.const 37) "terminal") ;; 37-45, 8
+    (data (i32.const 45) "(")        ;; 45-46, 1
+    (data (i32.const 46) ")")        ;; 46-47, 1
+    (data (i32.const 47) "nothing")  ;; 47-54, 7
+    ;; memory nodes
     (data (i32.const 1024)  "\00\04\00\00") ;; begin.prev = &begin (1024)
     (data (i32.const 1028)  "\F4\FF\00\00") ;; begin.next = &end (65524)
     (data (i32.const 1032)  "\00\00\00\00") ;; begin.size = 0
     (data (i32.const 65524) "\00\04\00\00") ;; begin.prev = &begin (1024)
     (data (i32.const 65528) "\F4\FF\00\00") ;; begin.next = &end (65524)
     (data (i32.const 65532) "\00\00\00\00") ;; begin.size = 0
+
+    (func $type.Nothing  (result i32) i32.const 0 return)
+    (func $type.Terminal (result i32) i32.const 1 return)
+    (func $type.Internal (result i32) i32.const 2 return)
+    (func $type.Template (result i32) i32.const 3 return)
+    (func $type.Bind     (result i32) i32.const 4 return)
+    (func $type.Print    (result i32) i32.const 5 return)
+    (func $type.Add      (result i32) i32.const 6 return)
+    ;; (func $type.Sub      (result i32) i32.const 7 return)
+    ;; (func $type.Mul      (result i32) i32.const 8 return)
+    ;; (func $type.Div      (result i32) i32.const 9 return)
+    ;; (func $type.Length   (result i32) i32.const 10 return)
+    ;; (func $type.Get      (result i32) i32.const 11 return)
+    ;; (func $type.Set      (result i32) i32.const 12 return)
+    (func $type.Int32    (result i32) i32.const 13 return)
+    (func $type.ASCII    (result i32) i32.const 14 return)
+    ;; (func $type.List     (result i32) i32.const 0 return)
+
+    (table 15 funcref)
+    (func $virtual.print.offset (result i32) i32.const 0)
+    (elem (i32.const 0)
+        $virtual.print.Nothing
+        $virtual.print.Terminal
+        $virtual.print.Internal
+        $virtual.print.Template
+        $virtual.print.Bind
+        $virtual.print.Print
+        $virtual.print.Nothing ;; @todo 6
+        $virtual.print.Nothing ;; @todo 7
+        $virtual.print.Nothing ;; @todo 8
+        $virtual.print.Nothing ;; @todo 9
+        $virtual.print.Nothing ;; @todo 10
+        $virtual.print.Nothing ;; @todo 11
+        $virtual.print.Nothing ;; @todo 12
+        $virtual.print.Int32
+        $virtual.print.ASCII
+    )
+
+    (type $virtual.print.type (func (param $something i32)))
+    (func $virtual.print (param $something i32)
+        local.get $something
+
+        local.get $something
+        call $something.type
+        call $virtual.print.offset
+        i32.add
+        call_indirect (type $virtual.print.type)
+
+        call $print.newline
+    )
+    (func $virtual.print.Nothing (param $nothing i32)
+        i32.const 47
+        i32.const 7
+        call $print.ascii
+    )
+    (func $virtual.print.Terminal (param $terminal i32)
+        i32.const 37
+        i32.const 8
+        call $print.ascii
+    )
+    (func $virtual.print.Internal (param $internal i32)
+        (local $target i32)
+        (local $length i32)
+
+        local.get $internal
+        call $Internal.targets.length
+        local.set $length
+        local.get $internal
+        call $Internal.targets.first
+        local.set $target
+
+        ;; print "internal"
+        i32.const 11
+        i32.const 8
+        call $print.ascii
+        call $print.square_opening
+
+        (block $break (loop $continue
+            local.get $length
+            i32.const 0
+            i32.eq
+            br_if $break
+
+            local.get $target
+            i32.load
+            call $print.int32
+
+            local.get $target
+            i32.const 4
+            i32.add
+            local.set $target
+
+            local.get $length
+            i32.const 1
+            i32.sub
+            local.set $length
+
+            (block $comma
+                local.get $length
+                i32.const 0
+                i32.eq
+                br_if $comma
+
+                call $print.comma
+            )
+
+            br $continue
+        ))
+
+        call $print.square_closing
+        call $print.round_opening
+
+        local.get $internal
+        call $Internal.storage.length
+        call $print.int32
+
+        call $print.round_closing
+    )
+    (func $virtual.print.Template (param $template i32)
+        i32.const 25
+        i32.const 8
+        call $print.ascii
+    )
+    (func $virtual.print.Bind (param $bind i32)
+        i32.const 33
+        i32.const 4
+        call $print.ascii
+    )
+    (func $virtual.print.Print (param $print i32)
+        i32.const 20
+        i32.const 5
+        call $print.ascii
+    )
+    (func $virtual.print.Int32 (param $int32 i32)
+        local.get $int32
+        call $Int32.value
+        call $print.int32
+    )
+    (func $virtual.print.ASCII (param $ascii i32)
+        local.get $ascii
+        call $ASCII.data
+        local.get $ascii
+        call $ASCII.length
+        call $print.ascii
+    )
+    (func $print.newline
+        i32.const 0
+        i32.const 1
+        call $print.ascii
+    )
+    (func $print.comma
+        i32.const 10
+        i32.const 1
+        call $print.ascii
+    )
+    (func $print.square_opening
+        i32.const 8
+        i32.const 1
+        call $print.ascii
+    )
+    (func $print.square_closing
+        i32.const 9
+        i32.const 1
+        call $print.ascii
+    )
+    (func $print.round_opening
+        i32.const 45
+        i32.const 1
+        call $print.ascii
+    )
+    (func $print.round_closing
+        i32.const 46
+        i32.const 1
+        call $print.ascii
+    )
+
+    (type $virtual.step (func (param $print i32) (param $buffer i32) (param $nothing i32) (result i32)))
+    (func $virtual.step.Print (param $print i32) (param $buffer i32) (param $nothing i32) (result i32)
+        (local $next i32)
+        (local $next_buffer i32)
+
+        ;; do printing
+        local.get $buffer
+        i32.const 2
+        call $Array.get
+        call $virtual.print
+
+        ;; alloc next buffer
+        i32.const 2
+        call $Array.constructor
+        local.set $next_buffer
+
+        ;; save next
+        local.get $buffer
+        i32.const 1
+        call $Array.get
+        local.set $next
+
+        ;; fill next buffer
+        local.get $next_buffer
+        i32.const 0
+        local.get $next
+        call $Array.set
+
+        local.get $next_buffer
+        i32.const 1
+        local.get $next
+        call $Array.set
+
+        ;; return
+        local.get $next_buffer
+        return
+    )
 
     (func $memory_size (result i32)
         i32.const 65536
@@ -267,7 +495,7 @@
         return
     )
     (func $Nothing.type (result i32)
-        i32.const 0
+        call $type.Nothing
         return
     )
     (func $Nothing.constructor (result i32)
@@ -290,7 +518,7 @@
         return
     )
     (func $Int32.type (result i32)
-        i32.const 2
+        call $type.Int32
         return
     )
     (func $Int32.value (param $int32 i32) (result i32)
@@ -461,7 +689,7 @@
         return
     )
     (func $ASCII.type (result i32)
-        i32.const 3
+        call $type.ASCII
         return
     )
     (func $ASCII.length.offset (result i32)
@@ -645,7 +873,7 @@
         return
     )
     (func $Internal.type (result i32)
-        i32.const 5
+        call $type.Internal
         return
     )
     (func $Internal.targets.length.offset (result i32)
@@ -748,7 +976,7 @@
         return
     )
     (func $Template.type (result i32)
-        i32.const 8
+        call $type.Template
         return
     )
     (func $Template.length.offset (result i32)
@@ -805,7 +1033,7 @@
         return
     )
     (func $Terminal.type (result i32)
-        i32.const 6
+        call $type.Terminal
         return
     )
     (func $Terminal.constructor (result i32)
@@ -958,7 +1186,7 @@
 
             local.get $current
             i32.load
-            call $print.something
+            call $virtual.print
 
             local.get $current
             i32.const 4
@@ -991,7 +1219,7 @@
         return
     )
     (func $external.Print.type (result i32)
-        i32.const 7
+        call $type.Print
         return
     )
     (func $external.Print.constructor (result i32)
@@ -1014,7 +1242,7 @@
         return
     )
     (func $external.Bind.type (result i32)
-        i32.const 9
+        call $type.Bind
         return
     )
     (func $external.Bind.constructor (result i32)
@@ -1032,249 +1260,82 @@
         return
     )
 
-    (func $print (param $something i32)
-        local.get $something
-        call $print.something
-
-        i32.const 0
-        i32.const 1
-        call $print.ascii
+    (func $sizeof.external.Add (result i32)
+        i32.const 4
+        return
     )
-    (func $print.something (param $something i32)
-        (block $print_terminal
-            local.get $something
-            call $something.type
-            call $Terminal.type
-            i32.ne
-            br_if $print_terminal
-
-            i32.const 37
-            i32.const 8
-            call $print.ascii
-
-            return
-        )
-        (block $print_int32
-            ;; if something.type != Int32.type then break
-            local.get $something
-            call $something.type
-            call $Int32.type
-            i32.ne
-            br_if $print_int32
-
-            local.get $something
-            call $Int32.value
-            call $print.int32
-
-            return
-        )
-        (block $print_ascii
-            local.get $something
-            call $something.type
-            call $ASCII.type
-            i32.ne
-            br_if $print_ascii
-
-            local.get $something
-            call $ASCII.data
-            local.get $something
-            call $ASCII.length
-            call $print.ascii
-
-            return
-        )
-        (block $print_list
-            local.get $something
-            call $something.type
-            call $List.type
-            i32.ne
-            br_if $print_list
-
-            local.get $something
-            call $print.List
-
-            return
-        )
-        (block $print_internal
-            local.get $something
-            call $something.type
-            call $Internal.type
-            i32.ne
-            br_if $print_internal
-
-            local.get $something
-            call $print.Internal
-
-            return
-        )
-        (block $print_template
-            local.get $something
-            call $something.type
-            call $Template.type
-            i32.ne
-            br_if $print_template
-
-            i32.const 25
-            i32.const 8
-            call $print.ascii
-
-            return
-        )
-        (block $print_bind
-            local.get $something
-            call $something.type
-            call $external.Bind.type
-            i32.ne
-            br_if $print_bind
-
-            i32.const 33
-            i32.const 4
-            call $print.ascii
-
-            return
-        )
-        (block $print_print
-            local.get $something
-            call $something.type
-            call $external.Print.type
-            i32.ne
-            br_if $print_print
-
-            i32.const 20
-            i32.const 5
-            call $print.ascii
-
-            return
-        )
-
-        i32.const 1
-        i32.const 7
-        call $print.ascii
+    (func $external.Add.type (result i32)
+        call $type.Add
+        return
     )
-    (func $print.List (param $list i32)
-        (local $i i32)
-        (local $length i32)
-
-        i32.const 8 ;; [
-        i32.const 1
-        call $print.ascii
-
-        local.get $list
-        call $List.length
-        local.set $length
-        (block $check_first
-            local.get $length
-            i32.const 0
-            i32.le_u
-            br_if $check_first
-
-            local.get $list
-            i32.const 0
-            call $List.get
-            call $print.something
-
-            i32.const 1
-            local.set $i
-            (loop $print_content (block $break_print
-                local.get $i
-                local.get $length
-                i32.ge_u
-                br_if $break_print
-
-                i32.const 10 ;; ,
-                i32.const 1
-                call $print.ascii
-
-                local.get $list
-                local.get $i
-                call $List.get
-                call $print.something
-
-                ;; ++i
-                local.get $i
-                i32.const 1
-                i32.add
-                local.set $i
-
-                br $print_content
-            ))
-        )
-
-        i32.const 9 ;; ]
-        i32.const 1
-        call $print.ascii
+    (func $external.Add.constructor (result i32)
+        (local $external i32)
+        ;; allocate
+        call $sizeof.external.Add
+        call $mem.allocate
+        local.set $external
+        ;; external.type = external.Add.type
+        local.get $external
+        call $external.Add.type
+        call $something.type.set
+        ;; return
+        local.get $external
+        return
     )
-    (func $print.Internal (param $internal i32)
-        (local $target i32)
-        (local $length i32)
 
-        local.get $internal
-        call $Internal.targets.length
-        local.set $length
-        local.get $internal
-        call $Internal.targets.first
-        local.set $target
+    ;; (func $print.List (param $list i32)
+    ;;     (local $i i32)
+    ;;     (local $length i32)
 
-        ;; print "internal"
-        i32.const 11
-        i32.const 8
-        call $print.ascii
-        ;; print "["
-        i32.const 8
-        i32.const 1
-        call $print.ascii
+    ;;     i32.const 8 ;; [
+    ;;     i32.const 1
+    ;;     call $print.ascii
 
-        (block $break (loop $continue
-            local.get $length
-            i32.const 0
-            i32.eq
-            br_if $break
+    ;;     local.get $list
+    ;;     call $List.length
+    ;;     local.set $length
+    ;;     (block $check_first
+    ;;         local.get $length
+    ;;         i32.const 0
+    ;;         i32.le_u
+    ;;         br_if $check_first
 
-            local.get $target
-            i32.load
-            call $print.int32
+    ;;         local.get $list
+    ;;         i32.const 0
+    ;;         call $List.get
+    ;;         call $print.something
 
-            local.get $target
-            i32.const 4
-            i32.add
-            local.set $target
+    ;;         i32.const 1
+    ;;         local.set $i
+    ;;         (loop $print_content (block $break_print
+    ;;             local.get $i
+    ;;             local.get $length
+    ;;             i32.ge_u
+    ;;             br_if $break_print
 
-            local.get $length
-            i32.const 1
-            i32.sub
-            local.set $length
+    ;;             i32.const 10 ;; ,
+    ;;             i32.const 1
+    ;;             call $print.ascii
 
-            (block $comma
-                local.get $length
-                i32.const 0
-                i32.eq
-                br_if $comma
+    ;;             local.get $list
+    ;;             local.get $i
+    ;;             call $List.get
+    ;;             call $print.something
 
-                i32.const 10
-                i32.const 1
-                call $print.ascii
-            )
+    ;;             ;; ++i
+    ;;             local.get $i
+    ;;             i32.const 1
+    ;;             i32.add
+    ;;             local.set $i
 
-            br $continue
-        ))
+    ;;             br $print_content
+    ;;         ))
+    ;;     )
 
-        ;; print "]"
-        i32.const 9
-        i32.const 1
-        call $print.ascii
-
-        i32.const 45 ;; (
-        i32.const 1
-        call $print.ascii
-
-        local.get $internal
-        call $Internal.storage.length
-        call $print.int32
-
-        i32.const 46 ;; )
-        i32.const 1
-        call $print.ascii
-    )
+    ;;     i32.const 9 ;; ]
+    ;;     i32.const 1
+    ;;     call $print.ascii
+    ;; )
 
     (func $machine.step.internal.get
         (param $target i32)
@@ -1440,42 +1501,6 @@
             br $continue
         ))
 
-        local.get $next_buffer
-        return
-    )
-    (func $machine.step.print (param $buffer i32) (param $nothing i32) (result i32)
-        (local $next i32)
-        (local $next_buffer i32)
-
-        ;; do printing
-        local.get $buffer
-        i32.const 2
-        call $Array.get
-        call $print
-
-        ;; alloc next buffer
-        i32.const 2
-        call $Array.constructor
-        local.set $next_buffer
-
-        ;; save next
-        local.get $buffer
-        i32.const 1
-        call $Array.get
-        local.set $next
-
-        ;; fill next buffer
-        local.get $next_buffer
-        i32.const 0
-        local.get $next
-        call $Array.set
-
-        local.get $next_buffer
-        i32.const 1
-        local.get $next
-        call $Array.set
-
-        ;; return
         local.get $next_buffer
         return
     )
@@ -1769,18 +1794,10 @@
             i32.ne
             br_if $check_print
 
-            ;; ;; print "print"
-            ;; i32.const 20
-            ;; i32.const 5
-            ;; call $print.ascii
-            ;; i32.const 0
-            ;; i32.const 1
-            ;; call $print.ascii
-            ;; @todo
-
+            local.get $first
             local.get $buffer
             local.get $nothing
-            call $machine.step.print
+            call $virtual.step.Print
             return
         )
         (block $check_bind
@@ -1933,6 +1950,7 @@
     (export "Array.set" (func $Array.set))
     (export "Print" (func $external.Print.constructor))
     (export "Bind" (func $external.Bind.constructor))
+    (export "Add" (func $external.Add.constructor))
     (export "step" (func $machine.step))
-    (export "_print" (func $print))
+    (export "_print" (func $virtual.print))
 )

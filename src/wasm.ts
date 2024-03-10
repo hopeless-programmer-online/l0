@@ -36,7 +36,6 @@ export class Context {
         return new Context({ exports, memory })
     }
 
-    private exports                    : WebAssembly.Exports
     private memory                     : WebAssembly.Memory
     private readonly nothing           : Address
     private readonly terminal          : Address
@@ -54,6 +53,7 @@ export class Context {
     private readonly internal_storage  : (internal : Address) => Address
     private readonly _step             : (buffer : Address) => Address
     private readonly _print            : (something : Address) => void
+    private readonly add               : Address
 
     public constructor({ exports, memory } : { exports : WebAssembly.Exports, memory : WebAssembly.Memory }) {
         const Nothing          = exports.Nothing as () => Address
@@ -76,8 +76,9 @@ export class Context {
         const internal_storage = exports[`Internal.storage`] as (internal : Address) => Address
         const step             = exports.step as (buffer : Address) => Address
         const _print           = exports._print as (something : Address) => void
+        const Add              = exports.Add as () => Address
+        const add              = Add()
 
-        this.exports          = exports
         this.memory           = memory
         this.nothing          = nothing
         this.terminal         = terminal
@@ -95,6 +96,7 @@ export class Context {
         this.internal_storage = internal_storage
         this._step            = step
         this._print           = _print
+        this.add              = add
     }
 
     private template(targets : number[]) {
@@ -170,7 +172,7 @@ export class Context {
         //     case `if`           : return this.if
 
         //     case `Int32`        : return this.Int32
-        //     case `+`            : return this.add
+            case `+`            : return this.add
         //     case `-`            : return this.sub
         //     case `*`            : return this.mul
         //     case `/`            : return this.div
