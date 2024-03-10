@@ -37,7 +37,7 @@
     (func $type.Sub      (result i32) i32.const 7 return)
     (func $type.Mul      (result i32) i32.const 8 return)
     (func $type.Div      (result i32) i32.const 9 return)
-    ;; (func $type.Length   (result i32) i32.const 10 return)
+    (func $type.Length   (result i32) i32.const 10 return)
     ;; (func $type.Get      (result i32) i32.const 11 return)
     ;; (func $type.Set      (result i32) i32.const 12 return)
     (func $type.Int32    (result i32) i32.const 13 return)
@@ -58,7 +58,7 @@
         $virtual.step.Sub
         $virtual.step.Mul
         $virtual.step.Div
-        $virtual.step.Nothing ;; @todo: $virtual.print.Length
+        $virtual.step.Length
         $virtual.step.Nothing ;; @todo: $virtual.print.Get
         $virtual.step.Nothing ;; @todo: $virtual.print.Set
         $virtual.step.Nothing ;; @todo: $virtual.print.Int32
@@ -843,6 +843,39 @@
         call $Int32.constructor
 
         call $virtual.step.result2
+        return
+    )
+    (func $virtual.step.Length (param $length i32) (param $buffer i32) (param $nothing i32) (result i32)
+        (local $next i32)
+        (local $next_buffer i32)
+        (local $ascii i32)
+
+        ;; extract & check ascii
+        local.get $buffer
+        i32.const 2
+        call $Array.get
+        local.set $ascii
+
+        (block $check_ascii
+            local.get $ascii
+            call $something.type
+            call $ASCII.type
+            i32.eq
+            br_if $check_ascii
+
+            ;; @todo: error state
+            i32.const 0
+            return
+        )
+
+        ;; return
+        local.get $buffer
+
+        local.get $ascii
+        call $ASCII.length
+        call $Int32.constructor
+
+        call $virtual.step.result1
         return
     )
 
@@ -2120,6 +2153,29 @@
         return
     )
 
+    (func $sizeof.external.Length (result i32)
+        i32.const 4
+        return
+    )
+    (func $external.Length.type (result i32)
+        call $type.Length
+        return
+    )
+    (func $external.Length.constructor (result i32)
+        (local $external i32)
+        ;; allocate
+        call $sizeof.external.Length
+        call $mem.allocate
+        local.set $external
+        ;; external.type = external.Length.type
+        local.get $external
+        call $external.Length.type
+        call $something.type.set
+        ;; return
+        local.get $external
+        return
+    )
+
     (func $machine.step (param $buffer i32) (param $nothing i32) (result i32)
         (local $first i32)
 
@@ -2228,6 +2284,7 @@
     (export "Sub" (func $external.Sub.constructor))
     (export "Mul" (func $external.Mul.constructor))
     (export "Div" (func $external.Div.constructor))
+    (export "Length" (func $external.Length.constructor))
     (export "step" (func $machine.step))
     (export "_print" (func $virtual.print))
 )

@@ -57,6 +57,7 @@ export class Context {
     private readonly sub               : Address
     private readonly mul               : Address
     private readonly div               : Address
+    private readonly length            : Address
 
     public constructor({ exports, memory } : { exports : WebAssembly.Exports, memory : WebAssembly.Memory }) {
         const Nothing          = exports.Nothing as () => Address
@@ -87,6 +88,8 @@ export class Context {
         const mul              = Mul()
         const Div              = exports.Div as () => Address
         const div              = Div()
+        const Length           = exports.Length as () => Address
+        const length           = Length()
 
         this.memory           = memory
         this.nothing          = nothing
@@ -109,6 +112,7 @@ export class Context {
         this.sub              = sub
         this.mul              = mul
         this.div              = div
+        this.length           = length
     }
 
     private template(targets : number[]) {
@@ -195,7 +199,7 @@ export class Context {
 
         //     case `UTF8String`   : return this.UTF8String
 
-        //     case `length`       : return this.length
+            case `length`       : return this.length
         //     case `get`          : return this.get
         //     case `set`          : return this.set
         //     case `List`         : return this.List
