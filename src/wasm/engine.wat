@@ -35,8 +35,8 @@
     (func $type.Print    (result i32) i32.const 5 return)
     (func $type.Add      (result i32) i32.const 6 return)
     (func $type.Sub      (result i32) i32.const 7 return)
-    ;; (func $type.Mul      (result i32) i32.const 8 return)
-    ;; (func $type.Div      (result i32) i32.const 9 return)
+    (func $type.Mul      (result i32) i32.const 8 return)
+    (func $type.Div      (result i32) i32.const 9 return)
     ;; (func $type.Length   (result i32) i32.const 10 return)
     ;; (func $type.Get      (result i32) i32.const 11 return)
     ;; (func $type.Set      (result i32) i32.const 12 return)
@@ -56,8 +56,8 @@
         $virtual.step.Print
         $virtual.step.Add
         $virtual.step.Sub
-        $virtual.step.Nothing ;; @todo: $virtual.print.Mul
-        $virtual.step.Nothing ;; @todo: $virtual.print.Div
+        $virtual.step.Mul
+        $virtual.step.Div
         $virtual.step.Nothing ;; @todo: $virtual.print.Length
         $virtual.step.Nothing ;; @todo: $virtual.print.Get
         $virtual.step.Nothing ;; @todo: $virtual.print.Set
@@ -578,6 +578,47 @@
         local.get $next_buffer
         return
     )
+    (func $virtual.step.result2 (param $buffer i32) (param $result1 i32) (param $result2 i32) (result i32)
+        (local $next i32)
+        (local $next_buffer i32)
+
+        ;; alloc next buffer
+        i32.const 4
+        call $Array.constructor
+        local.set $next_buffer
+
+        ;; save next
+        local.get $buffer
+        i32.const 1
+        call $Array.get
+        local.set $next
+
+        ;; fill next buffer
+        local.get $next_buffer
+        i32.const 0
+        local.get $next
+        call $Array.set
+
+        local.get $next_buffer
+        i32.const 1
+        local.get $next
+        call $Array.set
+
+        ;; save results
+        local.get $next_buffer
+        i32.const 2
+        local.get $result1
+        call $Array.set
+
+        local.get $next_buffer
+        i32.const 3
+        local.get $result2
+        call $Array.set
+
+        ;; return
+        local.get $next_buffer
+        return
+    )
     (func $virtual.step.Add (param $add i32) (param $buffer i32) (param $nothing i32) (result i32)
         (local $next i32)
         (local $next_buffer i32)
@@ -686,6 +727,122 @@
         call $Int32.constructor
 
         call $virtual.step.result1
+        return
+    )
+    (func $virtual.step.Mul (param $mul i32) (param $buffer i32) (param $nothing i32) (result i32)
+        (local $next i32)
+        (local $next_buffer i32)
+        (local $left i32)
+        (local $right i32)
+
+        ;; extract & check left
+        local.get $buffer
+        i32.const 2
+        call $Array.get
+        local.set $left
+
+        (block $check_left
+            local.get $left
+            call $something.type
+            call $Int32.type
+            i32.eq
+            br_if $check_left
+
+            ;; @todo: error state
+            i32.const 0
+            return
+        )
+
+        ;; extract & check right
+        local.get $buffer
+        i32.const 3
+        call $Array.get
+        local.set $right
+
+        (block $check_right
+            local.get $right
+            call $something.type
+            call $Int32.type
+            i32.eq
+            br_if $check_right
+
+            ;; @todo: error state
+            i32.const 0
+            return
+        )
+
+        ;; return
+        local.get $buffer
+
+        local.get $left
+        call $Int32.value
+        local.get $right
+        call $Int32.value
+        i32.mul
+        call $Int32.constructor
+
+        call $virtual.step.result1
+        return
+    )
+    (func $virtual.step.Div (param $div i32) (param $buffer i32) (param $nothing i32) (result i32)
+        (local $next i32)
+        (local $next_buffer i32)
+        (local $left i32)
+        (local $right i32)
+
+        ;; extract & check left
+        local.get $buffer
+        i32.const 2
+        call $Array.get
+        local.set $left
+
+        (block $check_left
+            local.get $left
+            call $something.type
+            call $Int32.type
+            i32.eq
+            br_if $check_left
+
+            ;; @todo: error state
+            i32.const 0
+            return
+        )
+
+        ;; extract & check right
+        local.get $buffer
+        i32.const 3
+        call $Array.get
+        local.set $right
+
+        (block $check_right
+            local.get $right
+            call $something.type
+            call $Int32.type
+            i32.eq
+            br_if $check_right
+
+            ;; @todo: error state
+            i32.const 0
+            return
+        )
+
+        ;; return
+        local.get $buffer
+
+        local.get $left
+        call $Int32.value
+        local.tee $left
+        local.get $right
+        call $Int32.value
+        local.tee $right
+        i32.div_s
+        call $Int32.constructor
+        local.get $left
+        local.get $right
+        i32.rem_s
+        call $Int32.constructor
+
+        call $virtual.step.result2
         return
     )
 
@@ -1917,6 +2074,52 @@
         return
     )
 
+    (func $sizeof.external.Mul (result i32)
+        i32.const 4
+        return
+    )
+    (func $external.Mul.type (result i32)
+        call $type.Mul
+        return
+    )
+    (func $external.Mul.constructor (result i32)
+        (local $external i32)
+        ;; allocate
+        call $sizeof.external.Mul
+        call $mem.allocate
+        local.set $external
+        ;; external.type = external.Mul.type
+        local.get $external
+        call $external.Mul.type
+        call $something.type.set
+        ;; return
+        local.get $external
+        return
+    )
+
+    (func $sizeof.external.Div (result i32)
+        i32.const 4
+        return
+    )
+    (func $external.Div.type (result i32)
+        call $type.Div
+        return
+    )
+    (func $external.Div.constructor (result i32)
+        (local $external i32)
+        ;; allocate
+        call $sizeof.external.Div
+        call $mem.allocate
+        local.set $external
+        ;; external.type = external.Div.type
+        local.get $external
+        call $external.Div.type
+        call $something.type.set
+        ;; return
+        local.get $external
+        return
+    )
+
     (func $machine.step (param $buffer i32) (param $nothing i32) (result i32)
         (local $first i32)
 
@@ -2023,6 +2226,8 @@
     (export "Bind" (func $external.Bind.constructor))
     (export "Add" (func $external.Add.constructor))
     (export "Sub" (func $external.Sub.constructor))
+    (export "Mul" (func $external.Mul.constructor))
+    (export "Div" (func $external.Div.constructor))
     (export "step" (func $machine.step))
     (export "_print" (func $virtual.print))
 )
