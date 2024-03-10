@@ -19,6 +19,10 @@
     (data (i32.const 46) ")")        ;; 46-47, 1
     (data (i32.const 47) "nothing")  ;; 47-54, 7
     (data (i32.const 54) "+")        ;; 54-55, 1
+    (data (i32.const 55) "-")        ;; 55-56, 1
+    (data (i32.const 56) "*")        ;; 56-57, 1
+    (data (i32.const 57) "/")        ;; 57-58, 1
+    (data (i32.const 58) "length")   ;; 58-64, 6
     ;; memory nodes
     (data (i32.const 1024)  "\00\04\00\00") ;; begin.prev = &begin (1024)
     (data (i32.const 1028)  "\F4\FF\00\00") ;; begin.next = &end (65524)
@@ -888,10 +892,10 @@
         $virtual.print.Bind
         $virtual.print.Print
         $virtual.print.Add
-        $virtual.print.Nothing ;; Sub
-        $virtual.print.Nothing ;; Mul
-        $virtual.print.Nothing ;; Div
-        $virtual.print.Nothing ;; Length
+        $virtual.print.Sub
+        $virtual.print.Mul
+        $virtual.print.Div
+        $virtual.print.Length
         $virtual.print.Nothing ;; Get
         $virtual.print.Nothing ;; Set
         $virtual.print.Int32
@@ -995,6 +999,26 @@
     (func $virtual.print.Add (param $print i32)
         i32.const 54
         i32.const 1
+        call $print.ascii
+    )
+    (func $virtual.print.Sub (param $print i32)
+        i32.const 55
+        i32.const 1
+        call $print.ascii
+    )
+    (func $virtual.print.Mul (param $print i32)
+        i32.const 56
+        i32.const 1
+        call $print.ascii
+    )
+    (func $virtual.print.Div (param $print i32)
+        i32.const 57
+        i32.const 1
+        call $print.ascii
+    )
+    (func $virtual.print.Length (param $print i32)
+        i32.const 58
+        i32.const 6
         call $print.ascii
     )
     (func $virtual.print.Int32 (param $int32 i32)
