@@ -34,7 +34,7 @@
     (func $type.Bind     (result i32) i32.const 4 return)
     (func $type.Print    (result i32) i32.const 5 return)
     (func $type.Add      (result i32) i32.const 6 return)
-    ;; (func $type.Sub      (result i32) i32.const 7 return)
+    (func $type.Sub      (result i32) i32.const 7 return)
     ;; (func $type.Mul      (result i32) i32.const 8 return)
     ;; (func $type.Div      (result i32) i32.const 9 return)
     ;; (func $type.Length   (result i32) i32.const 10 return)
@@ -55,7 +55,7 @@
         $virtual.step.Bind
         $virtual.step.Print
         $virtual.step.Add
-        $virtual.step.Nothing ;; @todo: $virtual.print.Sub
+        $virtual.step.Sub
         $virtual.step.Nothing ;; @todo: $virtual.print.Mul
         $virtual.step.Nothing ;; @todo: $virtual.print.Div
         $virtual.step.Nothing ;; @todo: $virtual.print.Length
@@ -542,6 +542,42 @@
         local.get $next_buffer
         return
     )
+    (func $virtual.step.result1 (param $buffer i32) (param $result i32) (result i32)
+        (local $next i32)
+        (local $next_buffer i32)
+
+        ;; alloc next buffer
+        i32.const 3
+        call $Array.constructor
+        local.set $next_buffer
+
+        ;; save next
+        local.get $buffer
+        i32.const 1
+        call $Array.get
+        local.set $next
+
+        ;; fill next buffer
+        local.get $next_buffer
+        i32.const 0
+        local.get $next
+        call $Array.set
+
+        local.get $next_buffer
+        i32.const 1
+        local.get $next
+        call $Array.set
+
+        ;; save result
+        local.get $next_buffer
+        i32.const 2
+        local.get $result
+        call $Array.set
+
+        ;; return
+        local.get $next_buffer
+        return
+    )
     (func $virtual.step.Add (param $add i32) (param $buffer i32) (param $nothing i32) (result i32)
         (local $next i32)
         (local $next_buffer i32)
@@ -584,31 +620,8 @@
             return
         )
 
-        ;; alloc next buffer
-        i32.const 3
-        call $Array.constructor
-        local.set $next_buffer
-
-        ;; save next
+        ;; return
         local.get $buffer
-        i32.const 1
-        call $Array.get
-        local.set $next
-
-        ;; fill next buffer
-        local.get $next_buffer
-        i32.const 0
-        local.get $next
-        call $Array.set
-
-        local.get $next_buffer
-        i32.const 1
-        local.get $next
-        call $Array.set
-
-        ;; save result
-        local.get $next_buffer
-        i32.const 2
 
         local.get $left
         call $Int32.value
@@ -617,10 +630,62 @@
         i32.add
         call $Int32.constructor
 
-        call $Array.set
+        call $virtual.step.result1
+        return
+    )
+    (func $virtual.step.Sub (param $sub i32) (param $buffer i32) (param $nothing i32) (result i32)
+        (local $next i32)
+        (local $next_buffer i32)
+        (local $left i32)
+        (local $right i32)
+
+        ;; extract & check left
+        local.get $buffer
+        i32.const 2
+        call $Array.get
+        local.set $left
+
+        (block $check_left
+            local.get $left
+            call $something.type
+            call $Int32.type
+            i32.eq
+            br_if $check_left
+
+            ;; @todo: error state
+            i32.const 0
+            return
+        )
+
+        ;; extract & check right
+        local.get $buffer
+        i32.const 3
+        call $Array.get
+        local.set $right
+
+        (block $check_right
+            local.get $right
+            call $something.type
+            call $Int32.type
+            i32.eq
+            br_if $check_right
+
+            ;; @todo: error state
+            i32.const 0
+            return
+        )
 
         ;; return
-        local.get $next_buffer
+        local.get $buffer
+
+        local.get $left
+        call $Int32.value
+        local.get $right
+        call $Int32.value
+        i32.sub
+        call $Int32.constructor
+
+        call $virtual.step.result1
         return
     )
 
@@ -1829,6 +1894,29 @@
         return
     )
 
+    (func $sizeof.external.Sub (result i32)
+        i32.const 4
+        return
+    )
+    (func $external.Sub.type (result i32)
+        call $type.Sub
+        return
+    )
+    (func $external.Sub.constructor (result i32)
+        (local $external i32)
+        ;; allocate
+        call $sizeof.external.Sub
+        call $mem.allocate
+        local.set $external
+        ;; external.type = external.Sub.type
+        local.get $external
+        call $external.Sub.type
+        call $something.type.set
+        ;; return
+        local.get $external
+        return
+    )
+
     (func $machine.step (param $buffer i32) (param $nothing i32) (result i32)
         (local $first i32)
 
@@ -1934,6 +2022,7 @@
     (export "Print" (func $external.Print.constructor))
     (export "Bind" (func $external.Bind.constructor))
     (export "Add" (func $external.Add.constructor))
+    (export "Sub" (func $external.Sub.constructor))
     (export "step" (func $machine.step))
     (export "_print" (func $virtual.print))
 )

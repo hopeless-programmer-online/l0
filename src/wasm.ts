@@ -54,6 +54,7 @@ export class Context {
     private readonly _step             : (buffer : Address) => Address
     private readonly _print            : (something : Address) => void
     private readonly add               : Address
+    private readonly sub               : Address
 
     public constructor({ exports, memory } : { exports : WebAssembly.Exports, memory : WebAssembly.Memory }) {
         const Nothing          = exports.Nothing as () => Address
@@ -78,6 +79,8 @@ export class Context {
         const _print           = exports._print as (something : Address) => void
         const Add              = exports.Add as () => Address
         const add              = Add()
+        const Sub              = exports.Sub as () => Address
+        const sub              = Sub()
 
         this.memory           = memory
         this.nothing          = nothing
@@ -97,6 +100,7 @@ export class Context {
         this._step            = step
         this._print           = _print
         this.add              = add
+        this.sub              = sub
     }
 
     private template(targets : number[]) {
@@ -173,7 +177,7 @@ export class Context {
 
         //     case `Int32`        : return this.Int32
             case `+`            : return this.add
-        //     case `-`            : return this.sub
+            case `-`            : return this.sub
         //     case `*`            : return this.mul
         //     case `/`            : return this.div
         //     case `<`            : return this.less
