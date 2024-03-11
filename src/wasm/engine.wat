@@ -23,6 +23,11 @@
     (data (i32.const 56) "*")        ;; 56-57, 1
     (data (i32.const 57) "/")        ;; 57-58, 1
     (data (i32.const 58) "length")   ;; 58-64, 6
+    (data (i32.const 64) "<")        ;; 64-65, 1
+    (data (i32.const 65) "<=")       ;; 65-67, 2
+    (data (i32.const 67) ">")        ;; 67-68, 1
+    (data (i32.const 68) ">=")       ;; 68-70, 2
+    (data (i32.const 70) "if")       ;; 70-72, 2
     ;; memory nodes
     (data (i32.const 1024)  "\00\04\00\00") ;; begin.prev = &begin (1024)
     (data (i32.const 1028)  "\F4\FF\00\00") ;; begin.next = &end (65524)
@@ -46,13 +51,14 @@
     (func $type.LessEqual    (result i32) i32.const 12 return)
     (func $type.Greater      (result i32) i32.const 13 return)
     (func $type.GreaterEqual (result i32) i32.const 14 return)
-    ;; (func $type.Get          (result i32) i32.const 15 return)
-    ;; (func $type.Set          (result i32) i32.const 16 return)
-    (func $type.Int32        (result i32) i32.const 17 return)
-    (func $type.ASCII        (result i32) i32.const 18 return)
+    (func $type.If           (result i32) i32.const 15 return)
+    ;; (func $type.Get          (result i32) i32.const 16 return)
+    ;; (func $type.Set          (result i32) i32.const 17 return)
+    (func $type.Int32        (result i32) i32.const 18 return)
+    (func $type.ASCII        (result i32) i32.const 19 return)
     ;; (func $type.List         (result i32) i32.const 0 return)
 
-    (table 38 funcref)
+    (table 40 funcref)
 
     (func $virtual.step.offset (result i32) i32.const 0)
     (elem (i32.const 0)
@@ -71,6 +77,7 @@
         $virtual.step.LessEqual
         $virtual.step.Greater
         $virtual.step.GreaterEqual
+        $virtual.step.If
         $virtual.step.Nothing ;; @todo: $virtual.print.Get
         $virtual.step.Nothing ;; @todo: $virtual.print.Set
         $virtual.step.Nothing ;; @todo: $virtual.print.Int32
@@ -1156,10 +1163,82 @@
         call $virtual.step.result1
         return
     )
+    (func $virtual.step.If (param $if i32) (param $buffer i32) (param $nothing i32) (result i32)
+        (local $next i32)
+        (local $condition i32)
+        (local $next_buffer i32)
+
+        ;; extract next
+        local.get $buffer
+        i32.const 1
+        call $Array.get
+        local.set $next
+
+        ;; extract & check left
+        local.get $buffer
+        i32.const 2
+        call $Array.get
+        local.set $condition
+
+        (block $check_condition
+            local.get $condition
+            call $something.type
+            call $Int32.type
+            i32.eq
+            br_if $check_condition
+
+            ;; @todo: error state
+            i32.const 0
+            return
+        )
+        (block $then
+            local.get $condition
+            call $Int32.value
+            i32.const 0
+            i32.eq
+            br_if $then
+
+            i32.const 2
+            call $Array.constructor
+            local.set $next_buffer
+
+            local.get $next_buffer
+            i32.const 0
+                local.get $buffer
+                i32.const 3
+                call $Array.get
+            call $Array.set
+
+            local.get $next_buffer
+            i32.const 1
+            local.get $next
+            call $Array.set
+
+            local.get $next_buffer
+            return
+        )
+
+        i32.const 2
+        call $Array.constructor
+        local.set $next_buffer
+
+        local.get $next_buffer
+        i32.const 0
+        local.get $next
+        call $Array.set
+
+        local.get $next_buffer
+        i32.const 1
+        local.get $next
+        call $Array.set
+
+        local.get $next_buffer
+        return
+    )
 
 
-    (func $virtual.print.offset (result i32) i32.const 19)
-    (elem (i32.const 19)
+    (func $virtual.print.offset (result i32) i32.const 20)
+    (elem (i32.const 20)
         $virtual.print.Nothing
         $virtual.print.Terminal
         $virtual.print.Internal
@@ -1171,10 +1250,11 @@
         $virtual.print.Mul
         $virtual.print.Div
         $virtual.print.Length
-        $virtual.print.Nothing ;; Less
-        $virtual.print.Nothing ;; LessEqual
-        $virtual.print.Nothing ;; Greater
-        $virtual.print.Nothing ;; GreaterEqual
+        $virtual.print.Less
+        $virtual.print.LessEqual
+        $virtual.print.Greater
+        $virtual.print.GreaterEqual
+        $virtual.print.If
         $virtual.print.Nothing ;; Get
         $virtual.print.Nothing ;; Set
         $virtual.print.Int32
@@ -1298,6 +1378,31 @@
     (func $virtual.print.Length (param $print i32)
         i32.const 58
         i32.const 6
+        call $print.ascii
+    )
+    (func $virtual.print.Less (param $less i32)
+        i32.const 64
+        i32.const 1
+        call $print.ascii
+    )
+    (func $virtual.print.LessEqual (param $less_equal i32)
+        i32.const 65
+        i32.const 2
+        call $print.ascii
+    )
+    (func $virtual.print.Greater (param $greater i32)
+        i32.const 67
+        i32.const 1
+        call $print.ascii
+    )
+    (func $virtual.print.GreaterEqual (param $greater_equal i32)
+        i32.const 68
+        i32.const 2
+        call $print.ascii
+    )
+    (func $virtual.print.If (param $greater_equal i32)
+        i32.const 70
+        i32.const 2
         call $print.ascii
     )
     (func $virtual.print.Int32 (param $int32 i32)
@@ -2571,6 +2676,29 @@
         return
     )
 
+    (func $sizeof.external.If (result i32)
+        i32.const 4
+        return
+    )
+    (func $external.If.type (result i32)
+        call $type.If
+        return
+    )
+    (func $external.If.constructor (result i32)
+        (local $external i32)
+        ;; allocate
+        call $sizeof.external.If
+        call $mem.allocate
+        local.set $external
+        ;; external.type = external.If.type
+        local.get $external
+        call $external.If.type
+        call $something.type.set
+        ;; return
+        local.get $external
+        return
+    )
+
     (func $machine.step (param $buffer i32) (param $nothing i32) (result i32)
         (local $first i32)
 
@@ -2684,6 +2812,7 @@
     (export "LessEqual" (func $external.LessEqual.constructor))
     (export "Greater" (func $external.Greater.constructor))
     (export "GreaterEqual" (func $external.GreaterEqual.constructor))
+    (export "If" (func $external.If.constructor))
     (export "step" (func $machine.step))
     (export "_print" (func $virtual.print))
 )

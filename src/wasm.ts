@@ -62,6 +62,7 @@ export class Context {
     private readonly less_equal        : Address
     private readonly greater           : Address
     private readonly greater_equal     : Address
+    private readonly if                : Address
 
     public constructor({ exports, memory } : { exports : WebAssembly.Exports, memory : WebAssembly.Memory }) {
         const Nothing          = exports.Nothing as () => Address
@@ -102,6 +103,8 @@ export class Context {
         const greater          = Greater()
         const GreaterEqual     = exports.GreaterEqual as () => Address
         const greater_equal    = GreaterEqual()
+        const If               = exports.If as () => Address
+        const if_              = If()
 
         this.memory           = memory
         this.nothing          = nothing
@@ -129,6 +132,7 @@ export class Context {
         this.less_equal       = less_equal
         this.greater          = greater
         this.greater_equal    = greater_equal
+        this.if               = if_
     }
 
     private template(targets : number[]) {
@@ -201,7 +205,7 @@ export class Context {
         //     case `not`          : return this.not
         //     case `and`          : return this.and
         //     case `or`           : return this.or
-        //     case `if`           : return this.if
+            case `if`           : return this.if
 
         //     case `Int32`        : return this.Int32
             case `+`            : return this.add
