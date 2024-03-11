@@ -31,24 +31,28 @@
     (data (i32.const 65528) "\F4\FF\00\00") ;; begin.next = &end (65524)
     (data (i32.const 65532) "\00\00\00\00") ;; begin.size = 0
 
-    (func $type.Nothing  (result i32) i32.const 0 return)
-    (func $type.Terminal (result i32) i32.const 1 return)
-    (func $type.Internal (result i32) i32.const 2 return)
-    (func $type.Template (result i32) i32.const 3 return)
-    (func $type.Bind     (result i32) i32.const 4 return)
-    (func $type.Print    (result i32) i32.const 5 return)
-    (func $type.Add      (result i32) i32.const 6 return)
-    (func $type.Sub      (result i32) i32.const 7 return)
-    (func $type.Mul      (result i32) i32.const 8 return)
-    (func $type.Div      (result i32) i32.const 9 return)
-    (func $type.Length   (result i32) i32.const 10 return)
-    ;; (func $type.Get      (result i32) i32.const 11 return)
-    ;; (func $type.Set      (result i32) i32.const 12 return)
-    (func $type.Int32    (result i32) i32.const 13 return)
-    (func $type.ASCII    (result i32) i32.const 14 return)
-    ;; (func $type.List     (result i32) i32.const 0 return)
+    (func $type.Nothing      (result i32) i32.const 0 return)
+    (func $type.Terminal     (result i32) i32.const 1 return)
+    (func $type.Internal     (result i32) i32.const 2 return)
+    (func $type.Template     (result i32) i32.const 3 return)
+    (func $type.Bind         (result i32) i32.const 4 return)
+    (func $type.Print        (result i32) i32.const 5 return)
+    (func $type.Add          (result i32) i32.const 6 return)
+    (func $type.Sub          (result i32) i32.const 7 return)
+    (func $type.Mul          (result i32) i32.const 8 return)
+    (func $type.Div          (result i32) i32.const 9 return)
+    (func $type.Length       (result i32) i32.const 10 return)
+    (func $type.Less         (result i32) i32.const 11 return)
+    (func $type.LessEqual    (result i32) i32.const 12 return)
+    (func $type.Greater      (result i32) i32.const 13 return)
+    (func $type.GreaterEqual (result i32) i32.const 14 return)
+    ;; (func $type.Get          (result i32) i32.const 15 return)
+    ;; (func $type.Set          (result i32) i32.const 16 return)
+    (func $type.Int32        (result i32) i32.const 17 return)
+    (func $type.ASCII        (result i32) i32.const 18 return)
+    ;; (func $type.List         (result i32) i32.const 0 return)
 
-    (table 30 funcref)
+    (table 38 funcref)
 
     (func $virtual.step.offset (result i32) i32.const 0)
     (elem (i32.const 0)
@@ -63,6 +67,10 @@
         $virtual.step.Mul
         $virtual.step.Div
         $virtual.step.Length
+        $virtual.step.Less
+        $virtual.step.LessEqual
+        $virtual.step.Greater
+        $virtual.step.GreaterEqual
         $virtual.step.Nothing ;; @todo: $virtual.print.Get
         $virtual.step.Nothing ;; @todo: $virtual.print.Set
         $virtual.step.Nothing ;; @todo: $virtual.print.Int32
@@ -624,8 +632,6 @@
         return
     )
     (func $virtual.step.Add (param $add i32) (param $buffer i32) (param $nothing i32) (result i32)
-        (local $next i32)
-        (local $next_buffer i32)
         (local $left i32)
         (local $right i32)
 
@@ -679,8 +685,6 @@
         return
     )
     (func $virtual.step.Sub (param $sub i32) (param $buffer i32) (param $nothing i32) (result i32)
-        (local $next i32)
-        (local $next_buffer i32)
         (local $left i32)
         (local $right i32)
 
@@ -734,8 +738,6 @@
         return
     )
     (func $virtual.step.Mul (param $mul i32) (param $buffer i32) (param $nothing i32) (result i32)
-        (local $next i32)
-        (local $next_buffer i32)
         (local $left i32)
         (local $right i32)
 
@@ -789,8 +791,6 @@
         return
     )
     (func $virtual.step.Div (param $div i32) (param $buffer i32) (param $nothing i32) (result i32)
-        (local $next i32)
-        (local $next_buffer i32)
         (local $left i32)
         (local $right i32)
 
@@ -850,8 +850,6 @@
         return
     )
     (func $virtual.step.Length (param $length i32) (param $buffer i32) (param $nothing i32) (result i32)
-        (local $next i32)
-        (local $next_buffer i32)
         (local $ascii i32)
 
         ;; extract & check ascii
@@ -882,9 +880,286 @@
         call $virtual.step.result1
         return
     )
+    (func $virtual.step.Less (param $less i32) (param $buffer i32) (param $nothing i32) (result i32)
+        (local $left i32)
+        (local $right i32)
+        (local $result i32)
 
-    (func $virtual.print.offset (result i32) i32.const 15)
-    (elem (i32.const 15)
+        ;; extract & check left
+        local.get $buffer
+        i32.const 2
+        call $Array.get
+        local.set $left
+
+        (block $check_left
+            local.get $left
+            call $something.type
+            call $Int32.type
+            i32.eq
+            br_if $check_left
+
+            ;; @todo: error state
+            i32.const 0
+            return
+        )
+
+        ;; extract & check right
+        local.get $buffer
+        i32.const 3
+        call $Array.get
+        local.set $right
+
+        (block $check_right
+            local.get $right
+            call $something.type
+            call $Int32.type
+            i32.eq
+            br_if $check_right
+
+            ;; @todo: error state
+            i32.const 0
+            return
+        )
+
+        ;; return
+        local.get $buffer
+
+        (block $break1
+            (block $break2
+                local.get $left
+                call $Int32.value
+                local.get $right
+                call $Int32.value
+                i32.lt_s
+                br_if $break2
+
+                i32.const 0
+                local.set $result
+
+                br $break1
+            )
+
+            i32.const 1
+            local.set $result
+        )
+
+        local.get $result
+        call $Int32.constructor
+
+        call $virtual.step.result1
+        return
+    )
+    (func $virtual.step.LessEqual (param $less_equal i32) (param $buffer i32) (param $nothing i32) (result i32)
+        (local $left i32)
+        (local $right i32)
+        (local $result i32)
+
+        ;; extract & check left
+        local.get $buffer
+        i32.const 2
+        call $Array.get
+        local.set $left
+
+        (block $check_left
+            local.get $left
+            call $something.type
+            call $Int32.type
+            i32.eq
+            br_if $check_left
+
+            ;; @todo: error state
+            i32.const 0
+            return
+        )
+
+        ;; extract & check right
+        local.get $buffer
+        i32.const 3
+        call $Array.get
+        local.set $right
+
+        (block $check_right
+            local.get $right
+            call $something.type
+            call $Int32.type
+            i32.eq
+            br_if $check_right
+
+            ;; @todo: error state
+            i32.const 0
+            return
+        )
+
+        ;; return
+        local.get $buffer
+
+        (block $break1
+            (block $break2
+                local.get $left
+                call $Int32.value
+                local.get $right
+                call $Int32.value
+                i32.le_s
+                br_if $break2
+
+                i32.const 0
+                local.set $result
+
+                br $break1
+            )
+
+            i32.const 1
+            local.set $result
+        )
+
+        local.get $result
+        call $Int32.constructor
+
+        call $virtual.step.result1
+        return
+    )
+    (func $virtual.step.Greater (param $greater i32) (param $buffer i32) (param $nothing i32) (result i32)
+        (local $left i32)
+        (local $right i32)
+        (local $result i32)
+
+        ;; extract & check left
+        local.get $buffer
+        i32.const 2
+        call $Array.get
+        local.set $left
+
+        (block $check_left
+            local.get $left
+            call $something.type
+            call $Int32.type
+            i32.eq
+            br_if $check_left
+
+            ;; @todo: error state
+            i32.const 0
+            return
+        )
+
+        ;; extract & check right
+        local.get $buffer
+        i32.const 3
+        call $Array.get
+        local.set $right
+
+        (block $check_right
+            local.get $right
+            call $something.type
+            call $Int32.type
+            i32.eq
+            br_if $check_right
+
+            ;; @todo: error state
+            i32.const 0
+            return
+        )
+
+        ;; return
+        local.get $buffer
+
+        (block $break1
+            (block $break2
+                local.get $left
+                call $Int32.value
+                local.get $right
+                call $Int32.value
+                i32.gt_s
+                br_if $break2
+
+                i32.const 0
+                local.set $result
+
+                br $break1
+            )
+
+            i32.const 1
+            local.set $result
+        )
+
+        local.get $result
+        call $Int32.constructor
+
+        call $virtual.step.result1
+        return
+    )
+    (func $virtual.step.GreaterEqual (param $greater_equal i32) (param $buffer i32) (param $nothing i32) (result i32)
+        (local $left i32)
+        (local $right i32)
+        (local $result i32)
+
+        ;; extract & check left
+        local.get $buffer
+        i32.const 2
+        call $Array.get
+        local.set $left
+
+        (block $check_left
+            local.get $left
+            call $something.type
+            call $Int32.type
+            i32.eq
+            br_if $check_left
+
+            ;; @todo: error state
+            i32.const 0
+            return
+        )
+
+        ;; extract & check right
+        local.get $buffer
+        i32.const 3
+        call $Array.get
+        local.set $right
+
+        (block $check_right
+            local.get $right
+            call $something.type
+            call $Int32.type
+            i32.eq
+            br_if $check_right
+
+            ;; @todo: error state
+            i32.const 0
+            return
+        )
+
+        ;; return
+        local.get $buffer
+
+        (block $break1
+            (block $break2
+                local.get $left
+                call $Int32.value
+                local.get $right
+                call $Int32.value
+                i32.ge_s
+                br_if $break2
+
+                i32.const 0
+                local.set $result
+
+                br $break1
+            )
+
+            i32.const 1
+            local.set $result
+        )
+
+        local.get $result
+        call $Int32.constructor
+
+        call $virtual.step.result1
+        return
+    )
+
+
+    (func $virtual.print.offset (result i32) i32.const 19)
+    (elem (i32.const 19)
         $virtual.print.Nothing
         $virtual.print.Terminal
         $virtual.print.Internal
@@ -896,6 +1171,10 @@
         $virtual.print.Mul
         $virtual.print.Div
         $virtual.print.Length
+        $virtual.print.Nothing ;; Less
+        $virtual.print.Nothing ;; LessEqual
+        $virtual.print.Nothing ;; Greater
+        $virtual.print.Nothing ;; GreaterEqual
         $virtual.print.Nothing ;; Get
         $virtual.print.Nothing ;; Set
         $virtual.print.Int32
@@ -2200,6 +2479,98 @@
         return
     )
 
+    (func $sizeof.external.Less (result i32)
+        i32.const 4
+        return
+    )
+    (func $external.Less.type (result i32)
+        call $type.Less
+        return
+    )
+    (func $external.Less.constructor (result i32)
+        (local $external i32)
+        ;; allocate
+        call $sizeof.external.Less
+        call $mem.allocate
+        local.set $external
+        ;; external.type = external.Less.type
+        local.get $external
+        call $external.Less.type
+        call $something.type.set
+        ;; return
+        local.get $external
+        return
+    )
+
+    (func $sizeof.external.LessEqual (result i32)
+        i32.const 4
+        return
+    )
+    (func $external.LessEqual.type (result i32)
+        call $type.LessEqual
+        return
+    )
+    (func $external.LessEqual.constructor (result i32)
+        (local $external i32)
+        ;; allocate
+        call $sizeof.external.LessEqual
+        call $mem.allocate
+        local.set $external
+        ;; external.type = external.LessEqual.type
+        local.get $external
+        call $external.LessEqual.type
+        call $something.type.set
+        ;; return
+        local.get $external
+        return
+    )
+
+    (func $sizeof.external.Greater (result i32)
+        i32.const 4
+        return
+    )
+    (func $external.Greater.type (result i32)
+        call $type.Greater
+        return
+    )
+    (func $external.Greater.constructor (result i32)
+        (local $external i32)
+        ;; allocate
+        call $sizeof.external.Greater
+        call $mem.allocate
+        local.set $external
+        ;; external.type = external.Greater.type
+        local.get $external
+        call $external.Greater.type
+        call $something.type.set
+        ;; return
+        local.get $external
+        return
+    )
+
+    (func $sizeof.external.GreaterEqual (result i32)
+        i32.const 4
+        return
+    )
+    (func $external.GreaterEqual.type (result i32)
+        call $type.GreaterEqual
+        return
+    )
+    (func $external.GreaterEqual.constructor (result i32)
+        (local $external i32)
+        ;; allocate
+        call $sizeof.external.GreaterEqual
+        call $mem.allocate
+        local.set $external
+        ;; external.type = external.GreaterEqual.type
+        local.get $external
+        call $external.GreaterEqual.type
+        call $something.type.set
+        ;; return
+        local.get $external
+        return
+    )
+
     (func $machine.step (param $buffer i32) (param $nothing i32) (result i32)
         (local $first i32)
 
@@ -2309,6 +2680,10 @@
     (export "Mul" (func $external.Mul.constructor))
     (export "Div" (func $external.Div.constructor))
     (export "Length" (func $external.Length.constructor))
+    (export "Less" (func $external.Less.constructor))
+    (export "LessEqual" (func $external.LessEqual.constructor))
+    (export "Greater" (func $external.Greater.constructor))
+    (export "GreaterEqual" (func $external.GreaterEqual.constructor))
     (export "step" (func $machine.step))
     (export "_print" (func $virtual.print))
 )

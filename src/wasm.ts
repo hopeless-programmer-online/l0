@@ -58,6 +58,10 @@ export class Context {
     private readonly mul               : Address
     private readonly div               : Address
     private readonly length            : Address
+    private readonly less              : Address
+    private readonly less_equal        : Address
+    private readonly greater           : Address
+    private readonly greater_equal     : Address
 
     public constructor({ exports, memory } : { exports : WebAssembly.Exports, memory : WebAssembly.Memory }) {
         const Nothing          = exports.Nothing as () => Address
@@ -90,6 +94,14 @@ export class Context {
         const div              = Div()
         const Length           = exports.Length as () => Address
         const length           = Length()
+        const Less             = exports.Less as () => Address
+        const less             = Less()
+        const LessEqual        = exports.LessEqual as () => Address
+        const less_equal       = LessEqual()
+        const Greater          = exports.Greater as () => Address
+        const greater          = Greater()
+        const GreaterEqual     = exports.GreaterEqual as () => Address
+        const greater_equal    = GreaterEqual()
 
         this.memory           = memory
         this.nothing          = nothing
@@ -113,6 +125,10 @@ export class Context {
         this.mul              = mul
         this.div              = div
         this.length           = length
+        this.less             = less
+        this.less_equal       = less_equal
+        this.greater          = greater
+        this.greater_equal    = greater_equal
     }
 
     private template(targets : number[]) {
@@ -192,10 +208,10 @@ export class Context {
             case `-`            : return this.sub
             case `*`            : return this.mul
             case `/`            : return this.div
-        //     case `<`            : return this.less
-        //     case `<=`           : return this.lessOrEqual
-        //     case `>`            : return this.greater
-        //     case `>=`           : return this.greaterOrEqual
+            case `<`            : return this.less
+            case `<=`           : return this.less_equal
+            case `>`            : return this.greater
+            case `>=`           : return this.greater_equal
 
         //     case `UTF8String`   : return this.UTF8String
 
