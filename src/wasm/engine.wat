@@ -1498,6 +1498,38 @@
             br $print_node
         ))
     )
+    (func $heap.available (result i32)
+        (local $node i32)
+        (local $available i32)
+
+        i32.const 0
+        local.set $available
+
+        call $heap.begin
+        local.set $node
+
+        (loop $continue (block $break
+            local.get $node
+            call $heap.end
+            i32.eq
+            br_if $break
+
+            local.get $node
+            call $mem.node.capacity
+            local.get $available
+            i32.add
+            local.set $available
+
+            local.get $node
+            call $mem.node.next
+            local.set $node
+
+            br $continue
+        ))
+
+        local.get $available
+        return
+    )
     (func $sizeof.node (result i32)
         i32.const 12
         return
@@ -2787,6 +2819,7 @@
     )
 
     (export "memory" (memory $memory))
+    (export "heap_available" (func $heap.available))
     (export "run" (func $run))
     (export "Nothing" (func $Nothing.constructor))
     (export "Terminal" (func $Terminal.constructor))

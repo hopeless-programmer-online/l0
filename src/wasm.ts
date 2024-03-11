@@ -37,6 +37,7 @@ export class Context {
     }
 
     private memory                     : WebAssembly.Memory
+    private readonly heap_available    : () => number
     private readonly nothing           : Address
     private readonly terminal          : Address
     private readonly Template          : (targets : number) => Address
@@ -65,6 +66,7 @@ export class Context {
     private readonly if                : Address
 
     public constructor({ exports, memory } : { exports : WebAssembly.Exports, memory : WebAssembly.Memory }) {
+        const heap_available   = exports.heap_available as () => number
         const Nothing          = exports.Nothing as () => Address
         const nothing          = Nothing()
         const Terminal         = exports.Terminal as () => Address
@@ -107,6 +109,7 @@ export class Context {
         const if_              = If()
 
         this.memory           = memory
+        this.heap_available   = heap_available
         this.nothing          = nothing
         this.terminal         = terminal
         this.Template         = Template
@@ -260,6 +263,8 @@ export class Context {
         return array
     }
     public step(buffer : Address) {
+        console.log(this.heap_available())
+
         return this._step(buffer)
     }
 }
