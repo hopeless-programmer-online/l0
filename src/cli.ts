@@ -36,40 +36,13 @@ export class Cli {
         const semanticsAnalyzer = new semantics.Analyzer
         const entry = stopwatch(() => semanticsAnalyzer.analyze(main), `semantic analysis completed`)
         const context = await wasm.Context.create()
-        // console.log(entry.dependencies)
-        // const closure = entry.dependencies.map(value => context.resolve(value))
-        const buffer = context.fill_buffer(entry)
-
-        // context.step(buffer)
-
-        // const buffer = new vm.Buffer<std.Anything>({
-        //     nothing : context.nothing,
-        //     list : [ new std.Internal({ closure, template : std.Template.from(entry.entryTemplate) }) ],
-        // })
-        // const machine = new vm.Machine({ buffer })
+        let buffer = context.fill_buffer(entry)
 
         stopwatch(() => {
-            // for (let i = 0; !machine.halted; ++i) {
-            //     // console.log(`step #${i}`)
-
-            //     const { buffer } = machine
-
-            //     if (buffer instanceof vm.Buffer) {
-            //         statistics.buffer.add(buffer.list.length)
-
-            //         const { first } = buffer
-
-            //         if (first instanceof std.Internal) {
-            //             ++statistics.internals
-
-            //             statistics.closure.add(first.closure.length)
-            //         }
-            //     }
-
-            //     ++statistics.total
-
-            //     machine.step()
-            // }
+            while (buffer !== 0) {
+                buffer = context.step(buffer)
+                // ++statistics.total
+            }
         }, `executed`)
 
         /*{
