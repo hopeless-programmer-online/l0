@@ -180,7 +180,7 @@ export class Context {
         const text = name.toString()
 
         switch (text) {
-        //     case `super`        : return this.terminal
+            case `super`        : return this.terminal
             case `bind`         : return this.bind
             case `print`        : return this.print
 
@@ -263,7 +263,7 @@ export class Context {
         return array
     }
     public step(buffer : Address) {
-        console.log(this.heap_available())
+        // console.log(this.heap_available())
 
         return this._step(buffer)
     }

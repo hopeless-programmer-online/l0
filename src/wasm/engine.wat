@@ -28,13 +28,6 @@
     (data (i32.const 67) ">")        ;; 67-68, 1
     (data (i32.const 68) ">=")       ;; 68-70, 2
     (data (i32.const 70) "if")       ;; 70-72, 2
-    ;; memory nodes
-    (data (i32.const 1024)  "\00\04\00\00") ;; begin.prev = &begin (1024)
-    (data (i32.const 1028)  "\F4\FF\00\00") ;; begin.next = &end (65524)
-    (data (i32.const 1032)  "\00\00\00\00") ;; begin.size = 0
-    (data (i32.const 65524) "\00\04\00\00") ;; begin.prev = &begin (1024)
-    (data (i32.const 65528) "\F4\FF\00\00") ;; begin.next = &end (65524)
-    (data (i32.const 65532) "\00\00\00\00") ;; begin.size = 0
 
     (func $type.Nothing      (result i32) i32.const 0 return)
     (func $type.Terminal     (result i32) i32.const 1 return)
@@ -1462,6 +1455,31 @@
         i32.const 65524
         return
     )
+    (func $heap.init
+        call $heap.begin
+        call $heap.begin
+        call $mem.node.prev.set
+
+        call $heap.begin
+        call $heap.end
+        call $mem.node.next.set
+
+        call $heap.begin
+        i32.const 0
+        call $mem.node.size.set
+
+        call $heap.end
+        call $heap.begin
+        call $mem.node.prev.set
+
+        call $heap.end
+        call $heap.end
+        call $mem.node.next.set
+
+        call $heap.end
+        i32.const 0
+        call $mem.node.size.set
+    )
     (func $heap.print
         (local $node i32)
         call $heap.begin
@@ -2751,76 +2769,12 @@
         return
     )
 
-    (func $run (result i32)
-        (local $nothing i32)
-        (local $buffer i32)
-        (local $internal i32)
-        (local $val i32)
-        (local $val2 i32)
-
-        call $Nothing.constructor
-        local.set $nothing
-
-        i32.const 123
-        call $Int32.constructor
-        local.set $val
-
-        i32.const 321
-        call $Int32.constructor
-        local.set $val2
-
-        i32.const 2
-        call $Array.constructor
-        local.set $buffer
-
-        i32.const 1
-        i32.const 1
-        call $Internal.constructor
-        local.set $internal
-
-        ;; internal.targets[0] = 3
-        local.get $internal
-        call $Internal.targets.first
-        i32.const 3
-        i32.store
-
-        ;; internal.storage[0] = val
-        local.get $internal
-        call $Internal.storage.first
-        local.get $val
-        i32.store
-
-        ;; buffer[0] = internal
-        local.get $buffer
-        call $Array.first
-        local.get $internal
-        i32.store
-
-        ;; buffer[1] = val2
-        local.get $buffer
-        call $Array.first
-        i32.const 4
-        i32.add
-        local.get $val2
-        i32.store
-
-        local.get $buffer
-        local.get $nothing
-        call $machine.step
-
-        call $Array.first
-        i32.load
-        local.get $nothing
-        i32.eq
-        call $print.int32
-
-        i32.const 0
-        return
+    (func $init
+        call $heap.init
     )
 
     (export "memory" (memory $memory))
     (export "heap_available" (func $heap.available))
-    (export "run" (func $run))
     (export "Nothing" (func $Nothing.constructor))
     (export "Terminal" (func $Terminal.constructor))
     (export "Int32" (func $Int32.constructor))
@@ -2848,4 +2802,6 @@
     (export "If" (func $external.If.constructor))
     (export "step" (func $machine.step))
     (export "_print" (func $virtual.print))
+
+    (start $init)
 )
