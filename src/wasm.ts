@@ -28,6 +28,13 @@ export class Context {
                     process.stdout.write(`${text}`)
                 },
             },
+            global : {
+                // nothing  : new WebAssembly.Global({ value : `i32`, mutable : true }, 0),
+                // terminal : new WebAssembly.Global({ value : `i32`, mutable : true }, 0),
+                // bind     : new WebAssembly.Global({ value : `i32`, mutable : true }, 0),
+                // print    : new WebAssembly.Global({ value : `i32`, mutable : true }, 0),
+                // Int32    : new WebAssembly.Global({ value : `i32`, mutable : true }, 0),
+            },
         }
         const instance = await WebAssembly.instantiate(module, imports)
         const { exports } = instance
@@ -59,6 +66,8 @@ export class Context {
     private readonly mul               : Address
     private readonly div               : Address
     private readonly length            : Address
+    private readonly equal             : Address
+    private readonly not_equal         : Address
     private readonly less              : Address
     private readonly less_equal        : Address
     private readonly greater           : Address
@@ -67,16 +76,12 @@ export class Context {
 
     public constructor({ exports, memory } : { exports : WebAssembly.Exports, memory : WebAssembly.Memory }) {
         const heap_available   = exports.heap_available as () => number
-        const Nothing          = exports.Nothing as () => Address
-        const nothing          = Nothing()
-        const Terminal         = exports.Terminal as () => Address
-        const terminal         = Terminal()
+        const nothing          = (exports.nothing as () => Address)()
+        const terminal         = (exports.terminal as () => Address)()
         const Template         = exports.Template as (targets : number) => Address
         const template_first   = exports[`Template.first`] as (template : Address) => Address
-        const Bind             = exports.Bind as () => Address
-        const bind             = Bind()
-        const Print            = exports.Print as () => Address
-        const print            = Print()
+        const bind             = (exports.bind as () => Address)()
+        const print            = (exports.print as () => Address)()
         const Array            = exports.Array as (length : number) => Address
         const array_set        = exports[`Array.set`] as (array : Address, i : number, v : Address) => void
         const Int32            = exports.Int32 as (value : number) => Address
@@ -87,26 +92,18 @@ export class Context {
         const internal_storage = exports[`Internal.storage`] as (internal : Address) => Address
         const step             = exports.step as (buffer : Address) => Address
         const _print           = exports._print as (something : Address) => void
-        const Add              = exports.Add as () => Address
-        const add              = Add()
-        const Sub              = exports.Sub as () => Address
-        const sub              = Sub()
-        const Mul              = exports.Mul as () => Address
-        const mul              = Mul()
-        const Div              = exports.Div as () => Address
-        const div              = Div()
-        const Length           = exports.Length as () => Address
-        const length           = Length()
-        const Less             = exports.Less as () => Address
-        const less             = Less()
-        const LessEqual        = exports.LessEqual as () => Address
-        const less_equal       = LessEqual()
-        const Greater          = exports.Greater as () => Address
-        const greater          = Greater()
-        const GreaterEqual     = exports.GreaterEqual as () => Address
-        const greater_equal    = GreaterEqual()
-        const If               = exports.If as () => Address
-        const if_              = If()
+        const add              = (exports.add as () => Address)()
+        const sub              = (exports.sub as () => Address)()
+        const mul              = (exports.mul as () => Address)()
+        const div              = (exports.div as () => Address)()
+        const length           = (exports.length as () => Address)()
+        const equal            = (exports.equal as () => Address)()
+        const not_equal        = (exports.not_equal as () => Address)()
+        const less             = (exports.less as () => Address)()
+        const less_equal       = (exports.less_equal as () => Address)()
+        const greater          = (exports.greater as () => Address)()
+        const greater_equal    = (exports.greater_equal as () => Address)()
+        const if_              = (exports.if as () => Address)()
 
         this.memory           = memory
         this.heap_available   = heap_available
@@ -131,6 +128,8 @@ export class Context {
         this.mul              = mul
         this.div              = div
         this.length           = length
+        this.equal            = equal
+        this.not_equal        = not_equal
         this.less             = less
         this.less_equal       = less_equal
         this.greater          = greater
@@ -180,11 +179,11 @@ export class Context {
         const text = name.toString()
 
         switch (text) {
+            case `nothing`      : return this.nothing
+
             case `super`        : return this.terminal
             case `bind`         : return this.bind
             case `print`        : return this.print
-
-            case `nothing`      : return this.nothing
 
         //     case `type`         : return this.type
 
@@ -203,8 +202,6 @@ export class Context {
         //     case `Boolean`      : return this.Boolean
         //     case `true`         : return this.true
         //     case `false`        : return this.false
-        //     case `==`           : return this.isEqual
-        //     case `!=`           : return this.isNotEqual
         //     case `not`          : return this.not
         //     case `and`          : return this.and
         //     case `or`           : return this.or
@@ -215,6 +212,8 @@ export class Context {
             case `-`            : return this.sub
             case `*`            : return this.mul
             case `/`            : return this.div
+            case `==`           : return this.equal
+            case `!=`           : return this.not_equal
             case `<`            : return this.less
             case `<=`           : return this.less_equal
             case `>`            : return this.greater
