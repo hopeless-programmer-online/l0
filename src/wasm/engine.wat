@@ -4,32 +4,36 @@
 
     ;; (global $print (import "global" "print") (mut i32))
 
-    (memory $memory 1)
+    (memory $memory 10)
     ;; constants
-    (data (i32.const 0)  "\n")       ;; 0-1,   1
-    (data (i32.const 1)  "unknown")  ;; 1-8,   7
-    (data (i32.const 8)  "[")        ;; 8-9,   1
-    (data (i32.const 9)  "]")        ;; 9-10,  1
-    (data (i32.const 10) ",")        ;; 10-11, 1
-    (data (i32.const 11) "internal") ;; 11-19, 8
-    (data (i32.const 19) "|")        ;; 19-20, 1
-    (data (i32.const 20) "print")    ;; 20-25, 5
-    (data (i32.const 25) "template") ;; 25-33, 8
-    (data (i32.const 33) "bind")     ;; 33-37, 4
-    (data (i32.const 37) "terminal") ;; 37-45, 8
-    (data (i32.const 45) "(")        ;; 45-46, 1
-    (data (i32.const 46) ")")        ;; 46-47, 1
-    (data (i32.const 47) "nothing")  ;; 47-54, 7
-    (data (i32.const 54) "+")        ;; 54-55, 1
-    (data (i32.const 55) "-")        ;; 55-56, 1
-    (data (i32.const 56) "*")        ;; 56-57, 1
-    (data (i32.const 57) "/")        ;; 57-58, 1
-    (data (i32.const 58) "length")   ;; 58-64, 6
-    (data (i32.const 64) "<")        ;; 64-65, 1
-    (data (i32.const 65) "<=")       ;; 65-67, 2
-    (data (i32.const 67) ">")        ;; 67-68, 1
-    (data (i32.const 68) ">=")       ;; 68-70, 2
-    (data (i32.const 70) "if")       ;; 70-72, 2
+    (data (i32.const 0)  "\n")            ;; 0-1,   1
+    (data (i32.const 1)  "unknown")       ;; 1-8,   7
+    (data (i32.const 8)  "[")             ;; 8-9,   1
+    (data (i32.const 9)  "]")             ;; 9-10,  1
+    (data (i32.const 10) ",")             ;; 10-11, 1
+    (data (i32.const 11) "internal")      ;; 11-19, 8
+    (data (i32.const 19) "|")             ;; 19-20, 1
+    (data (i32.const 20) "print")         ;; 20-25, 5
+    (data (i32.const 25) "template")      ;; 25-33, 8
+    (data (i32.const 33) "bind")          ;; 33-37, 4
+    (data (i32.const 37) "terminal")      ;; 37-45, 8
+    (data (i32.const 45) "(")             ;; 45-46, 1
+    (data (i32.const 46) ")")             ;; 46-47, 1
+    (data (i32.const 47) "nothing")       ;; 47-54, 7
+    (data (i32.const 54) "+")             ;; 54-55, 1
+    (data (i32.const 55) "-")             ;; 55-56, 1
+    (data (i32.const 56) "*")             ;; 56-57, 1
+    (data (i32.const 57) "/")             ;; 57-58, 1
+    (data (i32.const 58) "length")        ;; 58-64, 6
+    (data (i32.const 64) "<")             ;; 64-65, 1
+    (data (i32.const 65) "<=")            ;; 65-67, 2
+    (data (i32.const 67) ">")             ;; 67-68, 1
+    (data (i32.const 68) ">=")            ;; 68-70, 2
+    (data (i32.const 70) "if")            ;; 70-72, 2
+    (data (i32.const 72) "==")            ;; 72-74, 2
+    (data (i32.const 74) "!=")            ;; 74-76, 2
+    (data (i32.const 76) "type")          ;; 76-80, 4
+    (data (i32.const 80) "OUT OF MEMORY") ;; 80-93, 13
 
     (func $global.nothing       (result i32) i32.const 768 return)
     (func $global.terminal      (result i32) i32.const 772 return)
@@ -47,9 +51,10 @@
     (func $global.greater       (result i32) i32.const 820 return)
     (func $global.greater_equal (result i32) i32.const 824 return)
     (func $global.if            (result i32) i32.const 828 return)
+    (func $global.type          (result i32) i32.const 832 return)
 
     (func $heap.begin        (result i32) i32.const 1024 return)
-    (func $heap.end          (result i32) i32.const 65524 return)
+    (func $heap.end          (result i32) i32.const 655348 return) ;; 10×65K
 
     (func $type.Nothing      (result i32) i32.const 0 return)
     (func $type.Terminal     (result i32) i32.const 1 return)
@@ -69,13 +74,14 @@
     (func $type.Greater      (result i32) i32.const 15 return)
     (func $type.GreaterEqual (result i32) i32.const 16 return)
     (func $type.If           (result i32) i32.const 17 return)
-    (func $type.Int32        (result i32) i32.const 18 return)
-    (func $type.ASCII        (result i32) i32.const 19 return)
+    (func $type.Type         (result i32) i32.const 18 return)
+    (func $type.Int32        (result i32) i32.const 19 return)
+    (func $type.ASCII        (result i32) i32.const 20 return)
     ;; (func $type.List         (result i32) i32.const 20 return)
     ;; (func $type.Get          (result i32) i32.const 18 return)
     ;; (func $type.Set          (result i32) i32.const 19 return)
 
-    (table 40 funcref)
+    (table 63 funcref)
 
     (func $virtual.step.offset (result i32) i32.const 0)
     (elem (i32.const 0)
@@ -90,13 +96,14 @@
         $virtual.step.Mul
         $virtual.step.Div
         $virtual.step.Length
-        $virtual.step.Nothing ;; @todo: $virtual.print.Equal
-        $virtual.step.Nothing ;; @todo: $virtual.print.NotEqual
+        $virtual.step.Equal
+        $virtual.step.NotEqual
         $virtual.step.Less
         $virtual.step.LessEqual
         $virtual.step.Greater
         $virtual.step.GreaterEqual
         $virtual.step.If
+        $virtual.step.Type
         $virtual.step.Nothing ;; @todo: $virtual.print.Int32
         $virtual.step.Nothing ;; @todo: $virtual.print.ASCII
     )
@@ -909,64 +916,99 @@
         (local $right i32)
         (local $result i32)
 
-        ;; extract & check left
+        ;; extract left & right
         local.get $buffer
         i32.const 2
         call $Array.get
         local.set $left
 
-        (block $check_left
-            local.get $left
-            call $something.type
-            call $Int32.type
-            i32.eq
-            br_if $check_left
-
-            ;; @todo: error state
-            i32.const 0
-            return
-        )
-
-        ;; extract & check right
         local.get $buffer
         i32.const 3
         call $Array.get
         local.set $right
 
-        (block $check_right
-            local.get $right
-            call $something.type
-            call $Int32.type
-            i32.eq
-            br_if $check_right
+        i32.const 0
+        local.set $result
 
-            ;; @todo: error state
-            i32.const 0
-            return
-        )
-
-        ;; return
-        local.get $buffer
-
-        (block $break1
-            (block $break2
+        (block $check
+            (block $check_address
                 local.get $left
-                call $Int32.value
                 local.get $right
-                call $Int32.value
-                i32.eq
-                br_if $break2
+                i32.ne
+                br_if $check_address
 
-                i32.const 0
+                i32.const 1
                 local.set $result
 
-                br $break1
+                br $check
             )
+            (block $check_int32
+                local.get $left
+                call $something.type
+                call $Int32.type
+                i32.ne
+                br_if $check_int32
+
+                local.get $right
+                call $something.type
+                call $Int32.type
+                i32.ne
+                br_if $check_int32
+
+                (block $break
+                    local.get $left
+                    call $Int32.value
+                    local.get $right
+                    call $Int32.value
+                    i32.ne
+                    br_if $break
+
+                    i32.const 1
+                    local.set $result
+
+                    br $check
+                )
+            )
+            (block $check_ascii
+                local.get $left
+                call $something.type
+                call $ASCII.type
+                i32.ne
+                br_if $check_ascii
+
+                local.get $right
+                call $something.type
+                call $ASCII.type
+                i32.ne
+                br_if $check_ascii
+
+                local.get $left
+                local.get $right
+                call $ASCII.equal
+
+                (if (then) (else
+                    br $check
+                ))
+
+                i32.const 1
+                local.set $result
+
+                br $check
+            )
+
+            local.get $left
+            call $something.type
+            local.get $right
+            call $something.type
+            i32.ne
+            br_if $check
 
             i32.const 1
             local.set $result
         )
 
+        ;; return
+        local.get $buffer
         local.get $result
         call $Int32.constructor
 
@@ -1390,10 +1432,48 @@
         local.get $next_buffer
         return
     )
+    (func $virtual.step.Type (param $type i32) (param $buffer i32) (param $nothing i32) (result i32)
+        (local $next i32)
+        (local $next_buffer i32)
 
+        ;; alloc next buffer
+        i32.const 3
+        call $Array.constructor
+        local.set $next_buffer
 
-    (func $virtual.print.offset (result i32) i32.const 20)
-    (elem (i32.const 20)
+        ;; save next
+        local.get $buffer
+        i32.const 1
+        call $Array.get
+        local.set $next
+
+        ;; fill next buffer
+        local.get $next_buffer
+        i32.const 0
+        local.get $next
+        call $Array.set
+
+        local.get $next_buffer
+        i32.const 1
+        local.get $next
+        call $Array.set
+
+        local.get $next_buffer
+        i32.const 2
+            ;; get type
+            local.get $buffer
+            i32.const 2
+            call $Array.get
+            call $virtual.type
+        call $Array.set
+
+        ;; return
+        local.get $next_buffer
+        return
+    )
+
+    (func $virtual.print.offset (result i32) i32.const 21)
+    (elem (i32.const 21)
         $virtual.print.Nothing
         $virtual.print.Terminal
         $virtual.print.Internal
@@ -1405,13 +1485,14 @@
         $virtual.print.Mul
         $virtual.print.Div
         $virtual.print.Length
-        $virtual.print.Nothing ;; @todo: $virtual.print.Equal
-        $virtual.print.Nothing ;; @todo: $virtual.print.NotEqual
+        $virtual.print.Equal
+        $virtual.print.NotEqual
         $virtual.print.Less
         $virtual.print.LessEqual
         $virtual.print.Greater
         $virtual.print.GreaterEqual
         $virtual.print.If
+        $virtual.print.Type
         $virtual.print.Int32
         $virtual.print.ASCII
     )
@@ -1535,6 +1616,16 @@
         i32.const 6
         call $print.ascii
     )
+    (func $virtual.print.Equal (param $less i32)
+        i32.const 72
+        i32.const 2
+        call $print.ascii
+    )
+    (func $virtual.print.NotEqual (param $less i32)
+        i32.const 74
+        i32.const 2
+        call $print.ascii
+    )
     (func $virtual.print.Less (param $less i32)
         i32.const 64
         i32.const 1
@@ -1558,6 +1649,11 @@
     (func $virtual.print.If (param $greater_equal i32)
         i32.const 70
         i32.const 2
+        call $print.ascii
+    )
+    (func $virtual.print.Type (param $type i32)
+        i32.const 76
+        i32.const 4
         call $print.ascii
     )
     (func $virtual.print.Int32 (param $int32 i32)
@@ -1601,6 +1697,127 @@
         i32.const 46
         i32.const 1
         call $print.ascii
+    )
+
+    (func $virtual.type.offset (result i32) i32.const 42)
+    (elem (i32.const 42)
+        $virtual.type.Nothing
+        $virtual.type.Terminal
+        $virtual.type.Nothing ;; @todo Internal
+        $virtual.type.Nothing ;; @todo Template
+        $virtual.type.Bind
+        $virtual.type.Print
+        $virtual.type.Add
+        $virtual.type.Sub
+        $virtual.type.Mul
+        $virtual.type.Div
+        $virtual.type.Length
+        $virtual.type.Equal
+        $virtual.type.NotEqual
+        $virtual.type.Less
+        $virtual.type.LessEqual
+        $virtual.type.Greater
+        $virtual.type.GreaterEqual
+        $virtual.type.If
+        $virtual.type.Type
+        $virtual.type.Nothing ;; @todo Int32
+        $virtual.type.Nothing ;; @todo ASCII
+    )
+    (type $virtual.type (func (param $something i32) (result i32)))
+    (func $virtual.type (param $something i32) (result i32)
+        local.get $something
+
+        local.get $something
+        call $something.type
+        call $virtual.type.offset
+        i32.add
+        call_indirect (type $virtual.type)
+        return
+    )
+    (func $virtual.type.Nothing (param $nothing i32) (result i32)
+        call $global.nothing
+        i32.load
+        return
+    )
+    (func $virtual.type.Terminal (param $terminal i32) (result i32)
+        call $global.terminal
+        i32.load
+        return
+    )
+    (func $virtual.type.Bind (param $bind i32) (result i32)
+        call $global.bind
+        i32.load
+        return
+    )
+    (func $virtual.type.Print (param $print i32) (result i32)
+        call $global.print
+        i32.load
+        return
+    )
+    (func $virtual.type.Add (param $add i32) (result i32)
+        call $global.add
+        i32.load
+        return
+    )
+    (func $virtual.type.Sub (param $sub i32) (result i32)
+        call $global.sub
+        i32.load
+        return
+    )
+    (func $virtual.type.Mul (param $mul i32) (result i32)
+        call $global.mul
+        i32.load
+        return
+    )
+    (func $virtual.type.Div (param $div i32) (result i32)
+        call $global.div
+        i32.load
+        return
+    )
+    (func $virtual.type.Length (param $length i32) (result i32)
+        call $global.length
+        i32.load
+        return
+    )
+    (func $virtual.type.Equal (param $equal i32) (result i32)
+        call $global.equal
+        i32.load
+        return
+    )
+    (func $virtual.type.NotEqual (param $not_equal i32) (result i32)
+        call $global.not_equal
+        i32.load
+        return
+    )
+    (func $virtual.type.Less (param $less i32) (result i32)
+        call $global.less
+        i32.load
+        return
+    )
+    (func $virtual.type.LessEqual (param $less_equal i32) (result i32)
+        call $global.less_equal
+        i32.load
+        return
+    )
+    (func $virtual.type.Greater (param $greater i32) (result i32)
+        call $global.greater
+        i32.load
+        return
+    )
+    (func $virtual.type.GreaterEqual (param $greater_equal i32) (result i32)
+        call $global.greater_equal
+        i32.load
+        return
+    )
+    (func $virtual.type.If (param $if i32) (result i32)
+        call $global.if
+        i32.load
+        return
+    )
+    (func $virtual.type.Type (param $type i32) (result i32)
+        call $global.type
+        i32.load
+        return
     )
 
     (func $memory_size (result i32)
@@ -1658,6 +1875,15 @@
             call $mem.node.size
             call $print.int32
 
+            ;; print |
+            i32.const 19
+            i32.const 1
+            call $print.ascii
+
+            local.get $node
+            call $mem.node.capacity
+            call $print.int32
+
             ;; print \n
             i32.const 0
             i32.const 1
@@ -1700,6 +1926,45 @@
         ))
 
         local.get $available
+        return
+    )
+    (func $heap.max (result i32)
+        (local $node i32)
+        (local $capacity i32)
+        (local $max i32)
+
+        i32.const 0
+        local.set $max
+
+        call $heap.begin
+        local.set $node
+
+        (loop $continue (block $break
+            local.get $node
+            call $heap.end
+            i32.eq
+            br_if $break
+
+            (block $check_max
+                local.get $node
+                call $mem.node.capacity
+                local.tee $capacity
+                local.get $max
+                i32.le_u
+                br_if $check_max
+
+                local.get $capacity
+                local.set $max
+            )
+
+            local.get $node
+            call $mem.node.next
+            local.set $node
+
+            br $continue
+        ))
+
+        local.get $max
         return
     )
     (func $sizeof.node (result i32)
@@ -1869,6 +2134,37 @@
 
             br $iterate_nodes
         ))
+
+        ;; OOM
+        i32.const 80
+        i32.const 13
+        call $print.ascii
+        i32.const 0
+        i32.const 1
+        call $print.ascii
+
+        ;; allocation size
+        local.get $size
+        call $print.int32
+        i32.const 0
+        i32.const 1
+        call $print.ascii
+
+        ;; allocation size
+        call $heap.available
+        call $print.int32
+        i32.const 0
+        i32.const 1
+        call $print.ascii
+
+        ;; allocation size
+        call $heap.max
+        call $print.int32
+        i32.const 0
+        i32.const 1
+        call $print.ascii
+
+        call $heap.print
 
         i32.const 0
         return
@@ -2151,6 +2447,100 @@
         call $ASCII.length.set
         ;; return ascii
         local.get $ascii
+        return
+    )
+    (func $ASCII.equal (param $ascii i32) (param $other i32) (result i32)
+        (local $length i32)
+        (local $last i32)
+        (local $a i32)
+        (local $b i32)
+
+        (block $check_length
+            local.get $ascii
+            call $ASCII.length
+            local.tee $length
+            local.get $other
+            call $ASCII.length
+            i32.eq
+            br_if $check_length
+
+            i32.const 0
+            return
+        )
+
+        local.get $ascii
+        call $ASCII.data
+        local.tee $a ;; a + length - length % 4
+            local.get $length
+            i32.add
+            local.get $length
+            i32.const 4
+            i32.rem_u
+            i32.sub
+        local.set $last
+
+        local.get $other
+        call $ASCII.data
+        local.set $b
+
+        (loop $continue (block $break
+            local.get $a
+            local.get $last
+            i32.eq
+            br_if $break
+
+            local.get $a
+            i32.load
+            local.get $b
+            i32.load
+            i32.ne
+
+            (if (then
+                i32.const 0
+                return
+            ))
+
+            local.get $a
+            i32.const 4
+            i32.add
+            local.set $a
+
+            local.get $b
+            i32.const 4
+            i32.add
+            local.set $b
+
+            br $continue
+        ))
+        (block $rem
+            ;; bitmask 255 << ((length % 4 )- 1) * 8
+            i32.const 255
+            local.get $length
+            i32.const 4
+            i32.rem_u
+            i32.const 1
+            i32.sub
+            i32.const 8
+            i32.mul
+            i32.shl
+            local.set $length
+
+            local.get $a
+            i32.load
+                local.get $length
+                i32.and
+            local.get $b
+            i32.load
+                local.get $length
+                i32.and
+            i32.eq
+            br_if $rem
+
+            i32.const 0
+            return
+        )
+
+        i32.const 1
         return
     )
 
@@ -2949,6 +3339,29 @@
         return
     )
 
+    (func $sizeof.external.Type (result i32)
+        i32.const 4
+        return
+    )
+    (func $external.Type.type (result i32)
+        call $type.Type
+        return
+    )
+    (func $external.Type.constructor (result i32)
+        (local $external i32)
+        ;; allocate
+        call $sizeof.external.Type
+        call $mem.allocate
+        local.set $external
+        ;; external.type = external.Type.type
+        local.get $external
+        call $external.Type.type
+        call $something.type.set
+        ;; return
+        local.get $external
+        return
+    )
+
     (func $machine.step (param $buffer i32) (param $nothing i32) (result i32)
         (local $first i32)
 
@@ -3036,8 +3449,9 @@
         call $external.If.constructor
         i32.store
 
-        ;; call $external.Print.constructor
-        ;; global.set $print
+        call $global.type
+        call $external.Type.constructor
+        i32.store
     )
 
     (func $global.nothing.get (result i32)
@@ -3120,6 +3534,11 @@
         i32.load
         return
     )
+    (func $global.type.get (result i32)
+        call $global.type
+        i32.load
+        return
+    )
 
     (export "nothing"       (func $global.nothing.get))
     (export "terminal"      (func $global.terminal.get))
@@ -3137,34 +3556,23 @@
     (export "greater"       (func $global.greater.get))
     (export "greater_equal" (func $global.greater_equal.get))
     (export "if"            (func $global.if.get))
+    (export "type"          (func $global.type.get))
 
-    (export "memory" (memory $memory))
-    (export "heap_available" (func $heap.available))
-    (export "Int32" (func $Int32.constructor))
-    (export "ASCII" (func $ASCII.constructor))
-    (export "ASCII_data" (func $ASCII.data))
-    (export "List" (func $List.constructor))
-    (export "Internal" (func $Internal.constructor))
+    (export "memory"           (memory $memory))
+    (export "heap_available"   (func $heap.available))
+    (export "Int32"            (func $Int32.constructor))
+    (export "ASCII"            (func $ASCII.constructor))
+    (export "ASCII_data"       (func $ASCII.data))
+    (export "List"             (func $List.constructor))
+    (export "Internal"         (func $Internal.constructor))
     (export "Internal.targets" (func $Internal.targets.first))
     (export "Internal.storage" (func $Internal.storage.first))
-    (export "Template" (func $Template.constructor))
-    (export "Template.first" (func $Template.first))
-    (export "Array" (func $Array.constructor))
-    (export "Array.set" (func $Array.set))
-    (export "Add" (func $external.Add.constructor))
-    (export "Sub" (func $external.Sub.constructor))
-    (export "Mul" (func $external.Mul.constructor))
-    (export "Div" (func $external.Div.constructor))
-    (export "Length" (func $external.Length.constructor))
-    (export "Equal" (func $external.Equal.constructor))
-    (export "NotEqual" (func $external.NotEqual.constructor))
-    (export "Less" (func $external.Less.constructor))
-    (export "LessEqual" (func $external.LessEqual.constructor))
-    (export "Greater" (func $external.Greater.constructor))
-    (export "GreaterEqual" (func $external.GreaterEqual.constructor))
-    (export "If" (func $external.If.constructor))
-    (export "step" (func $machine.step))
-    (export "_print" (func $virtual.print))
+    (export "Template"         (func $Template.constructor))
+    (export "Template.first"   (func $Template.first))
+    (export "Array"            (func $Array.constructor))
+    (export "Array.set"        (func $Array.set))
+    (export "step"             (func $machine.step))
+    (export "_print"           (func $virtual.print))
 
     (start $init)
 )
