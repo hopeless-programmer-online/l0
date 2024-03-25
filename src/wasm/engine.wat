@@ -6,34 +6,36 @@
 
     (memory $memory 10)
     ;; constants
-    (data (i32.const 0)  "\n")            ;; 0-1,   1
-    (data (i32.const 1)  "unknown")       ;; 1-8,   7
-    (data (i32.const 8)  "[")             ;; 8-9,   1
-    (data (i32.const 9)  "]")             ;; 9-10,  1
-    (data (i32.const 10) ",")             ;; 10-11, 1
-    (data (i32.const 11) "internal")      ;; 11-19, 8
-    (data (i32.const 19) "|")             ;; 19-20, 1
-    (data (i32.const 20) "print")         ;; 20-25, 5
-    (data (i32.const 25) "template")      ;; 25-33, 8
-    (data (i32.const 33) "bind")          ;; 33-37, 4
-    (data (i32.const 37) "terminal")      ;; 37-45, 8
-    (data (i32.const 45) "(")             ;; 45-46, 1
-    (data (i32.const 46) ")")             ;; 46-47, 1
-    (data (i32.const 47) "nothing")       ;; 47-54, 7
-    (data (i32.const 54) "+")             ;; 54-55, 1
-    (data (i32.const 55) "-")             ;; 55-56, 1
-    (data (i32.const 56) "*")             ;; 56-57, 1
-    (data (i32.const 57) "/")             ;; 57-58, 1
-    (data (i32.const 58) "length")        ;; 58-64, 6
-    (data (i32.const 64) "<")             ;; 64-65, 1
-    (data (i32.const 65) "<=")            ;; 65-67, 2
-    (data (i32.const 67) ">")             ;; 67-68, 1
-    (data (i32.const 68) ">=")            ;; 68-70, 2
-    (data (i32.const 70) "if")            ;; 70-72, 2
-    (data (i32.const 72) "==")            ;; 72-74, 2
-    (data (i32.const 74) "!=")            ;; 74-76, 2
-    (data (i32.const 76) "type")          ;; 76-80, 4
-    (data (i32.const 80) "OUT OF MEMORY") ;; 80-93, 13
+    (data (i32.const 0)   "\n")            ;; 0-1,   1
+    (data (i32.const 1)   "unknown")       ;; 1-8,   7
+    (data (i32.const 8)   "[")             ;; 8-9,   1
+    (data (i32.const 9)   "]")             ;; 9-10,  1
+    (data (i32.const 10)  ",")             ;; 10-11, 1
+    (data (i32.const 11)  "internal")      ;; 11-19, 8
+    (data (i32.const 19)  "|")             ;; 19-20, 1
+    (data (i32.const 20)  "print")         ;; 20-25, 5
+    (data (i32.const 25)  "template")      ;; 25-33, 8
+    (data (i32.const 33)  "bind")          ;; 33-37, 4
+    (data (i32.const 37)  "terminal")      ;; 37-45, 8
+    (data (i32.const 45)  "(")             ;; 45-46, 1
+    (data (i32.const 46)  ")")             ;; 46-47, 1
+    (data (i32.const 47)  "nothing")       ;; 47-54, 7
+    (data (i32.const 54)  "+")             ;; 54-55, 1
+    (data (i32.const 55)  "-")             ;; 55-56, 1
+    (data (i32.const 56)  "*")             ;; 56-57, 1
+    (data (i32.const 57)  "/")             ;; 57-58, 1
+    (data (i32.const 58)  "length")        ;; 58-64, 6
+    (data (i32.const 64)  "<")             ;; 64-65, 1
+    (data (i32.const 65)  "<=")            ;; 65-67, 2
+    (data (i32.const 67)  ">")             ;; 67-68, 1
+    (data (i32.const 68)  ">=")            ;; 68-70, 2
+    (data (i32.const 70)  "if")            ;; 70-72, 2
+    (data (i32.const 72)  "==")            ;; 72-74, 2
+    (data (i32.const 74)  "!=")            ;; 74-76, 2
+    (data (i32.const 76)  "type")          ;; 76-80, 4
+    (data (i32.const 80)  "OUT OF MEMORY") ;; 80-93, 13
+    (data (i32.const 93)  "external")      ;; 93-101, 8
+    (data (i32.const 101) "ERROR")         ;; 101-106, 5
 
     (func $global.nothing       (result i32) i32.const 768 return)
     (func $global.terminal      (result i32) i32.const 772 return)
@@ -52,6 +54,7 @@
     (func $global.greater_equal (result i32) i32.const 824 return)
     (func $global.if            (result i32) i32.const 828 return)
     (func $global.type          (result i32) i32.const 832 return)
+    (func $global.external      (result i32) i32.const 836 return)
 
     (func $heap.begin        (result i32) i32.const 1024 return)
     (func $heap.end          (result i32) i32.const 655348 return) ;; 10×65K
@@ -77,11 +80,9 @@
     (func $type.Type         (result i32) i32.const 18 return)
     (func $type.Int32        (result i32) i32.const 19 return)
     (func $type.ASCII        (result i32) i32.const 20 return)
-    ;; (func $type.List         (result i32) i32.const 20 return)
-    ;; (func $type.Get          (result i32) i32.const 18 return)
-    ;; (func $type.Set          (result i32) i32.const 19 return)
+    (func $type.External     (result i32) i32.const 21 return)
 
-    (table 63 funcref)
+    (table 66 funcref)
 
     (func $virtual.step.offset (result i32) i32.const 0)
     (elem (i32.const 0)
@@ -106,6 +107,7 @@
         $virtual.step.Type
         $virtual.step.Nothing ;; @todo: $virtual.print.Int32
         $virtual.step.Nothing ;; @todo: $virtual.print.ASCII
+        $virtual.step.Nothing ;; @todo: $virtual.print.External
     )
     (type $virtual.step (func (param $print i32) (param $buffer i32) (param $nothing i32) (result i32)))
     (func $virtual.step (param $first i32) (param $buffer i32) (param $nothing i32) (result i32)
@@ -120,9 +122,9 @@
         call_indirect (type $virtual.step)
     )
     (func $virtual.step.Nothing (param $nothing_ i32) (param $buffer i32) (param $nothing i32) (result i32)
-        ;; print "unknown"
-        i32.const 1
-        i32.const 7
+        ;; print "ERROR"
+        i32.const 101
+        i32.const 5
         call $print.ascii
         call $print.newline
 
@@ -1472,8 +1474,8 @@
         return
     )
 
-    (func $virtual.print.offset (result i32) i32.const 21)
-    (elem (i32.const 21)
+    (func $virtual.print.offset (result i32) i32.const 22)
+    (elem (i32.const 22)
         $virtual.print.Nothing
         $virtual.print.Terminal
         $virtual.print.Internal
@@ -1495,6 +1497,7 @@
         $virtual.print.Type
         $virtual.print.Int32
         $virtual.print.ASCII
+        $virtual.print.External
     )
     (type $virtual.print (func (param $something i32)))
     (func $virtual.print (param $something i32)
@@ -1668,6 +1671,11 @@
         call $ASCII.length
         call $print.ascii
     )
+    (func $virtual.print.External (param $external i32)
+        i32.const 93
+        i32.const 8
+        call $print.ascii
+    )
     (func $print.newline
         i32.const 0
         i32.const 1
@@ -1699,29 +1707,30 @@
         call $print.ascii
     )
 
-    (func $virtual.type.offset (result i32) i32.const 42)
-    (elem (i32.const 42)
-        $virtual.type.Nothing
-        $virtual.type.Terminal
-        $virtual.type.Nothing ;; @todo Internal
-        $virtual.type.Nothing ;; @todo Template
-        $virtual.type.Bind
-        $virtual.type.Print
-        $virtual.type.Add
-        $virtual.type.Sub
-        $virtual.type.Mul
-        $virtual.type.Div
-        $virtual.type.Length
-        $virtual.type.Equal
-        $virtual.type.NotEqual
-        $virtual.type.Less
-        $virtual.type.LessEqual
-        $virtual.type.Greater
-        $virtual.type.GreaterEqual
-        $virtual.type.If
-        $virtual.type.Type
-        $virtual.type.Nothing ;; @todo Int32
-        $virtual.type.Nothing ;; @todo ASCII
+    (func $virtual.type.offset (result i32) i32.const 44)
+    (elem (i32.const 44)
+        $virtual.type.Nothing  ;; Nothing
+        $virtual.type.External ;; Terminal
+        $virtual.type.Nothing  ;; Internal
+        $virtual.type.Nothing  ;; Template
+        $virtual.type.External ;; Bind
+        $virtual.type.External ;; Print
+        $virtual.type.External ;; Add
+        $virtual.type.External ;; Sub
+        $virtual.type.External ;; Mul
+        $virtual.type.External ;; Div
+        $virtual.type.External ;; Length
+        $virtual.type.External ;; Equal
+        $virtual.type.External ;; NotEqual
+        $virtual.type.External ;; Less
+        $virtual.type.External ;; LessEqual
+        $virtual.type.External ;; Greater
+        $virtual.type.External ;; GreaterEqual
+        $virtual.type.External ;; If
+        $virtual.type.External ;; Type
+        $virtual.type.Nothing  ;; Int32
+        $virtual.type.Nothing  ;; ASCII
+        $virtual.type.External ;; External
     )
     (type $virtual.type (func (param $something i32) (result i32)))
     (func $virtual.type (param $something i32) (result i32)
@@ -1744,78 +1753,8 @@
         i32.load
         return
     )
-    (func $virtual.type.Bind (param $bind i32) (result i32)
-        call $global.bind
-        i32.load
-        return
-    )
-    (func $virtual.type.Print (param $print i32) (result i32)
-        call $global.print
-        i32.load
-        return
-    )
-    (func $virtual.type.Add (param $add i32) (result i32)
-        call $global.add
-        i32.load
-        return
-    )
-    (func $virtual.type.Sub (param $sub i32) (result i32)
-        call $global.sub
-        i32.load
-        return
-    )
-    (func $virtual.type.Mul (param $mul i32) (result i32)
-        call $global.mul
-        i32.load
-        return
-    )
-    (func $virtual.type.Div (param $div i32) (result i32)
-        call $global.div
-        i32.load
-        return
-    )
-    (func $virtual.type.Length (param $length i32) (result i32)
-        call $global.length
-        i32.load
-        return
-    )
-    (func $virtual.type.Equal (param $equal i32) (result i32)
-        call $global.equal
-        i32.load
-        return
-    )
-    (func $virtual.type.NotEqual (param $not_equal i32) (result i32)
-        call $global.not_equal
-        i32.load
-        return
-    )
-    (func $virtual.type.Less (param $less i32) (result i32)
-        call $global.less
-        i32.load
-        return
-    )
-    (func $virtual.type.LessEqual (param $less_equal i32) (result i32)
-        call $global.less_equal
-        i32.load
-        return
-    )
-    (func $virtual.type.Greater (param $greater i32) (result i32)
-        call $global.greater
-        i32.load
-        return
-    )
-    (func $virtual.type.GreaterEqual (param $greater_equal i32) (result i32)
-        call $global.greater_equal
-        i32.load
-        return
-    )
-    (func $virtual.type.If (param $if i32) (result i32)
-        call $global.if
-        i32.load
-        return
-    )
-    (func $virtual.type.Type (param $type i32) (result i32)
-        call $global.type
+    (func $virtual.type.External (param $external i32) (result i32)
+        call $global.external
         i32.load
         return
     )
@@ -3362,6 +3301,29 @@
         return
     )
 
+    (func $sizeof.external.External (result i32)
+        i32.const 4
+        return
+    )
+    (func $external.External.type (result i32)
+        call $type.External
+        return
+    )
+    (func $external.External.constructor (result i32)
+        (local $external i32)
+        ;; allocate
+        call $sizeof.external.External
+        call $mem.allocate
+        local.set $external
+        ;; external.type = external.External.type
+        local.get $external
+        call $external.External.type
+        call $something.type.set
+        ;; return
+        local.get $external
+        return
+    )
+
     (func $machine.step (param $buffer i32) (param $nothing i32) (result i32)
         (local $first i32)
 
@@ -3452,6 +3414,10 @@
         call $global.type
         call $external.Type.constructor
         i32.store
+
+        call $global.external
+        call $external.External.constructor
+        i32.store
     )
 
     (func $global.nothing.get (result i32)
@@ -3539,6 +3505,11 @@
         i32.load
         return
     )
+    (func $global.external.get (result i32)
+        call $global.external
+        i32.load
+        return
+    )
 
     (export "nothing"       (func $global.nothing.get))
     (export "terminal"      (func $global.terminal.get))
@@ -3557,6 +3528,7 @@
     (export "greater_equal" (func $global.greater_equal.get))
     (export "if"            (func $global.if.get))
     (export "type"          (func $global.type.get))
+    (export "external"      (func $global.external.get))
 
     (export "memory"           (memory $memory))
     (export "heap_available"   (func $heap.available))
