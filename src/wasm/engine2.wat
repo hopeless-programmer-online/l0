@@ -7,12 +7,14 @@
     (memory $memory 10)
     ;; { memory mapping
         ;; text
-        (data (i32.const 0) "\n")    (; 0 + 1 = 1 ;) (func $write.newline (call $print.ascii (i32.const 0) (i32.const 1)))
-        (data (i32.const 1) "ERROR") (; 1 + 5 = 6 ;) (func $write.ERROR   (call $print.ascii (i32.const 1) (i32.const 5)))
+        (data (i32.const 0) "\n")      (; 0 + 1 = 1 ;)  (func $write.newline (call $print.ascii (i32.const 0) (i32.const 1)))
+        (data (i32.const 1) "ERROR")   (; 1 + 5 = 6 ;)  (func $write.ERROR   (call $print.ascii (i32.const 1) (i32.const 5)))
+        (data (i32.const 6) "unknown") (; 6 + 7 = 13 ;) (func $write.unknown (call $print.ascii (i32.const 1) (i32.const 5)))
         ;; globals
         (func $global.nothing.address  (result i32) i32.const 768 return) (func $global.nothing (result i32) call $global.nothing.address i32.load return)
         (func $global.terminal.address (result i32) i32.const 772 return) (func $global.terminal (result i32) call $global.terminal.address i32.load return)
         (func $global.external.address (result i32) i32.const 776 return) (func $global.external (result i32) call $global.external.address i32.load return)
+        (func $global.print.address    (result i32) i32.const 780 return) (func $global.print (result i32) call $global.print.address i32.load return)
         ;; heap
         (func $heap.begin (result i32) i32.const 1024)
         (func $heap.end   (result i32) i32.const 655348) ;; 10×65K - 12
@@ -51,50 +53,97 @@
 
     (table 100 funcref)
     ;; { tables
-        ;; step
-        (func $virtual.step.offset (result i32) i32.const 0)
-        (elem (i32.const 0)
-            $virtual.step.error ;; Nothing
-            $Terminal.Step      ;; Terminal
-            $virtual.step.error ;; External
-            $virtual.step.error ;; Internal
-            $virtual.step.error ;; Template
-            $virtual.step.error ;; Bind
-            $virtual.step.error ;; Print
-            $virtual.step.error ;; Type
-            $virtual.step.error ;; Add
-            $virtual.step.error ;; Sub
-            $virtual.step.error ;; Mul
-            $virtual.step.error ;; Div
-            $virtual.step.error ;; Equal
-            $virtual.step.error ;; NotEqual
-            $virtual.step.error ;; Greater
-            $virtual.step.error ;; GreaterEqual
-            $virtual.step.error ;; Less
-            $virtual.step.error ;; LessEqual
-            $virtual.step.error ;; If
-            $virtual.step.error ;; Internal.instance
-            $virtual.step.error ;; Template.instance
-            $virtual.step.error ;; Int32.instance
-            $virtual.step.error ;; ASCII.instance
-        )
-        (type $virtual.step (func (param $something i32) (param $buffer i32) (result i32)))
-        (func $virtual.step (param $something i32) (param $buffer i32) (result i32)
-            local.get $something
-            local.get $buffer
+        ;; { step
+            (func $virtual.step.offset (result i32) i32.const 0)
+            (elem (i32.const 0)
+                $virtual.step.error ;; Nothing
+                $Terminal.step      ;; Terminal
+                $virtual.step.error ;; External
+                $virtual.step.error ;; Internal
+                $virtual.step.error ;; Template
+                $virtual.step.error ;; Bind
+                $Print.step         ;; Print
+                $virtual.step.error ;; Type
+                $virtual.step.error ;; Add
+                $virtual.step.error ;; Sub
+                $virtual.step.error ;; Mul
+                $virtual.step.error ;; Div
+                $virtual.step.error ;; Equal
+                $virtual.step.error ;; NotEqual
+                $virtual.step.error ;; Greater
+                $virtual.step.error ;; GreaterEqual
+                $virtual.step.error ;; Less
+                $virtual.step.error ;; LessEqual
+                $virtual.step.error ;; If
+                $virtual.step.error ;; Internal.instance
+                $virtual.step.error ;; Template.instance
+                $virtual.step.error ;; Int32.instance
+                $virtual.step.error ;; ASCII.instance
+            )
+            (type $virtual.step (func (param $something i32) (param $buffer i32) (result i32)))
+            (func $virtual.step (param $something i32) (param $buffer i32) (result i32)
+                local.get $something
+                local.get $buffer
 
-            local.get $something
-            call $something.type
-            call $virtual.step.offset
-            i32.add
-            call_indirect (type $virtual.step)
-            return
-        )
-        (func $virtual.step.error (param $something i32) (param $buffer i32) (result i32)
-            call $write.ERROR
-            i32.const 0
-            return
-        )
+                local.get $something
+                call $something.type
+                call $virtual.step.offset
+                i32.add
+                call_indirect (type $virtual.step)
+                return
+            )
+            (func $virtual.step.error (param $something i32) (param $buffer i32) (result i32)
+                call $write.ERROR
+                i32.const 0
+                return
+            )
+        ;; }
+
+        ;; { print
+            (func $virtual.print.offset (result i32) i32.const 23)
+            (elem (i32.const 23)
+                $virtual.print.unknown ;; Nothing
+                $virtual.print.unknown ;; Terminal
+                $virtual.print.unknown ;; External
+                $virtual.print.unknown ;; Internal
+                $virtual.print.unknown ;; Template
+                $virtual.print.unknown ;; Bind
+                $virtual.print.unknown ;; Print
+                $virtual.print.unknown ;; Type
+                $virtual.print.unknown ;; Add
+                $virtual.print.unknown ;; Sub
+                $virtual.print.unknown ;; Mul
+                $virtual.print.unknown ;; Div
+                $virtual.print.unknown ;; Equal
+                $virtual.print.unknown ;; NotEqual
+                $virtual.print.unknown ;; Greater
+                $virtual.print.unknown ;; GreaterEqual
+                $virtual.print.unknown ;; Less
+                $virtual.print.unknown ;; LessEqual
+                $virtual.print.unknown ;; If
+                $virtual.print.unknown ;; Internal.instance
+                $virtual.print.unknown ;; Template.instance
+                $virtual.print.unknown ;; Int32.instance
+                $virtual.print.unknown ;; ASCII.instance
+            )
+            (type $virtual.print (func (param $something i32)))
+            (func $virtual.print (param $something i32)
+                local.get $something
+
+                local.get $something
+                call $something.type
+                call $virtual.print.offset
+                i32.add
+                call_indirect (type $virtual.print)
+
+                call $write.newline
+                return
+            )
+            (func $virtual.print.unknown (param $something i32)
+                call $write.unknown
+                return
+            )
+        ;; }
     ;; }
 
     ;; { heap
@@ -679,7 +728,7 @@
             local.get $terminal
             return
         )
-        (func $Terminal.Step (param $something i32) (param $buffer i32) (result i32)
+        (func $Terminal.step (param $something i32) (param $buffer i32) (result i32)
             i32.const 0
             return
         )
@@ -706,7 +755,61 @@
         )
     ;; }
 
-    ;; { Internal.instance
+    ;; { Print
+        (func $sizeof.Print (result i32)
+            i32.const 4
+            return
+        )
+        (func $Print.constructor (result i32)
+            (local $print i32)
+            ;; allocate
+            call $sizeof.Print
+            call $mem.allocate
+            local.set $print
+            ;; print.type = type.Print
+            local.get $print
+            call $type.Print
+            call $something.type.set
+            ;; return
+            local.get $print
+            return
+        )
+        (func $Print.step (param $something i32) (param $buffer i32) (result i32)
+            (local $next i32)
+            (local $next_buffer i32)
+
+            ;; do printing
+            local.get $buffer
+            i32.const 2
+            call $Array.get
+            call $virtual.print
+
+            ;; alloc next buffer
+            i32.const 2
+            call $Array.constructor
+            local.set $next_buffer
+
+            ;; save next
+            local.get $buffer
+            i32.const 1
+            call $Array.get
+            local.set $next
+
+            ;; fill next buffer
+            local.get $next_buffer
+            i32.const 0
+            local.get $next
+            call $Array.set
+
+            local.get $next_buffer
+            i32.const 1
+            local.get $next
+            call $Array.set
+
+            ;; return
+            local.get $next_buffer
+            return
+        )
     ;; }
 
     (func $init
@@ -723,6 +826,10 @@
         call $global.external.address
         call $External.constructor
         i32.store
+
+        call $global.print.address
+        call $Print.constructor
+        i32.store
     )
     (func $step
     )
@@ -730,6 +837,7 @@
     (export "nothing"        (func $global.nothing))
     (export "terminal"       (func $global.terminal))
     (export "external"       (func $global.external))
+    (export "print"          (func $global.print))
 
     (export "memory"         (memory $memory))
     (export "heap_available" (func $heap.available))
