@@ -7,9 +7,12 @@
     (memory $memory 10)
     ;; { memory mapping
         ;; text
-        (data (i32.const 0) "\n")      (; 0 + 1 = 1 ;)  (func $write.newline (call $print.ascii (i32.const 0) (i32.const 1)))
-        (data (i32.const 1) "ERROR")   (; 1 + 5 = 6 ;)  (func $write.ERROR   (call $print.ascii (i32.const 1) (i32.const 5)))
-        (data (i32.const 6) "unknown") (; 6 + 7 = 13 ;) (func $write.unknown (call $print.ascii (i32.const 1) (i32.const 5)))
+        (data (i32.const 0)  "\n")       (; 0 + 1 = 1 ;)   (func $write.newline  (call $print.ascii (i32.const 0) (i32.const 1)))
+        (data (i32.const 1)  "ERROR")    (; 1 + 5 = 6 ;)   (func $write.ERROR    (call $print.ascii (i32.const 1) (i32.const 5)))
+        (data (i32.const 6)  "unknown")  (; 6 + 7 = 13 ;)  (func $write.unknown  (call $print.ascii (i32.const 6) (i32.const 7)))
+        (data (i32.const 13) "nothing")  (; 13 + 7 = 20 ;) (func $write.nothing  (call $print.ascii (i32.const 13) (i32.const 7)))
+        (data (i32.const 20) "terminal") (; 20 + 8 = 28 ;) (func $write.terminal (call $print.ascii (i32.const 20) (i32.const 8)))
+        (data (i32.const 28) "external") (; 28 + 8 = 36 ;) (func $write.external (call $print.ascii (i32.const 28) (i32.const 8)))
         ;; globals
         (func $global.nothing.address  (result i32) i32.const 768 return) (func $global.nothing (result i32) call $global.nothing.address i32.load return)
         (func $global.terminal.address (result i32) i32.const 772 return) (func $global.terminal (result i32) call $global.terminal.address i32.load return)
@@ -102,9 +105,9 @@
         ;; { print
             (func $virtual.print.offset (result i32) i32.const 23)
             (elem (i32.const 23)
-                $virtual.print.unknown ;; Nothing
-                $virtual.print.unknown ;; Terminal
-                $virtual.print.unknown ;; External
+                $Nothing.print         ;; Nothing
+                $Terminal.print        ;; Terminal
+                $External.print        ;; External
                 $virtual.print.unknown ;; Internal
                 $virtual.print.unknown ;; Template
                 $virtual.print.unknown ;; Bind
@@ -707,6 +710,10 @@
             local.get $nothing
             return
         )
+        (func $Nothing.print (param $nothing i32)
+            call $write.nothing
+            return
+        )
     ;; }
 
     ;; { Terminal
@@ -728,7 +735,11 @@
             local.get $terminal
             return
         )
-        (func $Terminal.step (param $something i32) (param $buffer i32) (result i32)
+        (func $Terminal.print (param $terminal i32)
+            call $write.terminal
+            return
+        )
+        (func $Terminal.step (param $terminal i32) (param $buffer i32) (result i32)
             i32.const 0
             return
         )
@@ -751,6 +762,10 @@
             call $something.type.set
             ;; return
             local.get $external
+            return
+        )
+        (func $External.print (param $external i32)
+            call $write.external
             return
         )
     ;; }
@@ -812,6 +827,112 @@
         )
     ;; }
 
+    ;; { Internal.instance
+        (func $sizeof.Internal.instance.header (result i32)
+            i32.const 12
+            return
+        )
+        (func $sizeof.Internal.instance (param $targets_length i32) (param $storage_length i32) (result i32)
+            ;; mem.allocate( sizeof.Internal.header + targets_length * 4 + storage_length * 4 )
+            call $sizeof.Internal.instance.header
+            local.get $targets_length
+            i32.const 4
+            i32.mul
+            i32.add
+            local.get $storage_length
+            i32.const 4
+            i32.mul
+            i32.add
+            return
+        )
+        (func $Internal.instance.targets.length.offset (result i32)
+            i32.const 4
+            return
+        )
+        (func $Internal.instance.targets.length (param $internal i32) (result i32)
+            local.get $internal
+            call $Internal.instance.targets.length.offset
+            i32.add
+            i32.load
+            return
+        )
+        (func $Internal.instance.targets.length.set (param $internal i32) (param $length i32)
+            local.get $internal
+            call $Internal.instance.targets.length.offset
+            i32.add
+            local.get $length
+            i32.store
+        )
+        (func $Internal.instance.targets.first.offset (result i32)
+            call $sizeof.Internal.instance.header
+            return
+        )
+        (func $Internal.instance.targets.first (param $internal i32) (result i32)
+            local.get $internal
+            call $Internal.instance.targets.first.offset
+            i32.add
+            return
+        )
+        (func $Internal.instance.storage.length.offset (result i32)
+            i32.const 8
+            return
+        )
+        (func $Internal.instance.storage.length (param $internal i32) (result i32)
+            local.get $internal
+            call $Internal.instance.storage.length.offset
+            i32.add
+            i32.load
+            return
+        )
+        (func $Internal.instance.storage.length.set (param $internal i32) (param $length i32)
+            local.get $internal
+            call $Internal.instance.storage.length.offset
+            i32.add
+            local.get $length
+            i32.store
+        )
+        (func $Internal.instance.storage.first.offset (param $internal i32) (result i32)
+            call $Internal.instance.targets.first.offset
+            local.get $internal
+            call $Internal.instance.targets.length
+            i32.const 4
+            i32.mul
+            i32.add
+            return
+        )
+        (func $Internal.instance.storage.first (param $internal i32) (result i32)
+            local.get $internal
+            local.get $internal
+            call $Internal.instance.storage.first.offset
+            i32.add
+            return
+        )
+        (func $Internal.instance.constructor (param $targets_length i32) (param $storage_length i32) (result i32)
+            (local $internal i32)
+            ;; allocate
+            local.get $targets_length
+            local.get $storage_length
+            call $sizeof.Internal.instance
+            call $mem.allocate
+            local.set $internal
+            ;; internal.type = type.Internal
+            local.get $internal
+            call $type.Internal
+            call $something.type.set
+            ;; internal.targets.length = targets_length
+            local.get $internal
+            local.get $targets_length
+            call $Internal.instance.targets.length.set
+            ;; internal.storage.length = storage_length
+            local.get $internal
+            local.get $storage_length
+            call $Internal.instance.storage.length.set
+            ;; return
+            local.get $internal
+            return
+        )
+    ;; }
+
     (func $init
         call $heap.init
 
@@ -831,7 +952,23 @@
         call $Print.constructor
         i32.store
     )
-    (func $step
+    (func $step (param $buffer i32) (result i32)
+        (local $first i32)
+
+        local.get $buffer
+        call $Array.first
+        i32.load
+        local.set $first
+
+        local.get $first
+        local.get $buffer
+        call $virtual.step
+
+        ;; free buffer
+        local.get $buffer
+        call $mem.free
+
+        return
     )
 
     (export "nothing"        (func $global.nothing))
@@ -841,6 +978,8 @@
 
     (export "memory"         (memory $memory))
     (export "heap_available" (func $heap.available))
+    (export "heap_max"       (func $heap.max))
+    (export "step"           (func $step))
 
     (start $init)
 )
