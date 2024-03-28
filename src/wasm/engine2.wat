@@ -11,6 +11,11 @@
         (data (i32.const 13) "nothing")  (; 13 + 7 = 20 ;) (func $write.nothing  (call $print.ascii (i32.const 13) (i32.const 7)))
         (data (i32.const 20) "terminal") (; 20 + 8 = 28 ;) (func $write.terminal (call $print.ascii (i32.const 20) (i32.const 8)))
         (data (i32.const 28) "external") (; 28 + 8 = 36 ;) (func $write.external (call $print.ascii (i32.const 28) (i32.const 8)))
+        (data (i32.const 36) "internal") (; 36 + 8 = 44 ;) (func $write.internal (call $print.ascii (i32.const 36) (i32.const 8)))
+        (data (i32.const 44) "template") (; 44 + 8 = 52 ;) (func $write.template (call $print.ascii (i32.const 44) (i32.const 8)))
+        (data (i32.const 52) "bind")     (; 52 + 4 = 56 ;) (func $write.bind     (call $print.ascii (i32.const 52) (i32.const 4)))
+        (data (i32.const 56) "print")    (; 56 + 5 = 61 ;) (func $write.print    (call $print.ascii (i32.const 56) (i32.const 5)))
+        (data (i32.const 61) "type")     (; 61 + 4 = 65 ;) (func $write.type     (call $print.ascii (i32.const 61) (i32.const 4)))
         ;; globals
         (func $global.nothing.address  (result i32) i32.const 768 return) (func $global.nothing (result i32) call $global.nothing.address i32.load return)
         (func $global.terminal.address (result i32) i32.const 772 return) (func $global.terminal (result i32) call $global.terminal.address i32.load return)
@@ -104,29 +109,29 @@
         ;; { print
             (func $virtual.print.offset (result i32) i32.const 23)
             (elem (i32.const 23)
-                $Nothing.print         ;; Nothing
-                $Terminal.print        ;; Terminal
-                $External.print        ;; External
-                $virtual.print.unknown ;; Internal
-                $virtual.print.unknown ;; Template
-                $virtual.print.unknown ;; Bind
-                $virtual.print.unknown ;; Print
-                $virtual.print.unknown ;; Type
-                $virtual.print.unknown ;; Add
-                $virtual.print.unknown ;; Sub
-                $virtual.print.unknown ;; Mul
-                $virtual.print.unknown ;; Div
-                $virtual.print.unknown ;; Equal
-                $virtual.print.unknown ;; NotEqual
-                $virtual.print.unknown ;; Greater
-                $virtual.print.unknown ;; GreaterEqual
-                $virtual.print.unknown ;; Less
-                $virtual.print.unknown ;; LessEqual
-                $virtual.print.unknown ;; If
-                $virtual.print.unknown ;; Internal.instance
-                $virtual.print.unknown ;; Template.instance
-                $virtual.print.unknown ;; Int32.instance
-                $virtual.print.unknown ;; ASCII.instance
+                $Nothing.print           ;; Nothing
+                $Terminal.print          ;; Terminal
+                $External.print          ;; External
+                $virtual.print.unknown   ;; Internal
+                $virtual.print.unknown   ;; Template
+                $Bind.print              ;; Bind
+                $Print.print             ;; Print
+                $virtual.print.unknown   ;; Type
+                $virtual.print.unknown   ;; Add
+                $virtual.print.unknown   ;; Sub
+                $virtual.print.unknown   ;; Mul
+                $virtual.print.unknown   ;; Div
+                $virtual.print.unknown   ;; Equal
+                $virtual.print.unknown   ;; NotEqual
+                $virtual.print.unknown   ;; Greater
+                $virtual.print.unknown   ;; GreaterEqual
+                $virtual.print.unknown   ;; Less
+                $virtual.print.unknown   ;; LessEqual
+                $virtual.print.unknown   ;; If
+                $Internal.instance.print ;; Internal.instance
+                $Template.instance.print ;; Template.instance
+                $virtual.print.unknown   ;; Int32.instance
+                $virtual.print.unknown   ;; ASCII.instance
             )
             (type $virtual.print (func (param $something i32)))
             (func $virtual.print (param $something i32)
@@ -579,6 +584,15 @@
             i32.store
         )
         (func $Array.get (param $array i32) (param $i i32) (result i32)
+            local.get $i
+            local.get $array
+            call $Array.length
+            i32.ge_u
+            (if (then
+                call $global.nothing
+                return
+            ))
+
             local.get $array
             call $Array.first
             local.get $i
@@ -734,12 +748,12 @@
             local.get $terminal
             return
         )
-        (func $Terminal.print (param $terminal i32)
-            call $write.terminal
-            return
-        )
         (func $Terminal.step (param $terminal i32) (param $buffer i32) (result i32)
             i32.const 0
+            return
+        )
+        (func $Terminal.print (param $terminal i32)
+            call $write.terminal
             return
         )
     ;; }
@@ -1042,6 +1056,10 @@
             local.get $result
             return
         )
+        (func $Bind.print (param $nothing i32)
+            call $write.bind
+            return
+        )
     ;; }
 
     ;; { Print
@@ -1097,6 +1115,10 @@
 
             ;; return
             local.get $next_buffer
+            return
+        )
+        (func $Print.print (param $nothing i32)
+            call $write.print
             return
         )
     ;; }
@@ -1271,6 +1293,10 @@
                 i32.lt_u
                 br_if $check_overflow
 
+                i32.const 12345
+                call $print.int32
+                call $write.newline
+
                 call $global.nothing
                 return
             )
@@ -1371,6 +1397,10 @@
             local.get $next_buffer
             return
         )
+        (func $Internal.instance.print (param $nothing i32)
+            call $write.internal
+            return
+        )
     ;; }
 
     ;; { Template.instance
@@ -1443,6 +1473,10 @@
             call $something.type
             call $type.Template.instance
             i32.ne
+            return
+        )
+        (func $Template.instance.print (param $nothing i32)
+            call $write.template
             return
         )
     ;; }

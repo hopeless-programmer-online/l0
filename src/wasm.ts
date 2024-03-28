@@ -40,6 +40,7 @@ export class Context {
     private readonly heap_available    : () => number
     private readonly nothing           : Address
     private readonly terminal          : Address
+    private readonly external          : Address
     private readonly Template          : (targets : number) => Address
     private readonly template_first    : (template : Address) => Address
     private readonly bind              : Address
@@ -73,6 +74,7 @@ export class Context {
         const heap_available   = exports.heap_available as () => number
         const nothing          = (exports.nothing as () => Address)()
         const terminal         = (exports.terminal as () => Address)()
+        const external         = (exports.external as () => Address)()
         const Template         = exports.Template as (targets : number) => Address
         const template_first   = exports[`Template.first`] as (template : Address) => Address
         const bind             = (exports.bind as () => Address)()
@@ -106,6 +108,7 @@ export class Context {
         this.heap_available   = heap_available
         this.nothing          = nothing
         this.terminal         = terminal
+        this.external         = external
         this.Template         = Template
         this.template_first   = template_first
         this.bind             = bind
@@ -179,13 +182,12 @@ export class Context {
 
         switch (text) {
             case `nothing`      : return this.nothing
-
             case `super`        : return this.terminal
+            case `external`     : return this.external
             case `bind`         : return this.bind
             case `print`        : return this.print
 
             // case `type`         : return this.type
-            // case `external`     : return this.external
 
         //     case `var`          : return this.var
         //     case `=`            : return this.equal
