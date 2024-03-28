@@ -20,8 +20,10 @@
         (func $global.nothing.address  (result i32) i32.const 768 return) (func $global.nothing (result i32) call $global.nothing.address i32.load return)
         (func $global.terminal.address (result i32) i32.const 772 return) (func $global.terminal (result i32) call $global.terminal.address i32.load return)
         (func $global.external.address (result i32) i32.const 776 return) (func $global.external (result i32) call $global.external.address i32.load return)
-        (func $global.bind.address     (result i32) i32.const 780 return) (func $global.bind (result i32) call $global.bind.address i32.load return)
-        (func $global.print.address    (result i32) i32.const 784 return) (func $global.print (result i32) call $global.print.address i32.load return)
+        (func $global.internal.address (result i32) i32.const 780 return) (func $global.internal (result i32) call $global.internal.address i32.load return)
+        (func $global.template.address (result i32) i32.const 784 return) (func $global.template (result i32) call $global.template.address i32.load return)
+        (func $global.bind.address     (result i32) i32.const 788 return) (func $global.bind (result i32) call $global.bind.address i32.load return)
+        (func $global.print.address    (result i32) i32.const 792 return) (func $global.print (result i32) call $global.print.address i32.load return)
         ;; heap
         (func $heap.begin (result i32) i32.const 1024)
         (func $heap.end   (result i32) i32.const 655348) ;; 10×65K - 12
@@ -112,8 +114,8 @@
                 $Nothing.print           ;; Nothing
                 $Terminal.print          ;; Terminal
                 $External.print          ;; External
-                $virtual.print.unknown   ;; Internal
-                $virtual.print.unknown   ;; Template
+                $Internal.print          ;; Internal
+                $Template.print          ;; Template
                 $Bind.print              ;; Bind
                 $Print.print             ;; Print
                 $virtual.print.unknown   ;; Type
@@ -779,6 +781,56 @@
         )
         (func $External.print (param $external i32)
             call $write.external
+            return
+        )
+    ;; }
+
+    ;; { Internal
+        (func $sizeof.Internal (result i32)
+            i32.const 4
+            return
+        )
+        (func $Internal.constructor (result i32)
+            (local $internal i32)
+            ;; allocate
+            call $sizeof.Internal
+            call $mem.allocate
+            local.set $internal
+            ;; internal.type = type.Internal
+            local.get $internal
+            call $type.Internal
+            call $something.type.set
+            ;; return
+            local.get $internal
+            return
+        )
+        (func $Internal.print (param $internal i32)
+            call $write.internal
+            return
+        )
+    ;; }
+
+    ;; { Template
+        (func $sizeof.Template (result i32)
+            i32.const 4
+            return
+        )
+        (func $Template.constructor (result i32)
+            (local $template i32)
+            ;; allocate
+            call $sizeof.Template
+            call $mem.allocate
+            local.set $template
+            ;; template.type = type.Template
+            local.get $template
+            call $type.Template
+            call $something.type.set
+            ;; return
+            local.get $template
+            return
+        )
+        (func $Template.print (param $template i32)
+            call $write.template
             return
         )
     ;; }
@@ -1496,6 +1548,14 @@
         call $External.constructor
         i32.store
 
+        call $global.internal.address
+        call $Internal.constructor
+        i32.store
+
+        call $global.template.address
+        call $Template.constructor
+        i32.store
+
         call $global.bind.address
         call $Bind.constructor
         i32.store
@@ -1531,6 +1591,8 @@
     (export "nothing"          (func $global.nothing))
     (export "terminal"         (func $global.terminal))
     (export "external"         (func $global.external))
+    (export "internal"         (func $global.internal))
+    (export "template"         (func $global.template))
     (export "bind"             (func $global.bind))
     (export "print"            (func $global.print))
 

@@ -41,6 +41,8 @@ export class Context {
     private readonly nothing           : Address
     private readonly terminal          : Address
     private readonly external          : Address
+    private readonly internal          : Address
+    private readonly template          : Address
     private readonly Template          : (targets : number) => Address
     private readonly template_first    : (template : Address) => Address
     private readonly bind              : Address
@@ -75,6 +77,8 @@ export class Context {
         const nothing          = (exports.nothing as () => Address)()
         const terminal         = (exports.terminal as () => Address)()
         const external         = (exports.external as () => Address)()
+        const internal         = (exports.internal as () => Address)()
+        const template         = (exports.template as () => Address)()
         const Template         = exports.Template as (targets : number) => Address
         const template_first   = exports[`Template.first`] as (template : Address) => Address
         const bind             = (exports.bind as () => Address)()
@@ -109,6 +113,8 @@ export class Context {
         this.nothing          = nothing
         this.terminal         = terminal
         this.external         = external
+        this.internal         = internal
+        this.template         = template
         this.Template         = Template
         this.template_first   = template_first
         this.bind             = bind
@@ -139,7 +145,7 @@ export class Context {
         // this.external         = external
     }
 
-    private template(targets : number[]) {
+    private create_template(targets : number[]) {
         const template = this.Template(targets.length)
         const first = this.template_first(template)
         const memory = Buffer.from(this.memory.buffer)
@@ -148,7 +154,7 @@ export class Context {
 
         return template
     }
-    private internal(entry : semantics.Entry) {
+    private create_internal(entry : semantics.Entry) {
         const { dependencies, entryTemplate : template } = entry
         const internal = this.Internal(template.targets.length, dependencies.length)
         const first_targets = this.internal_targets(internal)
@@ -171,7 +177,7 @@ export class Context {
         return internal
     }
     private resolve(value : semantics.Value) : Address {
-        if (value.symbol === semantics.Template.symbol) return this.template(value.targets)
+        if (value.symbol === semantics.Template.symbol) return this.create_template(value.targets)
         if (value.symbol === semantics.Bind.symbol) return this.bind
         if (value.symbol === semantics.Terminal.symbol) return this.terminal
         if (value.symbol !== semantics.Named.symbol) neverThrow(value, new Error) // @todo
@@ -184,6 +190,8 @@ export class Context {
             case `nothing`      : return this.nothing
             case `super`        : return this.terminal
             case `external`     : return this.external
+            case `internal`     : return this.internal
+            case `template`     : return this.template
             case `bind`         : return this.bind
             case `print`        : return this.print
 
@@ -256,7 +264,7 @@ export class Context {
     }
 
     public fill_buffer(entry : semantics.Entry) {
-        const internal = this.internal(entry)
+        const internal = this.create_internal(entry)
         const array = this.array(1)
 
         this.array_set(array, 0, internal)
