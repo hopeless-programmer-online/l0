@@ -8,7 +8,7 @@ type Address = number
 
 export class Context {
     public static async create() {
-        const file = path.join(__dirname, `wasm/engine.wat`)
+        const file = path.join(__dirname, `wasm/engine2.wat`)
         const wat = await readFile(file)
         const wabt = await Wabt()
         const wasm = wabt.parseWat(file, wat).toBinary({}).buffer
@@ -28,13 +28,6 @@ export class Context {
                     process.stdout.write(`${text}`)
                 },
             },
-            global : {
-                // nothing  : new WebAssembly.Global({ value : `i32`, mutable : true }, 0),
-                // terminal : new WebAssembly.Global({ value : `i32`, mutable : true }, 0),
-                // bind     : new WebAssembly.Global({ value : `i32`, mutable : true }, 0),
-                // print    : new WebAssembly.Global({ value : `i32`, mutable : true }, 0),
-                // Int32    : new WebAssembly.Global({ value : `i32`, mutable : true }, 0),
-            },
         }
         const instance = await WebAssembly.instantiate(module, imports)
         const { exports } = instance
@@ -53,28 +46,28 @@ export class Context {
     private readonly print             : Address
     private readonly array             : (length : number) => Address
     private readonly array_set         : (array : Address, i : number, v : Address) => void
-    private readonly int32             : (value : number) => Address
-    private readonly ascii             : (length : number) => Address
-    private readonly ascii_data        : (ascii : Address) => Address
+    // private readonly int32             : (value : number) => Address
+    // private readonly ascii             : (length : number) => Address
+    // private readonly ascii_data        : (ascii : Address) => Address
     private readonly Internal          : (targets : number, storage : number) => Address
     private readonly internal_targets  : (internal : Address) => Address
     private readonly internal_storage  : (internal : Address) => Address
     private readonly _step             : (buffer : Address) => Address
-    private readonly _print            : (something : Address) => void
-    private readonly add               : Address
-    private readonly sub               : Address
-    private readonly mul               : Address
-    private readonly div               : Address
-    private readonly length            : Address
-    private readonly equal             : Address
-    private readonly not_equal         : Address
-    private readonly less              : Address
-    private readonly less_equal        : Address
-    private readonly greater           : Address
-    private readonly greater_equal     : Address
-    private readonly if                : Address
-    private readonly type              : Address
-    private readonly external          : Address
+    // private readonly _print            : (something : Address) => void
+    // private readonly add               : Address
+    // private readonly sub               : Address
+    // private readonly mul               : Address
+    // private readonly div               : Address
+    // private readonly length            : Address
+    // private readonly equal             : Address
+    // private readonly not_equal         : Address
+    // private readonly less              : Address
+    // private readonly less_equal        : Address
+    // private readonly greater           : Address
+    // private readonly greater_equal     : Address
+    // private readonly if                : Address
+    // private readonly type              : Address
+    // private readonly external          : Address
 
     public constructor({ exports, memory } : { exports : WebAssembly.Exports, memory : WebAssembly.Memory }) {
         const heap_available   = exports.heap_available as () => number
@@ -86,28 +79,28 @@ export class Context {
         const print            = (exports.print as () => Address)()
         const Array            = exports.Array as (length : number) => Address
         const array_set        = exports[`Array.set`] as (array : Address, i : number, v : Address) => void
-        const Int32            = exports.Int32 as (value : number) => Address
-        const ASCII            = exports.ASCII as (length : number) => Address
-        const ASCII_data       = exports.ASCII_data as (ascii : Address) => Address
+        // const Int32            = exports.Int32 as (value : number) => Address
+        // const ASCII            = exports.ASCII as (length : number) => Address
+        // const ASCII_data       = exports.ASCII_data as (ascii : Address) => Address
         const Internal         = exports.Internal as (targets : number, storage : number) => Address
         const internal_targets = exports[`Internal.targets`] as (internal : Address) => Address
         const internal_storage = exports[`Internal.storage`] as (internal : Address) => Address
         const step             = exports.step as (buffer : Address) => Address
-        const _print           = exports._print as (something : Address) => void
-        const add              = (exports.add as () => Address)()
-        const sub              = (exports.sub as () => Address)()
-        const mul              = (exports.mul as () => Address)()
-        const div              = (exports.div as () => Address)()
-        const length           = (exports.length as () => Address)()
-        const equal            = (exports.equal as () => Address)()
-        const not_equal        = (exports.not_equal as () => Address)()
-        const less             = (exports.less as () => Address)()
-        const less_equal       = (exports.less_equal as () => Address)()
-        const greater          = (exports.greater as () => Address)()
-        const greater_equal    = (exports.greater_equal as () => Address)()
-        const if_              = (exports.if as () => Address)()
-        const type             = (exports.type as () => Address)()
-        const external         = (exports.external as () => Address)()
+        // const _print           = exports._print as (something : Address) => void
+        // const add              = (exports.add as () => Address)()
+        // const sub              = (exports.sub as () => Address)()
+        // const mul              = (exports.mul as () => Address)()
+        // const div              = (exports.div as () => Address)()
+        // const length           = (exports.length as () => Address)()
+        // const equal            = (exports.equal as () => Address)()
+        // const not_equal        = (exports.not_equal as () => Address)()
+        // const less             = (exports.less as () => Address)()
+        // const less_equal       = (exports.less_equal as () => Address)()
+        // const greater          = (exports.greater as () => Address)()
+        // const greater_equal    = (exports.greater_equal as () => Address)()
+        // const if_              = (exports.if as () => Address)()
+        // const type             = (exports.type as () => Address)()
+        // const external         = (exports.external as () => Address)()
 
         this.memory           = memory
         this.heap_available   = heap_available
@@ -119,28 +112,28 @@ export class Context {
         this.print            = print
         this.array            = Array
         this.array_set        = array_set
-        this.int32            = Int32
-        this.ascii            = ASCII
-        this.ascii_data       = ASCII_data
+        // this.int32            = Int32
+        // this.ascii            = ASCII
+        // this.ascii_data       = ASCII_data
         this.Internal         = Internal
         this.internal_targets = internal_targets
         this.internal_storage = internal_storage
         this._step            = step
-        this._print           = _print
-        this.add              = add
-        this.sub              = sub
-        this.mul              = mul
-        this.div              = div
-        this.length           = length
-        this.equal            = equal
-        this.not_equal        = not_equal
-        this.less             = less
-        this.less_equal       = less_equal
-        this.greater          = greater
-        this.greater_equal    = greater_equal
-        this.if               = if_
-        this.type             = type
-        this.external         = external
+        // this._print           = _print
+        // this.add              = add
+        // this.sub              = sub
+        // this.mul              = mul
+        // this.div              = div
+        // this.length           = length
+        // this.equal            = equal
+        // this.not_equal        = not_equal
+        // this.less             = less
+        // this.less_equal       = less_equal
+        // this.greater          = greater
+        // this.greater_equal    = greater_equal
+        // this.if               = if_
+        // this.type             = type
+        // this.external         = external
     }
 
     private template(targets : number[]) {
@@ -191,8 +184,8 @@ export class Context {
             case `bind`         : return this.bind
             case `print`        : return this.print
 
-            case `type`         : return this.type
-            case `external`     : return this.external
+            // case `type`         : return this.type
+            // case `external`     : return this.external
 
         //     case `var`          : return this.var
         //     case `=`            : return this.equal
@@ -212,23 +205,23 @@ export class Context {
         //     case `not`          : return this.not
         //     case `and`          : return this.and
         //     case `or`           : return this.or
-            case `if`           : return this.if
+            // case `if`           : return this.if
 
         //     case `Int32`        : return this.Int32
-            case `+`            : return this.add
-            case `-`            : return this.sub
-            case `*`            : return this.mul
-            case `/`            : return this.div
-            case `==`           : return this.equal
-            case `!=`           : return this.not_equal
-            case `<`            : return this.less
-            case `<=`           : return this.less_equal
-            case `>`            : return this.greater
-            case `>=`           : return this.greater_equal
+            // case `+`            : return this.add
+            // case `-`            : return this.sub
+            // case `*`            : return this.mul
+            // case `/`            : return this.div
+            // case `==`           : return this.equal
+            // case `!=`           : return this.not_equal
+            // case `<`            : return this.less
+            // case `<=`           : return this.less_equal
+            // case `>`            : return this.greater
+            // case `>=`           : return this.greater_equal
 
         //     case `UTF8String`   : return this.UTF8String
 
-            case `length`       : return this.length
+            // case `length`       : return this.length
         //     case `get`          : return this.get
         //     case `set`          : return this.set
         //     case `List`         : return this.List
@@ -240,22 +233,22 @@ export class Context {
         //     case `remove`       : return this.remove
         }
 
-        if (name.words.length === 1 && name.words[0].symbol === syntax.QuotedWord.symbol) {
-            const { unquoted : text } = name.words[0]
-            const ascii = this.ascii(text.length)
-            const memory = Buffer.from(this.memory.buffer)
-            const begin = this.ascii_data(ascii)
+        // if (name.words.length === 1 && name.words[0].symbol === syntax.QuotedWord.symbol) {
+        //     const { unquoted : text } = name.words[0]
+        //     const ascii = this.ascii(text.length)
+        //     const memory = Buffer.from(this.memory.buffer)
+        //     const begin = this.ascii_data(ascii)
 
-            Array.from(text).forEach((x, i) => {
-                memory.writeUInt8(x.charCodeAt(0), begin + i)
-            })
+        //     Array.from(text).forEach((x, i) => {
+        //         memory.writeUInt8(x.charCodeAt(0), begin + i)
+        //     })
 
-            return ascii
-        }
+        //     return ascii
+        // }
 
-        const int32 = text.match(/^(?:-|\+)?\s*(?:\d\s*)+$/)
+        // const int32 = text.match(/^(?:-|\+)?\s*(?:\d\s*)+$/)
 
-        if (int32) return this.int32(Number(int32[0].replace(/\s/g, ``)))
+        // if (int32) return this.int32(Number(int32[0].replace(/\s/g, ``)))
 
         throw new Error(`Cannot fill name ${text}.`)
     }
