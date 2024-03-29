@@ -46,12 +46,12 @@ export class Context {
     private readonly bind              : Address
     private readonly print             : Address
     private readonly type              : Address
+    private readonly int32             : Address
+    private readonly ascii             : Address
     private readonly Template          : (targets : number) => Address
     private readonly template_first    : (template : Address) => Address
     private readonly array             : (length : number) => Address
     private readonly array_set         : (array : Address, i : number, v : Address) => void
-    // private readonly int32             : (value : number) => Address
-    // private readonly ascii             : (length : number) => Address
     // private readonly ascii_data        : (ascii : Address) => Address
     private readonly Internal          : (targets : number, storage : number) => Address
     private readonly internal_targets  : (internal : Address) => Address
@@ -81,6 +81,8 @@ export class Context {
         const bind             = (exports.bind as () => Address)()
         const print            = (exports.print as () => Address)()
         const type             = (exports.type as () => Address)()
+        const int32            = (exports.int32 as () => Address)()
+        const ascii            = (exports.ascii as () => Address)()
         const Template         = exports.Template as (targets : number) => Address
         const template_first   = exports[`Template.first`] as (template : Address) => Address
         const Array            = exports.Array as (length : number) => Address
@@ -116,6 +118,8 @@ export class Context {
         this.bind             = bind
         this.print            = print
         this.type             = type
+        this.int32            = int32
+        this.ascii            = ascii
         this.Template         = Template
         this.template_first   = template_first
         this.array            = Array
@@ -193,6 +197,8 @@ export class Context {
             case `bind`         : return this.bind
             case `print`        : return this.print
             case `type`         : return this.type
+            case `int32`        : return this.int32
+            case `ascii`        : return this.ascii
 
         //     case `var`          : return this.var
         //     case `=`            : return this.equal

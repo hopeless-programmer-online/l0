@@ -16,6 +16,8 @@
         (data (i32.const 52) "bind")     (; 52 + 4 = 56 ;) (func $write.bind     (call $print.ascii (i32.const 52) (i32.const 4)))
         (data (i32.const 56) "print")    (; 56 + 5 = 61 ;) (func $write.print    (call $print.ascii (i32.const 56) (i32.const 5)))
         (data (i32.const 61) "type")     (; 61 + 4 = 65 ;) (func $write.type     (call $print.ascii (i32.const 61) (i32.const 4)))
+        (data (i32.const 65) "int32")    (; 65 + 5 = 70 ;) (func $write.int32    (call $print.ascii (i32.const 65) (i32.const 5)))
+        (data (i32.const 70) "ascii")    (; 70 + 5 = 75 ;) (func $write.ascii    (call $print.ascii (i32.const 70) (i32.const 5)))
         ;; globals
         (func $global.nothing.address  (result i32) i32.const 768 return) (func $global.nothing (result i32) call $global.nothing.address i32.load return)
         (func $global.terminal.address (result i32) i32.const 772 return) (func $global.terminal (result i32) call $global.terminal.address i32.load return)
@@ -25,6 +27,8 @@
         (func $global.bind.address     (result i32) i32.const 788 return) (func $global.bind (result i32) call $global.bind.address i32.load return)
         (func $global.print.address    (result i32) i32.const 792 return) (func $global.print (result i32) call $global.print.address i32.load return)
         (func $global.type.address     (result i32) i32.const 796 return) (func $global.type (result i32) call $global.type.address i32.load return)
+        (func $global.int32.address    (result i32) i32.const 800 return) (func $global.int32 (result i32) call $global.int32.address i32.load return)
+        (func $global.ascii.address    (result i32) i32.const 804 return) (func $global.ascii (result i32) call $global.ascii.address i32.load return)
         ;; heap
         (func $heap.begin (result i32) i32.const 1024)
         (func $heap.end   (result i32) i32.const 655348) ;; 10×65K - 12
@@ -41,24 +45,27 @@
         (func $type.Print             (result i32) i32.const 6 return)
         (func $type.Type              (result i32) i32.const 7 return)
 
-        (func $type.Add               (result i32) i32.const 8 return)
-        (func $type.Sub               (result i32) i32.const 9 return)
-        (func $type.Mul               (result i32) i32.const 10 return)
-        (func $type.Div               (result i32) i32.const 11 return)
+        (func $type.Int32             (result i32) i32.const 8 return)
+        (func $type.ASCII             (result i32) i32.const 9 return)
 
-        (func $type.Equal             (result i32) i32.const 12 return)
-        (func $type.NotEqual          (result i32) i32.const 13 return)
-        (func $type.Greater           (result i32) i32.const 14 return)
-        (func $type.GreaterEqual      (result i32) i32.const 15 return)
-        (func $type.Less              (result i32) i32.const 16 return)
-        (func $type.LessEqual         (result i32) i32.const 17 return)
+        (func $type.Add               (result i32) i32.const 10 return)
+        (func $type.Sub               (result i32) i32.const 11 return)
+        (func $type.Mul               (result i32) i32.const 12 return)
+        (func $type.Div               (result i32) i32.const 13 return)
 
-        (func $type.If                (result i32) i32.const 18 return)
+        (func $type.Equal             (result i32) i32.const 14 return)
+        (func $type.NotEqual          (result i32) i32.const 15 return)
+        (func $type.Greater           (result i32) i32.const 16 return)
+        (func $type.GreaterEqual      (result i32) i32.const 17 return)
+        (func $type.Less              (result i32) i32.const 18 return)
+        (func $type.LessEqual         (result i32) i32.const 19 return)
 
-        (func $type.Internal.instance (result i32) i32.const 19 return)
-        (func $type.Template.instance (result i32) i32.const 20 return)
-        (func $type.Int32.instance    (result i32) i32.const 21 return)
-        (func $type.ASCII.instance    (result i32) i32.const 22 return)
+        (func $type.If                (result i32) i32.const 20 return)
+
+        (func $type.Internal.instance (result i32) i32.const 21 return)
+        (func $type.Template.instance (result i32) i32.const 22 return)
+        (func $type.Int32.instance    (result i32) i32.const 23 return)
+        (func $type.ASCII.instance    (result i32) i32.const 24 return)
     ;; }
 
     (table 100 funcref)
@@ -74,6 +81,8 @@
                 $Bind.step              ;; Bind
                 $Print.step             ;; Print
                 $Type.step              ;; Type
+                $virtual.step.error     ;; Int32
+                $virtual.step.error     ;; ASCII
                 $virtual.step.error     ;; Add
                 $virtual.step.error     ;; Sub
                 $virtual.step.error     ;; Mul
@@ -110,8 +119,8 @@
         ;; }
 
         ;; { print
-            (func $virtual.print.offset (result i32) i32.const 23)
-            (elem (i32.const 23)
+            (func $virtual.print.offset (result i32) i32.const 25)
+            (elem (i32.const 25)
                 $Nothing.print           ;; Nothing
                 $Terminal.print          ;; Terminal
                 $External.print          ;; External
@@ -120,6 +129,8 @@
                 $Bind.print              ;; Bind
                 $Print.print             ;; Print
                 $Type.print              ;; Type
+                $Int32.print             ;; Int32
+                $ASCII.print             ;; ASCII
                 $virtual.print.unknown   ;; Add
                 $virtual.print.unknown   ;; Sub
                 $virtual.print.unknown   ;; Mul
@@ -156,8 +167,8 @@
         ;; }
 
         ;; { type
-            (func $virtual.type.offset (result i32) i32.const 46)
-            (elem (i32.const 46)
+            (func $virtual.type.offset (result i32) i32.const 50)
+            (elem (i32.const 50)
                 $Nothing.type           ;; Nothing
                 $virtual.type.external  ;; Terminal
                 $virtual.type.external  ;; External
@@ -166,6 +177,8 @@
                 $virtual.type.external  ;; Bind
                 $virtual.type.external  ;; Print
                 $virtual.type.external  ;; Type
+                $virtual.type.external  ;; Int32
+                $virtual.type.external  ;; ASCII
                 $virtual.type.external  ;; Add
                 $virtual.type.external  ;; Sub
                 $virtual.type.external  ;; Mul
@@ -1293,6 +1306,56 @@
         )
     ;; }
 
+    ;; { Int32
+        (func $sizeof.Int32 (result i32)
+            i32.const 4
+            return
+        )
+        (func $Int32.constructor (result i32)
+            (local $int32 i32)
+            ;; allocate
+            call $sizeof.Int32
+            call $mem.allocate
+            local.set $int32
+            ;; int32.type = type.Int32
+            local.get $int32
+            call $type.Int32
+            call $something.type.set
+            ;; return
+            local.get $int32
+            return
+        )
+        (func $Int32.print (param $int32 i32)
+            call $write.int32
+            return
+        )
+    ;; }
+
+    ;; { ASCII
+        (func $sizeof.ASCII (result i32)
+            i32.const 4
+            return
+        )
+        (func $ASCII.constructor (result i32)
+            (local $ascii i32)
+            ;; allocate
+            call $sizeof.ASCII
+            call $mem.allocate
+            local.set $ascii
+            ;; ascii.type = type.ASCII
+            local.get $ascii
+            call $type.ASCII
+            call $something.type.set
+            ;; return
+            local.get $ascii
+            return
+        )
+        (func $ASCII.print (param $ascii i32)
+            call $write.ascii
+            return
+        )
+    ;; }
+
     ;; { Internal.instance
         (func $sizeof.Internal.instance.header (result i32)
             i32.const 12
@@ -1689,6 +1752,14 @@
         call $global.type.address
         call $Type.constructor
         i32.store
+
+        call $global.int32.address
+        call $Int32.constructor
+        i32.store
+
+        call $global.ascii.address
+        call $ASCII.constructor
+        i32.store
     )
     (func $step (param $buffer i32) (result i32)
         (local $first i32)
@@ -1722,6 +1793,8 @@
     (export "bind"             (func $global.bind))
     (export "print"            (func $global.print))
     (export "type"             (func $global.type))
+    (export "int32"            (func $global.int32))
+    (export "ascii"            (func $global.ascii))
 
     (export "memory"           (memory $memory))
     (export "heap_available"   (func $heap.available))
