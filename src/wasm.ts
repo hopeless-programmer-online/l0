@@ -43,10 +43,11 @@ export class Context {
     private readonly external          : Address
     private readonly internal          : Address
     private readonly template          : Address
-    private readonly Template          : (targets : number) => Address
-    private readonly template_first    : (template : Address) => Address
     private readonly bind              : Address
     private readonly print             : Address
+    private readonly type              : Address
+    private readonly Template          : (targets : number) => Address
+    private readonly template_first    : (template : Address) => Address
     private readonly array             : (length : number) => Address
     private readonly array_set         : (array : Address, i : number, v : Address) => void
     // private readonly int32             : (value : number) => Address
@@ -69,8 +70,6 @@ export class Context {
     // private readonly greater           : Address
     // private readonly greater_equal     : Address
     // private readonly if                : Address
-    // private readonly type              : Address
-    // private readonly external          : Address
 
     public constructor({ exports, memory } : { exports : WebAssembly.Exports, memory : WebAssembly.Memory }) {
         const heap_available   = exports.heap_available as () => number
@@ -79,10 +78,11 @@ export class Context {
         const external         = (exports.external as () => Address)()
         const internal         = (exports.internal as () => Address)()
         const template         = (exports.template as () => Address)()
-        const Template         = exports.Template as (targets : number) => Address
-        const template_first   = exports[`Template.first`] as (template : Address) => Address
         const bind             = (exports.bind as () => Address)()
         const print            = (exports.print as () => Address)()
+        const type             = (exports.type as () => Address)()
+        const Template         = exports.Template as (targets : number) => Address
+        const template_first   = exports[`Template.first`] as (template : Address) => Address
         const Array            = exports.Array as (length : number) => Address
         const array_set        = exports[`Array.set`] as (array : Address, i : number, v : Address) => void
         // const Int32            = exports.Int32 as (value : number) => Address
@@ -105,8 +105,6 @@ export class Context {
         // const greater          = (exports.greater as () => Address)()
         // const greater_equal    = (exports.greater_equal as () => Address)()
         // const if_              = (exports.if as () => Address)()
-        // const type             = (exports.type as () => Address)()
-        // const external         = (exports.external as () => Address)()
 
         this.memory           = memory
         this.heap_available   = heap_available
@@ -115,10 +113,11 @@ export class Context {
         this.external         = external
         this.internal         = internal
         this.template         = template
-        this.Template         = Template
-        this.template_first   = template_first
         this.bind             = bind
         this.print            = print
+        this.type             = type
+        this.Template         = Template
+        this.template_first   = template_first
         this.array            = Array
         this.array_set        = array_set
         // this.int32            = Int32
@@ -141,7 +140,6 @@ export class Context {
         // this.greater          = greater
         // this.greater_equal    = greater_equal
         // this.if               = if_
-        // this.type             = type
         // this.external         = external
     }
 
@@ -194,8 +192,7 @@ export class Context {
             case `template`     : return this.template
             case `bind`         : return this.bind
             case `print`        : return this.print
-
-            // case `type`         : return this.type
+            case `type`         : return this.type
 
         //     case `var`          : return this.var
         //     case `=`            : return this.equal

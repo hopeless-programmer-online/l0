@@ -24,6 +24,7 @@
         (func $global.template.address (result i32) i32.const 784 return) (func $global.template (result i32) call $global.template.address i32.load return)
         (func $global.bind.address     (result i32) i32.const 788 return) (func $global.bind (result i32) call $global.bind.address i32.load return)
         (func $global.print.address    (result i32) i32.const 792 return) (func $global.print (result i32) call $global.print.address i32.load return)
+        (func $global.type.address     (result i32) i32.const 796 return) (func $global.type (result i32) call $global.type.address i32.load return)
         ;; heap
         (func $heap.begin (result i32) i32.const 1024)
         (func $heap.end   (result i32) i32.const 655348) ;; 10×65K - 12
@@ -118,7 +119,7 @@
                 $Template.print          ;; Template
                 $Bind.print              ;; Bind
                 $Print.print             ;; Print
-                $virtual.print.unknown   ;; Type
+                $Type.print              ;; Type
                 $virtual.print.unknown   ;; Add
                 $virtual.print.unknown   ;; Sub
                 $virtual.print.unknown   ;; Mul
@@ -150,6 +151,51 @@
             )
             (func $virtual.print.unknown (param $something i32)
                 call $write.unknown
+                return
+            )
+        ;; }
+
+        ;; { type
+            (func $virtual.type.offset (result i32) i32.const 46)
+            (elem (i32.const 46)
+                $virtual.type.unknown ;; Nothing
+                $virtual.type.unknown ;; Terminal
+                $virtual.type.unknown ;; External
+                $virtual.type.unknown ;; Internal
+                $virtual.type.unknown ;; Template
+                $virtual.type.unknown ;; Bind
+                $virtual.type.unknown ;; Print
+                $virtual.type.unknown ;; Type
+                $virtual.type.unknown ;; Add
+                $virtual.type.unknown ;; Sub
+                $virtual.type.unknown ;; Mul
+                $virtual.type.unknown ;; Div
+                $virtual.type.unknown ;; Equal
+                $virtual.type.unknown ;; NotEqual
+                $virtual.type.unknown ;; Greater
+                $virtual.type.unknown ;; GreaterEqual
+                $virtual.type.unknown ;; Less
+                $virtual.type.unknown ;; LessEqual
+                $virtual.type.unknown ;; If
+                $virtual.type.unknown ;; Internal.instance
+                $virtual.type.unknown ;; Template.instance
+                $virtual.type.unknown ;; Int32.instance
+                $virtual.type.unknown ;; ASCII.instance
+            )
+            (type $virtual.type (func (param $something i32) (result i32)))
+            (func $virtual.type (param $something i32) (result i32)
+                local.get $something
+
+                local.get $something
+                call $something.type
+                call $virtual.type.offset
+                i32.add
+                call_indirect (type $virtual.type)
+
+                return
+            )
+            (func $virtual.type.unknown (param $something i32) (result i32)
+                call $global.nothing
                 return
             )
         ;; }
@@ -1108,7 +1154,7 @@
             local.get $result
             return
         )
-        (func $Bind.print (param $nothing i32)
+        (func $Bind.print (param $bind i32)
             call $write.bind
             return
         )
@@ -1133,7 +1179,7 @@
             local.get $print
             return
         )
-        (func $Print.step (param $something i32) (param $buffer i32) (result i32)
+        (func $Print.step (param $print i32) (param $buffer i32) (result i32)
             (local $next i32)
             (local $next_buffer i32)
 
@@ -1169,8 +1215,72 @@
             local.get $next_buffer
             return
         )
-        (func $Print.print (param $nothing i32)
+        (func $Print.print (param $print i32)
             call $write.print
+            return
+        )
+    ;; }
+
+    ;; { Type
+        (func $sizeof.Type (result i32)
+            i32.const 4
+            return
+        )
+        (func $Type.constructor (result i32)
+            (local $type i32)
+            ;; allocate
+            call $sizeof.Type
+            call $mem.allocate
+            local.set $type
+            ;; type.type = type.Type
+            local.get $type
+            call $type.Type
+            call $something.type.set
+            ;; return
+            local.get $type
+            return
+        )
+        (func $Type.step (param $something i32) (param $buffer i32) (result i32)
+            (local $next i32)
+            (local $next_buffer i32)
+
+            ;; alloc next buffer
+            i32.const 3
+            call $Array.constructor
+            local.set $next_buffer
+
+            ;; save next
+            local.get $buffer
+            i32.const 1
+            call $Array.get
+            local.set $next
+
+            ;; fill next buffer
+            local.get $next_buffer
+            i32.const 0
+            local.get $next
+            call $Array.set
+
+            local.get $next_buffer
+            i32.const 1
+            local.get $next
+            call $Array.set
+
+            local.get $next_buffer
+            i32.const 2
+                ;; get type
+                local.get $buffer
+                i32.const 2
+                call $Array.get
+                call $virtual.type
+            call $Array.set
+
+            ;; return
+            local.get $next_buffer
+            return
+        )
+        (func $Type.print (param $type i32)
+            call $write.type
             return
         )
     ;; }
@@ -1563,6 +1673,10 @@
         call $global.print.address
         call $Print.constructor
         i32.store
+
+        call $global.type.address
+        call $Type.constructor
+        i32.store
     )
     (func $step (param $buffer i32) (result i32)
         (local $first i32)
@@ -1595,6 +1709,7 @@
     (export "template"         (func $global.template))
     (export "bind"             (func $global.bind))
     (export "print"            (func $global.print))
+    (export "type"             (func $global.type))
 
     (export "memory"           (memory $memory))
     (export "heap_available"   (func $heap.available))
