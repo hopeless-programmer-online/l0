@@ -73,7 +73,7 @@
                 $virtual.step.error     ;; Template
                 $Bind.step              ;; Bind
                 $Print.step             ;; Print
-                $virtual.step.error     ;; Type
+                $Type.step              ;; Type
                 $virtual.step.error     ;; Add
                 $virtual.step.error     ;; Sub
                 $virtual.step.error     ;; Mul
@@ -158,29 +158,29 @@
         ;; { type
             (func $virtual.type.offset (result i32) i32.const 46)
             (elem (i32.const 46)
-                $virtual.type.unknown ;; Nothing
-                $virtual.type.unknown ;; Terminal
-                $virtual.type.unknown ;; External
-                $virtual.type.unknown ;; Internal
-                $virtual.type.unknown ;; Template
-                $virtual.type.unknown ;; Bind
-                $virtual.type.unknown ;; Print
-                $virtual.type.unknown ;; Type
-                $virtual.type.unknown ;; Add
-                $virtual.type.unknown ;; Sub
-                $virtual.type.unknown ;; Mul
-                $virtual.type.unknown ;; Div
-                $virtual.type.unknown ;; Equal
-                $virtual.type.unknown ;; NotEqual
-                $virtual.type.unknown ;; Greater
-                $virtual.type.unknown ;; GreaterEqual
-                $virtual.type.unknown ;; Less
-                $virtual.type.unknown ;; LessEqual
-                $virtual.type.unknown ;; If
-                $virtual.type.unknown ;; Internal.instance
-                $virtual.type.unknown ;; Template.instance
-                $virtual.type.unknown ;; Int32.instance
-                $virtual.type.unknown ;; ASCII.instance
+                $Nothing.type           ;; Nothing
+                $virtual.type.external  ;; Terminal
+                $virtual.type.external  ;; External
+                $virtual.type.external  ;; Internal
+                $virtual.type.external  ;; Template
+                $virtual.type.external  ;; Bind
+                $virtual.type.external  ;; Print
+                $virtual.type.external  ;; Type
+                $virtual.type.external  ;; Add
+                $virtual.type.external  ;; Sub
+                $virtual.type.external  ;; Mul
+                $virtual.type.external  ;; Div
+                $virtual.type.external  ;; Equal
+                $virtual.type.external  ;; NotEqual
+                $virtual.type.external  ;; Greater
+                $virtual.type.external  ;; GreaterEqual
+                $virtual.type.external  ;; Less
+                $virtual.type.external  ;; LessEqual
+                $virtual.type.external  ;; If
+                $Internal.instance.type ;; Internal.instance
+                $Template.instance.type ;; Template.instance
+                $virtual.type.unknown   ;; Int32.instance
+                $virtual.type.unknown   ;; ASCII.instance
             )
             (type $virtual.type (func (param $something i32) (result i32)))
             (func $virtual.type (param $something i32) (result i32)
@@ -196,6 +196,10 @@
             )
             (func $virtual.type.unknown (param $something i32) (result i32)
                 call $global.nothing
+                return
+            )
+            (func $virtual.type.external (param $something i32) (result i32)
+                call $global.external
                 return
             )
         ;; }
@@ -773,6 +777,10 @@
         )
         (func $Nothing.print (param $nothing i32)
             call $write.nothing
+            return
+        )
+        (func $Nothing.type (param $nothing i32) (result i32)
+            call $global.nothing
             return
         )
     ;; }
@@ -1559,8 +1567,12 @@
             local.get $next_buffer
             return
         )
-        (func $Internal.instance.print (param $nothing i32)
+        (func $Internal.instance.print (param $internal i32)
             call $write.internal
+            return
+        )
+        (func $Internal.instance.type (param $internal i32) (result i32)
+            call $global.internal
             return
         )
     ;; }
@@ -1576,10 +1588,6 @@
             i32.const 4
             i32.mul
             i32.add
-            return
-        )
-        (func $Template.instance.type (result i32)
-            call $type.Template.instance
             return
         )
         (func $Template.instance.length.offset (result i32)
@@ -1637,8 +1645,12 @@
             i32.ne
             return
         )
-        (func $Template.instance.print (param $nothing i32)
+        (func $Template.instance.print (param $template i32)
             call $write.template
+            return
+        )
+        (func $Template.instance.type (param $template i32) (result i32)
+            call $global.template
             return
         )
     ;; }
