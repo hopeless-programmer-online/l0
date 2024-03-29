@@ -57,6 +57,8 @@ export class Context {
     private readonly internal_targets  : (internal : Address) => Address
     private readonly internal_storage  : (internal : Address) => Address
     private readonly Int32             : (value : number) => Address
+    private readonly ASCII             : (length : number) => Address
+    private readonly ASCII_data        : (ascii : Address) => Address
     private readonly _step             : (buffer : Address) => Address
     // private readonly _print            : (something : Address) => void
     // private readonly add               : Address
@@ -95,6 +97,8 @@ export class Context {
         const internal_targets = exports[`Internal.targets`] as (internal : Address) => Address
         const internal_storage = exports[`Internal.storage`] as (internal : Address) => Address
         const Int32            = exports.Int32 as (value : number) => Address
+        const ASCII            = exports.ASCII as (length : number) => Address
+        const ASCII_data       = exports[`ASCII.data`] as (ascii : Address) => Address
         const step             = exports.step as (buffer : Address) => Address
         // const _print           = exports._print as (something : Address) => void
         // const add              = (exports.add as () => Address)()
@@ -133,6 +137,8 @@ export class Context {
         this.internal_targets = internal_targets
         this.internal_storage = internal_storage
         this.Int32            = Int32
+        this.ASCII            = ASCII
+        this.ASCII_data       = ASCII_data
         this._step            = step
         // this._print           = _print
         // this.add              = add
@@ -249,18 +255,18 @@ export class Context {
         //     case `remove`       : return this.remove
         }
 
-        // if (name.words.length === 1 && name.words[0].symbol === syntax.QuotedWord.symbol) {
-        //     const { unquoted : text } = name.words[0]
-        //     const ascii = this.ascii(text.length)
-        //     const memory = Buffer.from(this.memory.buffer)
-        //     const begin = this.ascii_data(ascii)
+        if (name.words.length === 1 && name.words[0].symbol === syntax.QuotedWord.symbol) {
+            const { unquoted : text } = name.words[0]
+            const ascii = this.ASCII(text.length)
+            const memory = Buffer.from(this.memory.buffer)
+            const begin = this.ASCII_data(ascii)
 
-        //     Array.from(text).forEach((x, i) => {
-        //         memory.writeUInt8(x.charCodeAt(0), begin + i)
-        //     })
+            Array.from(text).forEach((x, i) => {
+                memory.writeUInt8(x.charCodeAt(0), begin + i)
+            })
 
-        //     return ascii
-        // }
+            return ascii
+        }
 
         const int32 = text.match(/^(?:-|\+)?\s*(?:\d\s*)+$/)
 

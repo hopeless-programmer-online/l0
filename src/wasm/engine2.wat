@@ -145,7 +145,7 @@
                 $Internal.instance.print ;; Internal.instance
                 $Template.instance.print ;; Template.instance
                 $Int32.instance.print    ;; Int32.instance
-                $virtual.print.unknown   ;; ASCII.instance
+                $ASCII.instance.print    ;; ASCII.instance
             )
             (type $virtual.print (func (param $something i32)))
             (func $virtual.print (param $something i32)
@@ -1766,6 +1766,68 @@
         )
     ;; }
 
+    ;; { ASCII.instance
+        (func $sizeof.ASCII.instance.header (result i32)
+            i32.const 8
+            return
+        )
+        (func $ASCII.instance.length.offset (result i32)
+            i32.const 4
+            return
+        )
+        (func $ASCII.instance.length (param $ascii i32) (result i32)
+            local.get $ascii
+            call $ASCII.instance.length.offset
+            i32.add
+            i32.load
+            return
+        )
+        (func $ASCII.instance.length.set (param $ascii i32) (param $length i32)
+            local.get $ascii
+            call $ASCII.instance.length.offset
+            i32.add
+            local.get $length
+            i32.store
+        )
+        (func $ASCII.instance.data.offset (result i32)
+            call $sizeof.ASCII.instance.header
+            return
+        )
+        (func $ASCII.instance.data (param $ascii i32) (result i32)
+            local.get $ascii
+            call $ASCII.instance.data.offset
+            i32.add
+            return
+        )
+        (func $ASCII.instance.constructor (param $length i32) (result i32)
+            (local $ascii i32)
+            ;; mem.allocate( sizeof.ASCII.instance.header + length )
+            call $sizeof.ASCII.instance.header
+            local.get $length
+            i32.add
+            call $mem.allocate
+            local.set $ascii
+            ;; ascii.type = type.ASCII.instance
+            local.get $ascii
+            call $type.ASCII.instance
+            call $something.type.set
+            ;; ascii.value = value
+            local.get $ascii
+            local.get $length
+            call $ASCII.instance.length.set
+            ;; return ascii
+            local.get $ascii
+            return
+        )
+        (func $ASCII.instance.print (param $ascii i32)
+            local.get $ascii
+            call $ASCII.instance.data
+            local.get $ascii
+            call $ASCII.instance.length
+            call $print.ascii
+        )
+    ;; }
+
     (func $init
         call $heap.init
 
@@ -1855,6 +1917,8 @@
     (export "Array"            (func $Array.constructor))
     (export "Array.set"        (func $Array.set))
     (export "Int32"            (func $Int32.instance.constructor))
+    (export "ASCII"            (func $ASCII.instance.constructor))
+    (export "ASCII.data"       (func $ASCII.instance.data))
     (export "step"             (func $step))
 
     (start $init)
