@@ -144,7 +144,7 @@
                 $virtual.print.unknown   ;; If
                 $Internal.instance.print ;; Internal.instance
                 $Template.instance.print ;; Template.instance
-                $virtual.print.unknown   ;; Int32.instance
+                $Int32.instance.print    ;; Int32.instance
                 $virtual.print.unknown   ;; ASCII.instance
             )
             (type $virtual.print (func (param $something i32)))
@@ -1718,6 +1718,54 @@
         )
     ;; }
 
+    ;; { Int32.instance
+        (func $sizeof.Int32.instance (result i32)
+            i32.const 8
+            return
+        )
+        (func $Int32.instance.value.offset (result i32)
+            i32.const 4
+            return
+        )
+        (func $Int32.instance.value (param $int32 i32) (result i32)
+            local.get $int32
+            call $Int32.instance.value.offset
+            i32.add
+            i32.load
+            return
+        )
+        (func $Int32.instance.value.set (param $int32 i32) (param $value i32)
+            local.get $int32
+            call $Int32.instance.value.offset
+            i32.add
+            local.get $value
+            i32.store
+        )
+        (func $Int32.instance.constructor (param $value i32) (result i32)
+            (local $int32 i32)
+            ;; allocate
+            call $sizeof.Int32.instance
+            call $mem.allocate
+            local.set $int32
+            ;; int32.type = type.Int32.instance
+            local.get $int32
+            call $type.Int32.instance
+            call $something.type.set
+            ;; int32.value = value
+            local.get $int32
+            local.get $value
+            call $Int32.instance.value.set
+            ;; return int32
+            local.get $int32
+            return
+        )
+        (func $Int32.instance.print (param $int32 i32)
+            local.get $int32
+            call $Int32.instance.value
+            call $print.int32
+        )
+    ;; }
+
     (func $init
         call $heap.init
 
@@ -1806,6 +1854,7 @@
     (export "Template.first"   (func $Template.instance.first))
     (export "Array"            (func $Array.constructor))
     (export "Array.set"        (func $Array.set))
+    (export "Int32"            (func $Int32.instance.constructor))
     (export "step"             (func $step))
 
     (start $init)

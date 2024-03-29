@@ -56,6 +56,7 @@ export class Context {
     private readonly Internal          : (targets : number, storage : number) => Address
     private readonly internal_targets  : (internal : Address) => Address
     private readonly internal_storage  : (internal : Address) => Address
+    private readonly Int32             : (value : number) => Address
     private readonly _step             : (buffer : Address) => Address
     // private readonly _print            : (something : Address) => void
     // private readonly add               : Address
@@ -93,6 +94,7 @@ export class Context {
         const Internal         = exports.Internal as (targets : number, storage : number) => Address
         const internal_targets = exports[`Internal.targets`] as (internal : Address) => Address
         const internal_storage = exports[`Internal.storage`] as (internal : Address) => Address
+        const Int32            = exports.Int32 as (value : number) => Address
         const step             = exports.step as (buffer : Address) => Address
         // const _print           = exports._print as (something : Address) => void
         // const add              = (exports.add as () => Address)()
@@ -130,6 +132,7 @@ export class Context {
         this.Internal         = Internal
         this.internal_targets = internal_targets
         this.internal_storage = internal_storage
+        this.Int32            = Int32
         this._step            = step
         // this._print           = _print
         // this.add              = add
@@ -259,9 +262,9 @@ export class Context {
         //     return ascii
         // }
 
-        // const int32 = text.match(/^(?:-|\+)?\s*(?:\d\s*)+$/)
+        const int32 = text.match(/^(?:-|\+)?\s*(?:\d\s*)+$/)
 
-        // if (int32) return this.int32(Number(int32[0].replace(/\s/g, ``)))
+        if (int32) return this.Int32(Number(int32[0].replace(/\s/g, ``)))
 
         throw new Error(`Cannot fill name ${text}.`)
     }
