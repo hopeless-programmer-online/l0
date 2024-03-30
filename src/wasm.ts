@@ -62,9 +62,9 @@ export class Context {
     private readonly _step             : (buffer : Address) => Address
     // private readonly _print            : (something : Address) => void
     private readonly add               : Address
-    // private readonly sub               : Address
-    // private readonly mul               : Address
-    // private readonly div               : Address
+    private readonly sub               : Address
+    private readonly mul               : Address
+    private readonly div               : Address
     // private readonly length            : Address
     // private readonly equal             : Address
     // private readonly not_equal         : Address
@@ -99,9 +99,9 @@ export class Context {
         const step             = exports.step as (buffer : Address) => Address
         // const _print           = exports._print as (something : Address) => void
         const add              = (exports.add as () => Address)()
-        // const sub              = (exports.sub as () => Address)()
-        // const mul              = (exports.mul as () => Address)()
-        // const div              = (exports.div as () => Address)()
+        const sub              = (exports.sub as () => Address)()
+        const mul              = (exports.mul as () => Address)()
+        const div              = (exports.div as () => Address)()
         // const length           = (exports.length as () => Address)()
         // const equal            = (exports.equal as () => Address)()
         // const not_equal        = (exports.not_equal as () => Address)()
@@ -136,9 +136,9 @@ export class Context {
         this._step            = step
         // this._print           = _print
         this.add              = add
-        // this.sub              = sub
-        // this.mul              = mul
-        // this.div              = div
+        this.sub              = sub
+        this.mul              = mul
+        this.div              = div
         // this.length           = length
         // this.equal            = equal
         // this.not_equal        = not_equal
@@ -225,9 +225,9 @@ export class Context {
 
         //     case `Int32`        : return this.Int32
             case `+`            : return this.add
-            // case `-`            : return this.sub
-            // case `*`            : return this.mul
-            // case `/`            : return this.div
+            case `-`            : return this.sub
+            case `*`            : return this.mul
+            case `/`            : return this.div
             // case `==`           : return this.equal
             // case `!=`           : return this.not_equal
             // case `<`            : return this.less

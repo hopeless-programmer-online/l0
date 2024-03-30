@@ -19,6 +19,9 @@
         (data (i32.const 65) "int32")    (; 65 + 5 = 70 ;) (func $write.int32    (call $print.ascii (i32.const 65) (i32.const 5)))
         (data (i32.const 70) "ascii")    (; 70 + 5 = 75 ;) (func $write.ascii    (call $print.ascii (i32.const 70) (i32.const 5)))
         (data (i32.const 75) "+")        (; 75 + 1 = 76 ;) (func $write.add      (call $print.ascii (i32.const 75) (i32.const 1)))
+        (data (i32.const 76) "-")        (; 76 + 1 = 77 ;) (func $write.sub      (call $print.ascii (i32.const 76) (i32.const 1)))
+        (data (i32.const 77) "*")        (; 77 + 1 = 78 ;) (func $write.mul      (call $print.ascii (i32.const 77) (i32.const 1)))
+        (data (i32.const 78) "/")        (; 78 + 1 = 79 ;) (func $write.div      (call $print.ascii (i32.const 78) (i32.const 1)))
         ;; globals
         (func $global.nothing.address  (result i32) i32.const 768 return) (func $global.nothing (result i32) call $global.nothing.address i32.load return)
         (func $global.terminal.address (result i32) i32.const 772 return) (func $global.terminal (result i32) call $global.terminal.address i32.load return)
@@ -31,6 +34,9 @@
         (func $global.int32.address    (result i32) i32.const 800 return) (func $global.int32 (result i32) call $global.int32.address i32.load return)
         (func $global.ascii.address    (result i32) i32.const 804 return) (func $global.ascii (result i32) call $global.ascii.address i32.load return)
         (func $global.add.address      (result i32) i32.const 808 return) (func $global.add (result i32) call $global.add.address i32.load return)
+        (func $global.sub.address      (result i32) i32.const 812 return) (func $global.sub (result i32) call $global.sub.address i32.load return)
+        (func $global.mul.address      (result i32) i32.const 816 return) (func $global.mul (result i32) call $global.mul.address i32.load return)
+        (func $global.div.address      (result i32) i32.const 820 return) (func $global.div (result i32) call $global.div.address i32.load return)
         ;; heap
         (func $heap.begin (result i32) i32.const 1024)
         (func $heap.end   (result i32) i32.const 655348) ;; 10×65K - 12
@@ -86,9 +92,9 @@
                 $virtual.step.error     ;; Int32
                 $virtual.step.error     ;; ASCII
                 $Add.step               ;; Add
-                $virtual.step.error     ;; Sub
-                $virtual.step.error     ;; Mul
-                $virtual.step.error     ;; Div
+                $Sub.step               ;; Sub
+                $Mul.step               ;; Mul
+                $Div.step               ;; Div
                 $virtual.step.error     ;; Equal
                 $virtual.step.error     ;; NotEqual
                 $virtual.step.error     ;; Greater
@@ -134,9 +140,9 @@
                 $Int32.print             ;; Int32
                 $ASCII.print             ;; ASCII
                 $Add.print               ;; Add
-                $virtual.print.unknown   ;; Sub
-                $virtual.print.unknown   ;; Mul
-                $virtual.print.unknown   ;; Div
+                $Sub.print               ;; Sub
+                $Mul.print               ;; Mul
+                $Div.print               ;; Div
                 $virtual.print.unknown   ;; Equal
                 $virtual.print.unknown   ;; NotEqual
                 $virtual.print.unknown   ;; Greater
@@ -1469,6 +1475,361 @@
         )
     ;; }
 
+    ;; { Sub
+        (func $sizeof.Sub (result i32)
+            i32.const 4
+            return
+        )
+        (func $Sub.constructor (result i32)
+            (local $sub i32)
+            ;; allocate
+            call $sizeof.Sub
+            call $mem.allocate
+            local.set $sub
+            ;; sub.type = type.Sub
+            local.get $sub
+            call $type.Sub
+            call $something.type.set
+            ;; return
+            local.get $sub
+            return
+        )
+        (func $Sub.sub (param $left i32) (param $right i32) (result i32)
+            (local $left_type i32)
+            (local $right_type i32)
+
+            ;; get types
+            local.get $left
+            call $something.type
+            local.set $left_type
+
+            local.get $right
+            call $something.type
+            local.set $right_type
+
+            ;; Int32 + Int32
+            local.get $left_type
+            call $type.Int32.instance
+            i32.eq
+            local.get $right_type
+            call $type.Int32.instance
+            i32.eq
+            i32.mul
+            (if (then
+                local.get $left
+                call $Int32.instance.value
+                local.get $right
+                call $Int32.instance.value
+                i32.sub
+                call $Int32.instance.constructor
+                return
+            ))
+
+            ;; no overloads
+            i32.const 0
+            return
+        )
+        (func $Sub.step (param $sub i32) (param $buffer i32) (result i32)
+            (local $next i32)
+            (local $next_buffer i32)
+            (local $result i32)
+
+            ;; get arguments
+            local.get $buffer
+            i32.const 2
+            call $Array.get
+            local.get $buffer
+            i32.const 3
+            call $Array.get
+            call $Sub.sub
+            local.tee $result
+            (if (then) (else
+                call $write.ERROR
+                i32.const 0
+                return
+            ))
+
+            ;; alloc next buffer
+            i32.const 3
+            call $Array.constructor
+            local.set $next_buffer
+
+            ;; save next
+            local.get $buffer
+            i32.const 1
+            call $Array.get
+            local.set $next
+
+            ;; fill next buffer
+            local.get $next_buffer
+            i32.const 0
+            local.get $next
+            call $Array.set
+
+            local.get $next_buffer
+            i32.const 1
+            local.get $next
+            call $Array.set
+
+            local.get $next_buffer
+            i32.const 2
+            local.get $result
+            call $Array.set
+
+            ;; return
+            local.get $next_buffer
+            return
+        )
+        (func $Sub.print (param $sub i32)
+            call $write.sub
+            return
+        )
+    ;; }
+
+    ;; { Mul
+        (func $sizeof.Mul (result i32)
+            i32.const 4
+            return
+        )
+        (func $Mul.constructor (result i32)
+            (local $mul i32)
+            ;; allocate
+            call $sizeof.Mul
+            call $mem.allocate
+            local.set $mul
+            ;; mul.type = type.Mul
+            local.get $mul
+            call $type.Mul
+            call $something.type.set
+            ;; return
+            local.get $mul
+            return
+        )
+        (func $Mul.mul (param $left i32) (param $right i32) (result i32)
+            (local $left_type i32)
+            (local $right_type i32)
+
+            ;; get types
+            local.get $left
+            call $something.type
+            local.set $left_type
+
+            local.get $right
+            call $something.type
+            local.set $right_type
+
+            ;; Int32 + Int32
+            local.get $left_type
+            call $type.Int32.instance
+            i32.eq
+            local.get $right_type
+            call $type.Int32.instance
+            i32.eq
+            i32.mul
+            (if (then
+                local.get $left
+                call $Int32.instance.value
+                local.get $right
+                call $Int32.instance.value
+                i32.mul
+                call $Int32.instance.constructor
+                return
+            ))
+
+            ;; no overloads
+            i32.const 0
+            return
+        )
+        (func $Mul.step (param $mul i32) (param $buffer i32) (result i32)
+            (local $next i32)
+            (local $next_buffer i32)
+            (local $result i32)
+
+            ;; get arguments
+            local.get $buffer
+            i32.const 2
+            call $Array.get
+            local.get $buffer
+            i32.const 3
+            call $Array.get
+            call $Mul.mul
+            local.tee $result
+            (if (then) (else
+                call $write.ERROR
+                i32.const 0
+                return
+            ))
+
+            ;; alloc next buffer
+            i32.const 3
+            call $Array.constructor
+            local.set $next_buffer
+
+            ;; save next
+            local.get $buffer
+            i32.const 1
+            call $Array.get
+            local.set $next
+
+            ;; fill next buffer
+            local.get $next_buffer
+            i32.const 0
+            local.get $next
+            call $Array.set
+
+            local.get $next_buffer
+            i32.const 1
+            local.get $next
+            call $Array.set
+
+            local.get $next_buffer
+            i32.const 2
+            local.get $result
+            call $Array.set
+
+            ;; return
+            local.get $next_buffer
+            return
+        )
+        (func $Mul.print (param $mul i32)
+            call $write.mul
+            return
+        )
+    ;; }
+
+    ;; { Div
+        (func $sizeof.Div (result i32)
+            i32.const 4
+            return
+        )
+        (func $Div.constructor (result i32)
+            (local $div i32)
+            ;; allocate
+            call $sizeof.Div
+            call $mem.allocate
+            local.set $div
+            ;; div.type = type.Div
+            local.get $div
+            call $type.Div
+            call $something.type.set
+            ;; return
+            local.get $div
+            return
+        )
+        (func $Div.step (param $div i32) (param $buffer i32) (result i32)
+            (local $next i32)
+            (local $next_buffer i32)
+            (local $result1 i32)
+            (local $result2 i32)
+            (local $left i32)
+            (local $right i32)
+            (local $left_type i32)
+            (local $right_type i32)
+
+            ;; get arguments
+            local.get $buffer
+            i32.const 2
+            call $Array.get
+            local.set $left
+
+            local.get $buffer
+            i32.const 3
+            call $Array.get
+            local.set $right
+
+            ;; get types
+            local.get $left
+            call $something.type
+            local.set $left_type
+
+            local.get $right
+            call $something.type
+            local.set $right_type
+
+            i32.const 0
+            local.set $result1
+            i32.const 0
+            local.set $result2
+
+            (block $overload
+                ;; Int32 + Int32
+                local.get $left_type
+                call $type.Int32.instance
+                i32.eq
+                local.get $right_type
+                call $type.Int32.instance
+                i32.eq
+                i32.mul
+                (if (then
+                    local.get $left
+                    call $Int32.instance.value
+                    local.get $right
+                    call $Int32.instance.value
+                    i32.div_s
+                    call $Int32.instance.constructor
+                    local.set $result1
+
+                    local.get $left
+                    call $Int32.instance.value
+                    local.get $right
+                    call $Int32.instance.value
+                    i32.rem_s
+                    call $Int32.instance.constructor
+                    local.set $result2
+
+                    br $overload
+                ))
+            )
+
+            local.get $result1
+            (if (then) (else
+                call $write.ERROR
+                i32.const 0
+                return
+            ))
+
+            ;; alloc next buffer
+            i32.const 4
+            call $Array.constructor
+            local.set $next_buffer
+
+            ;; save next
+            local.get $buffer
+            i32.const 1
+            call $Array.get
+            local.set $next
+
+            ;; fill next buffer
+            local.get $next_buffer
+            i32.const 0
+            local.get $next
+            call $Array.set
+
+            local.get $next_buffer
+            i32.const 1
+            local.get $next
+            call $Array.set
+
+            local.get $next_buffer
+            i32.const 2
+            local.get $result1
+            call $Array.set
+
+            local.get $next_buffer
+            i32.const 3
+            local.get $result2
+            call $Array.set
+
+            ;; return
+            local.get $next_buffer
+            return
+        )
+        (func $Div.print (param $div i32)
+            call $write.div
+            return
+        )
+    ;; }
+
     ;; { Internal.instance
         (func $sizeof.Internal.instance.header (result i32)
             i32.const 12
@@ -1987,6 +2348,18 @@
         call $global.add.address
         call $Add.constructor
         i32.store
+
+        call $global.sub.address
+        call $Sub.constructor
+        i32.store
+
+        call $global.mul.address
+        call $Mul.constructor
+        i32.store
+
+        call $global.div.address
+        call $Div.constructor
+        i32.store
     )
     (func $step (param $buffer i32) (result i32)
         (local $first i32)
@@ -2023,6 +2396,9 @@
     (export "int32"            (func $global.int32))
     (export "ascii"            (func $global.ascii))
     (export "add"              (func $global.add))
+    (export "sub"              (func $global.sub))
+    (export "mul"              (func $global.mul))
+    (export "div"              (func $global.div))
 
     (export "memory"           (memory $memory))
     (export "heap_available"   (func $heap.available))
