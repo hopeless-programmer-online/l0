@@ -61,7 +61,7 @@ export class Context {
     private readonly ASCII_data        : (ascii : Address) => Address
     private readonly _step             : (buffer : Address) => Address
     // private readonly _print            : (something : Address) => void
-    // private readonly add               : Address
+    private readonly add               : Address
     // private readonly sub               : Address
     // private readonly mul               : Address
     // private readonly div               : Address
@@ -90,9 +90,6 @@ export class Context {
         const template_first   = exports[`Template.first`] as (template : Address) => Address
         const Array            = exports.Array as (length : number) => Address
         const array_set        = exports[`Array.set`] as (array : Address, i : number, v : Address) => void
-        // const Int32            = exports.Int32 as (value : number) => Address
-        // const ASCII            = exports.ASCII as (length : number) => Address
-        // const ASCII_data       = exports.ASCII_data as (ascii : Address) => Address
         const Internal         = exports.Internal as (targets : number, storage : number) => Address
         const internal_targets = exports[`Internal.targets`] as (internal : Address) => Address
         const internal_storage = exports[`Internal.storage`] as (internal : Address) => Address
@@ -101,7 +98,7 @@ export class Context {
         const ASCII_data       = exports[`ASCII.data`] as (ascii : Address) => Address
         const step             = exports.step as (buffer : Address) => Address
         // const _print           = exports._print as (something : Address) => void
-        // const add              = (exports.add as () => Address)()
+        const add              = (exports.add as () => Address)()
         // const sub              = (exports.sub as () => Address)()
         // const mul              = (exports.mul as () => Address)()
         // const div              = (exports.div as () => Address)()
@@ -130,9 +127,6 @@ export class Context {
         this.template_first   = template_first
         this.array            = Array
         this.array_set        = array_set
-        // this.int32            = Int32
-        // this.ascii            = ASCII
-        // this.ascii_data       = ASCII_data
         this.Internal         = Internal
         this.internal_targets = internal_targets
         this.internal_storage = internal_storage
@@ -141,7 +135,7 @@ export class Context {
         this.ASCII_data       = ASCII_data
         this._step            = step
         // this._print           = _print
-        // this.add              = add
+        this.add              = add
         // this.sub              = sub
         // this.mul              = mul
         // this.div              = div
@@ -230,7 +224,7 @@ export class Context {
             // case `if`           : return this.if
 
         //     case `Int32`        : return this.Int32
-            // case `+`            : return this.add
+            case `+`            : return this.add
             // case `-`            : return this.sub
             // case `*`            : return this.mul
             // case `/`            : return this.div

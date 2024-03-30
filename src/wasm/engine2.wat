@@ -18,6 +18,7 @@
         (data (i32.const 61) "type")     (; 61 + 4 = 65 ;) (func $write.type     (call $print.ascii (i32.const 61) (i32.const 4)))
         (data (i32.const 65) "int32")    (; 65 + 5 = 70 ;) (func $write.int32    (call $print.ascii (i32.const 65) (i32.const 5)))
         (data (i32.const 70) "ascii")    (; 70 + 5 = 75 ;) (func $write.ascii    (call $print.ascii (i32.const 70) (i32.const 5)))
+        (data (i32.const 75) "+")        (; 75 + 1 = 76 ;) (func $write.add      (call $print.ascii (i32.const 75) (i32.const 1)))
         ;; globals
         (func $global.nothing.address  (result i32) i32.const 768 return) (func $global.nothing (result i32) call $global.nothing.address i32.load return)
         (func $global.terminal.address (result i32) i32.const 772 return) (func $global.terminal (result i32) call $global.terminal.address i32.load return)
@@ -29,6 +30,7 @@
         (func $global.type.address     (result i32) i32.const 796 return) (func $global.type (result i32) call $global.type.address i32.load return)
         (func $global.int32.address    (result i32) i32.const 800 return) (func $global.int32 (result i32) call $global.int32.address i32.load return)
         (func $global.ascii.address    (result i32) i32.const 804 return) (func $global.ascii (result i32) call $global.ascii.address i32.load return)
+        (func $global.add.address      (result i32) i32.const 808 return) (func $global.add (result i32) call $global.add.address i32.load return)
         ;; heap
         (func $heap.begin (result i32) i32.const 1024)
         (func $heap.end   (result i32) i32.const 655348) ;; 10×65K - 12
@@ -83,7 +85,7 @@
                 $Type.step              ;; Type
                 $virtual.step.error     ;; Int32
                 $virtual.step.error     ;; ASCII
-                $virtual.step.error     ;; Add
+                $Add.step               ;; Add
                 $virtual.step.error     ;; Sub
                 $virtual.step.error     ;; Mul
                 $virtual.step.error     ;; Div
@@ -131,7 +133,7 @@
                 $Type.print              ;; Type
                 $Int32.print             ;; Int32
                 $ASCII.print             ;; ASCII
-                $virtual.print.unknown   ;; Add
+                $Add.print               ;; Add
                 $virtual.print.unknown   ;; Sub
                 $virtual.print.unknown   ;; Mul
                 $virtual.print.unknown   ;; Div
@@ -1356,6 +1358,117 @@
         )
     ;; }
 
+    ;; { Add
+        (func $sizeof.Add (result i32)
+            i32.const 4
+            return
+        )
+        (func $Add.constructor (result i32)
+            (local $add i32)
+            ;; allocate
+            call $sizeof.Add
+            call $mem.allocate
+            local.set $add
+            ;; add.type = type.Add
+            local.get $add
+            call $type.Add
+            call $something.type.set
+            ;; return
+            local.get $add
+            return
+        )
+        (func $Add.add (param $left i32) (param $right i32) (result i32)
+            (local $left_type i32)
+            (local $right_type i32)
+
+            ;; get types
+            local.get $left
+            call $something.type
+            local.set $left_type
+
+            local.get $right
+            call $something.type
+            local.set $right_type
+
+            ;; Int32 + Int32
+            local.get $left_type
+            call $type.Int32.instance
+            i32.eq
+            local.get $right_type
+            call $type.Int32.instance
+            i32.eq
+            i32.mul
+            (if (then
+                local.get $left
+                call $Int32.instance.value
+                local.get $right
+                call $Int32.instance.value
+                i32.add
+                call $Int32.instance.constructor
+                return
+            ))
+
+            ;; no overloads
+            i32.const 0
+            return
+        )
+        (func $Add.step (param $add i32) (param $buffer i32) (result i32)
+            (local $next i32)
+            (local $next_buffer i32)
+            (local $result i32)
+
+            ;; get arguments
+            local.get $buffer
+            i32.const 2
+            call $Array.get
+            local.get $buffer
+            i32.const 3
+            call $Array.get
+            call $Add.add
+            local.tee $result
+            (if (then) (else
+                call $write.ERROR
+                i32.const 0
+                return
+            ))
+
+            ;; alloc next buffer
+            i32.const 3
+            call $Array.constructor
+            local.set $next_buffer
+
+            ;; save next
+            local.get $buffer
+            i32.const 1
+            call $Array.get
+            local.set $next
+
+            ;; fill next buffer
+            local.get $next_buffer
+            i32.const 0
+            local.get $next
+            call $Array.set
+
+            local.get $next_buffer
+            i32.const 1
+            local.get $next
+            call $Array.set
+
+            local.get $next_buffer
+            i32.const 2
+            local.get $result
+            call $Array.set
+
+            ;; return
+            local.get $next_buffer
+            return
+        )
+        (func $Add.print (param $add i32)
+            call $write.add
+            return
+        )
+    ;; }
+
     ;; { Internal.instance
         (func $sizeof.Internal.instance.header (result i32)
             i32.const 12
@@ -1870,6 +1983,10 @@
         call $global.ascii.address
         call $ASCII.constructor
         i32.store
+
+        call $global.add.address
+        call $Add.constructor
+        i32.store
     )
     (func $step (param $buffer i32) (result i32)
         (local $first i32)
@@ -1905,6 +2022,7 @@
     (export "type"             (func $global.type))
     (export "int32"            (func $global.int32))
     (export "ascii"            (func $global.ascii))
+    (export "add"              (func $global.add))
 
     (export "memory"           (memory $memory))
     (export "heap_available"   (func $heap.available))
