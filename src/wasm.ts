@@ -66,12 +66,12 @@ export class Context {
     private readonly mul               : Address
     private readonly div               : Address
     // private readonly length            : Address
-    // private readonly equal             : Address
-    // private readonly not_equal         : Address
-    // private readonly less              : Address
-    // private readonly less_equal        : Address
-    // private readonly greater           : Address
-    // private readonly greater_equal     : Address
+    private readonly equal             : Address
+    private readonly not_equal         : Address
+    private readonly less              : Address
+    private readonly less_equal        : Address
+    private readonly greater           : Address
+    private readonly greater_equal     : Address
     // private readonly if                : Address
 
     public constructor({ exports, memory } : { exports : WebAssembly.Exports, memory : WebAssembly.Memory }) {
@@ -103,12 +103,12 @@ export class Context {
         const mul              = (exports.mul as () => Address)()
         const div              = (exports.div as () => Address)()
         // const length           = (exports.length as () => Address)()
-        // const equal            = (exports.equal as () => Address)()
-        // const not_equal        = (exports.not_equal as () => Address)()
-        // const less             = (exports.less as () => Address)()
-        // const less_equal       = (exports.less_equal as () => Address)()
-        // const greater          = (exports.greater as () => Address)()
-        // const greater_equal    = (exports.greater_equal as () => Address)()
+        const equal            = (exports.equal as () => Address)()
+        const not_equal        = (exports.not_equal as () => Address)()
+        const less             = (exports.less as () => Address)()
+        const less_equal       = (exports.less_equal as () => Address)()
+        const greater          = (exports.greater as () => Address)()
+        const greater_equal    = (exports.greater_equal as () => Address)()
         // const if_              = (exports.if as () => Address)()
 
         this.memory           = memory
@@ -140,12 +140,12 @@ export class Context {
         this.mul              = mul
         this.div              = div
         // this.length           = length
-        // this.equal            = equal
-        // this.not_equal        = not_equal
-        // this.less             = less
-        // this.less_equal       = less_equal
-        // this.greater          = greater
-        // this.greater_equal    = greater_equal
+        this.equal            = equal
+        this.not_equal        = not_equal
+        this.less             = less
+        this.less_equal       = less_equal
+        this.greater          = greater
+        this.greater_equal    = greater_equal
         // this.if               = if_
         // this.external         = external
     }
@@ -206,36 +206,21 @@ export class Context {
         //     case `var`          : return this.var
         //     case `=`            : return this.equal
 
-        //     case `Internal`     : return this.Internal
         //     case `get_closure`  : return this.getClosure
         //     case `get_template` : return this.getTemplate
-        //     case `Template`     : return this.Template
         //     case `get_targets`  : return this.getTargets
         //     case `get_comment`  : return this.getComment
 
-        //     case `External`     : return this.External
-
-        //     case `Boolean`      : return this.Boolean
-        //     case `true`         : return this.true
-        //     case `false`        : return this.false
-        //     case `not`          : return this.not
-        //     case `and`          : return this.and
-        //     case `or`           : return this.or
-            // case `if`           : return this.if
-
-        //     case `Int32`        : return this.Int32
             case `+`            : return this.add
             case `-`            : return this.sub
             case `*`            : return this.mul
             case `/`            : return this.div
-            // case `==`           : return this.equal
-            // case `!=`           : return this.not_equal
-            // case `<`            : return this.less
-            // case `<=`           : return this.less_equal
-            // case `>`            : return this.greater
-            // case `>=`           : return this.greater_equal
-
-        //     case `UTF8String`   : return this.UTF8String
+            case `==`           : return this.equal
+            case `!=`           : return this.not_equal
+            case `<`            : return this.less
+            case `<=`           : return this.less_equal
+            case `>`            : return this.greater
+            case `>=`           : return this.greater_equal
 
             // case `length`       : return this.length
         //     case `get`          : return this.get
