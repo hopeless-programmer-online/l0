@@ -28,6 +28,7 @@
         (data (i32.const 84) "<=")       (; 84 + 2 = 86 ;) (func $write.less_equal    (call $print.ascii (i32.const 84) (i32.const 2)))
         (data (i32.const 86) ">")        (; 86 + 1 = 87 ;) (func $write.greater       (call $print.ascii (i32.const 86) (i32.const 1)))
         (data (i32.const 87) ">=")       (; 87 + 2 = 89 ;) (func $write.greater_equal (call $print.ascii (i32.const 87) (i32.const 2)))
+        (data (i32.const 89) "if")       (; 89 + 2 = 91 ;) (func $write.if            (call $print.ascii (i32.const 89) (i32.const 2)))
         ;; globals
         (func $global.nothing.address       (result i32) i32.const 768 return) (func $global.nothing       (result i32) call $global.nothing.address i32.load return)
         (func $global.terminal.address      (result i32) i32.const 772 return) (func $global.terminal      (result i32) call $global.terminal.address i32.load return)
@@ -49,6 +50,7 @@
         (func $global.less_equal.address    (result i32) i32.const 836 return) (func $global.less_equal    (result i32) call $global.less_equal.address i32.load return)
         (func $global.greater.address       (result i32) i32.const 840 return) (func $global.greater       (result i32) call $global.greater.address i32.load return)
         (func $global.greater_equal.address (result i32) i32.const 844 return) (func $global.greater_equal (result i32) call $global.greater_equal.address i32.load return)
+        (func $global.if.address            (result i32) i32.const 848 return) (func $global.if            (result i32) call $global.if.address i32.load return)
         ;; heap
         (func $heap.begin (result i32) i32.const 1024)
         (func $heap.end   (result i32) i32.const 655348) ;; 10×65K - 12
@@ -113,7 +115,7 @@
                 $GreaterEqual.step      ;; GreaterEqual
                 $Less.step              ;; Less
                 $LessEqual.step         ;; LessEqual
-                $virtual.step.error     ;; If
+                $If.step                ;; If
                 $Internal.instance.step ;; Internal.instance
                 $virtual.step.error     ;; Template.instance
                 $virtual.step.error     ;; Int32.instance
@@ -161,7 +163,7 @@
                 $GreaterEqual.print          ;; GreaterEqual
                 $Less.print                  ;; Less
                 $LessEqual.print             ;; LessEqual
-                $virtual.print.unknown       ;; If
+                $If.print                    ;; If
                 $Internal.instance.print     ;; Internal.instance
                 $Template.instance.print     ;; Template.instance
                 $Int32.instance.print        ;; Int32.instance
@@ -2508,6 +2510,85 @@
         )
     ;; }
 
+    ;; { If
+        (func $sizeof.If (result i32)
+            i32.const 4
+            return
+        )
+        (func $If.constructor (result i32)
+            (local $if i32)
+            ;; allocate
+            call $sizeof.If
+            call $mem.allocate
+            local.set $if
+            ;; if.type = type.If
+            local.get $if
+            call $type.If
+            call $something.type.set
+            ;; return
+            local.get $if
+            return
+        )
+        (func $If.step (param $if i32) (param $buffer i32) (result i32)
+            (local $next i32)
+            (local $next_buffer i32)
+            (local $condition i32)
+
+            ;; get arguments
+            local.get $buffer
+            i32.const 2
+            call $Array.get
+            local.tee $condition
+            call $Int32.instance.assert
+            (if (then
+                call $write.ERROR
+                i32.const 0
+                return
+            ))
+
+            ;; alloc next buffer
+            i32.const 2
+            call $Array.constructor
+            local.set $next_buffer
+
+            ;; save next
+            local.get $buffer
+            i32.const 1
+            call $Array.get
+            local.set $next
+
+            ;; fill next buffer
+            local.get $condition
+            call $Int32.instance.value
+            (if (then ;; fill [ next, next ]
+                local.get $next_buffer
+                i32.const 0
+                    local.get $buffer
+                    i32.const 3
+                    call $Array.get
+                call $Array.set
+            ) (else ;; fill [ then, next ]
+                local.get $next_buffer
+                i32.const 0
+                local.get $next
+                call $Array.set
+            ))
+
+            local.get $next_buffer
+            i32.const 1
+            local.get $next
+            call $Array.set
+
+            ;; return
+            local.get $next_buffer
+            return
+        )
+        (func $If.print (param $if i32)
+            call $write.if
+            return
+        )
+    ;; }
+
     ;; { Internal.instance
         (func $sizeof.Internal.instance.header (result i32)
             i32.const 12
@@ -2916,6 +2997,13 @@
             call $Int32.instance.value
             call $print.int32
         )
+        (func $Int32.instance.assert (param $int32 i32) (result i32)
+            local.get $int32
+            call $something.type
+            call $type.Int32.instance
+            i32.ne
+            return
+        )
     ;; }
 
     ;; { ASCII.instance
@@ -3062,6 +3150,10 @@
         call $global.greater_equal.address
         call $GreaterEqual.constructor
         i32.store
+
+        call $global.if.address
+        call $If.constructor
+        i32.store
     )
     (func $step (param $buffer i32) (result i32)
         (local $first i32)
@@ -3107,6 +3199,7 @@
     (export "less_equal"       (func $global.less_equal))
     (export "greater"          (func $global.greater))
     (export "greater_equal"    (func $global.greater_equal))
+    (export "if"               (func $global.if))
 
     (export "memory"           (memory $memory))
     (export "heap_available"   (func $heap.available))

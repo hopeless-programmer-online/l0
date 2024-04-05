@@ -72,7 +72,7 @@ export class Context {
     private readonly less_equal        : Address
     private readonly greater           : Address
     private readonly greater_equal     : Address
-    // private readonly if                : Address
+    private readonly if                : Address
 
     public constructor({ exports, memory } : { exports : WebAssembly.Exports, memory : WebAssembly.Memory }) {
         const heap_available   = exports.heap_available as () => number
@@ -109,7 +109,7 @@ export class Context {
         const less_equal       = (exports.less_equal as () => Address)()
         const greater          = (exports.greater as () => Address)()
         const greater_equal    = (exports.greater_equal as () => Address)()
-        // const if_              = (exports.if as () => Address)()
+        const if_              = (exports.if as () => Address)()
 
         this.memory           = memory
         this.heap_available   = heap_available
@@ -146,7 +146,7 @@ export class Context {
         this.less_equal       = less_equal
         this.greater          = greater
         this.greater_equal    = greater_equal
-        // this.if               = if_
+        this.if               = if_
         // this.external         = external
     }
 
@@ -221,6 +221,8 @@ export class Context {
             case `<=`           : return this.less_equal
             case `>`            : return this.greater
             case `>=`           : return this.greater_equal
+
+            case `if`           : return this.if
 
             // case `length`       : return this.length
         //     case `get`          : return this.get
