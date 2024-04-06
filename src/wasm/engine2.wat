@@ -88,6 +88,8 @@
         (func $type.Template.instance (result i32) i32.const 22 return)
         (func $type.Int32.instance    (result i32) i32.const 23 return)
         (func $type.ASCII.instance    (result i32) i32.const 24 return)
+
+        (func $type.Length            (result i32) i32.const 25 return)
     ;; }
 
     (table 100 funcref)
@@ -120,6 +122,7 @@
                 $virtual.step.error     ;; Template.instance
                 $virtual.step.error     ;; Int32.instance
                 $virtual.step.error     ;; ASCII.instance
+                $virtual.step.error     ;; Length
             )
             (type $virtual.step (func (param $something i32) (param $buffer i32) (result i32)))
             (func $virtual.step (param $something i32) (param $buffer i32) (result i32)
@@ -141,8 +144,8 @@
         ;; }
 
         ;; { print
-            (func $virtual.print.offset (result i32) i32.const 25)
-            (elem (i32.const 25)
+            (func $virtual.print.offset (result i32) i32.const 26)
+            (elem (i32.const 26)
                 $Nothing.print               ;; Nothing
                 $Terminal.print              ;; Terminal
                 $External.print              ;; External
@@ -168,6 +171,7 @@
                 $Template.instance.print     ;; Template.instance
                 $Int32.instance.print        ;; Int32.instance
                 $ASCII.instance.print        ;; ASCII.instance
+                $virtual.print.unknown       ;; Length
             )
             (type $virtual.print (func (param $something i32)))
             (func $virtual.print (param $something i32)
@@ -189,8 +193,8 @@
         ;; }
 
         ;; { type
-            (func $virtual.type.offset (result i32) i32.const 50)
-            (elem (i32.const 50)
+            (func $virtual.type.offset (result i32) i32.const 52)
+            (elem (i32.const 52)
                 $Nothing.type           ;; Nothing
                 $virtual.type.external  ;; Terminal
                 $virtual.type.external  ;; External
@@ -214,8 +218,9 @@
                 $virtual.type.external  ;; If
                 $Internal.instance.type ;; Internal.instance
                 $Template.instance.type ;; Template.instance
-                $virtual.type.unknown   ;; Int32.instance
-                $virtual.type.unknown   ;; ASCII.instance
+                $Int32.instance.type    ;; Int32.instance
+                $ASCII.instance.type    ;; ASCII.instance
+                $virtual.type.unknown   ;; Length
             )
             (type $virtual.type (func (param $something i32) (result i32)))
             (func $virtual.type (param $something i32) (result i32)
@@ -2997,6 +3002,9 @@
             call $Int32.instance.value
             call $print.int32
         )
+        (func $Int32.instance.type (param $int32 i32) (result i32)
+            call $global.int32
+        )
         (func $Int32.instance.assert (param $int32 i32) (result i32)
             local.get $int32
             call $something.type
@@ -3065,6 +3073,9 @@
             local.get $ascii
             call $ASCII.instance.length
             call $print.ascii
+        )
+        (func $ASCII.instance.type (param $ascii i32) (result i32)
+            call $global.ascii
         )
     ;; }
 
