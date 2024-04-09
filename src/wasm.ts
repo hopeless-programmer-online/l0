@@ -52,7 +52,6 @@ export class Context {
     private readonly template_first    : (template : Address) => Address
     private readonly array             : (length : number) => Address
     private readonly array_set         : (array : Address, i : number, v : Address) => void
-    // private readonly ascii_data        : (ascii : Address) => Address
     private readonly Internal          : (targets : number, storage : number) => Address
     private readonly internal_targets  : (internal : Address) => Address
     private readonly internal_storage  : (internal : Address) => Address
@@ -60,12 +59,10 @@ export class Context {
     private readonly ASCII             : (length : number) => Address
     private readonly ASCII_data        : (ascii : Address) => Address
     private readonly _step             : (buffer : Address) => Address
-    // private readonly _print            : (something : Address) => void
     private readonly add               : Address
     private readonly sub               : Address
     private readonly mul               : Address
     private readonly div               : Address
-    // private readonly length            : Address
     private readonly equal             : Address
     private readonly not_equal         : Address
     private readonly less              : Address
@@ -73,6 +70,7 @@ export class Context {
     private readonly greater           : Address
     private readonly greater_equal     : Address
     private readonly if                : Address
+    private readonly length            : Address
 
     public constructor({ exports, memory } : { exports : WebAssembly.Exports, memory : WebAssembly.Memory }) {
         const heap_available   = exports.heap_available as () => number
@@ -97,12 +95,10 @@ export class Context {
         const ASCII            = exports.ASCII as (length : number) => Address
         const ASCII_data       = exports[`ASCII.data`] as (ascii : Address) => Address
         const step             = exports.step as (buffer : Address) => Address
-        // const _print           = exports._print as (something : Address) => void
         const add              = (exports.add as () => Address)()
         const sub              = (exports.sub as () => Address)()
         const mul              = (exports.mul as () => Address)()
         const div              = (exports.div as () => Address)()
-        // const length           = (exports.length as () => Address)()
         const equal            = (exports.equal as () => Address)()
         const not_equal        = (exports.not_equal as () => Address)()
         const less             = (exports.less as () => Address)()
@@ -110,6 +106,7 @@ export class Context {
         const greater          = (exports.greater as () => Address)()
         const greater_equal    = (exports.greater_equal as () => Address)()
         const if_              = (exports.if as () => Address)()
+        const length           = (exports.length as () => Address)()
 
         this.memory           = memory
         this.heap_available   = heap_available
@@ -134,12 +131,10 @@ export class Context {
         this.ASCII            = ASCII
         this.ASCII_data       = ASCII_data
         this._step            = step
-        // this._print           = _print
         this.add              = add
         this.sub              = sub
         this.mul              = mul
         this.div              = div
-        // this.length           = length
         this.equal            = equal
         this.not_equal        = not_equal
         this.less             = less
@@ -147,7 +142,7 @@ export class Context {
         this.greater          = greater
         this.greater_equal    = greater_equal
         this.if               = if_
-        // this.external         = external
+        this.length           = length
     }
 
     private create_template(targets : number[]) {
@@ -186,7 +181,6 @@ export class Context {
         if (value.symbol === semantics.Bind.symbol) return this.bind
         if (value.symbol === semantics.Terminal.symbol) return this.terminal
         if (value.symbol !== semantics.Named.symbol) neverThrow(value, new Error) // @todo
-        // if (value.symbol !== semantics.Named.symbol) throw new Error // @todo
 
         const { name } = value
         const text = name.toString()
@@ -224,7 +218,7 @@ export class Context {
 
             case `if`           : return this.if
 
-            // case `length`       : return this.length
+            case `length`       : return this.length
         //     case `get`          : return this.get
         //     case `set`          : return this.set
         //     case `List`         : return this.List

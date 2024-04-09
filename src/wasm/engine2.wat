@@ -29,6 +29,7 @@
         (data (i32.const 86) ">")        (; 86 + 1 = 87 ;) (func $write.greater       (call $print.ascii (i32.const 86) (i32.const 1)))
         (data (i32.const 87) ">=")       (; 87 + 2 = 89 ;) (func $write.greater_equal (call $print.ascii (i32.const 87) (i32.const 2)))
         (data (i32.const 89) "if")       (; 89 + 2 = 91 ;) (func $write.if            (call $print.ascii (i32.const 89) (i32.const 2)))
+        (data (i32.const 91) "length")   (; 91 + 6 = 97 ;) (func $write.length        (call $print.ascii (i32.const 91) (i32.const 6)))
         ;; globals
         (func $global.nothing.address       (result i32) i32.const 768 return) (func $global.nothing       (result i32) call $global.nothing.address i32.load return)
         (func $global.terminal.address      (result i32) i32.const 772 return) (func $global.terminal      (result i32) call $global.terminal.address i32.load return)
@@ -51,6 +52,7 @@
         (func $global.greater.address       (result i32) i32.const 840 return) (func $global.greater       (result i32) call $global.greater.address i32.load return)
         (func $global.greater_equal.address (result i32) i32.const 844 return) (func $global.greater_equal (result i32) call $global.greater_equal.address i32.load return)
         (func $global.if.address            (result i32) i32.const 848 return) (func $global.if            (result i32) call $global.if.address i32.load return)
+        (func $global.length.address        (result i32) i32.const 848 return) (func $global.length        (result i32) call $global.length.address i32.load return)
         ;; heap
         (func $heap.begin (result i32) i32.const 1024)
         (func $heap.end   (result i32) i32.const 655348) ;; 10×65K - 12
@@ -90,6 +92,7 @@
         (func $type.ASCII.instance    (result i32) i32.const 24 return)
 
         (func $type.Length            (result i32) i32.const 25 return)
+        ;; (func $type.List.instance     (result i32) i32.const 25 return)
     ;; }
 
     (table 100 funcref)
@@ -122,7 +125,7 @@
                 $virtual.step.error     ;; Template.instance
                 $virtual.step.error     ;; Int32.instance
                 $virtual.step.error     ;; ASCII.instance
-                $virtual.step.error     ;; Length
+                $Length.step            ;; Length
             )
             (type $virtual.step (func (param $something i32) (param $buffer i32) (result i32)))
             (func $virtual.step (param $something i32) (param $buffer i32) (result i32)
@@ -171,7 +174,7 @@
                 $Template.instance.print     ;; Template.instance
                 $Int32.instance.print        ;; Int32.instance
                 $ASCII.instance.print        ;; ASCII.instance
-                $virtual.print.unknown       ;; Length
+                $Length.print                ;; Length
             )
             (type $virtual.print (func (param $something i32)))
             (func $virtual.print (param $something i32)
@@ -3079,6 +3082,181 @@
         )
     ;; }
 
+    ;; { Length
+        (func $sizeof.Length (result i32)
+            i32.const 4
+            return
+        )
+        (func $Length.constructor (result i32)
+            (local $length i32)
+            ;; allocate
+            call $sizeof.Length
+            call $mem.allocate
+            local.set $length
+            ;; length.type = type.Length
+            local.get $length
+            call $type.Length
+            call $something.type.set
+            ;; return
+            local.get $length
+            return
+        )
+        (func $Length.length (param $target i32) (result i32)
+            (local $type i32)
+
+            ;; get type
+            local.get $target
+            call $something.type
+            local.set $type
+
+            ;; ASCII overload
+            local.get $type
+            call $type.ASCII.instance
+            i32.eq
+            (if (then
+                local.get $target
+                call $ASCII.instance.length
+                call $Int32.instance.constructor
+                return
+            ))
+
+            ;; no overloads
+            i32.const 0
+            return
+        )
+        (func $Length.step (param $length i32) (param $buffer i32) (result i32)
+            (local $next i32)
+            (local $next_buffer i32)
+            (local $result i32)
+
+            ;; get arguments
+            local.get $buffer
+            i32.const 2
+            call $Array.get
+            call $Length.length
+            local.tee $result
+            (if (then) (else
+                call $write.ERROR
+                i32.const 0
+                return
+            ))
+
+            ;; alloc next buffer
+            i32.const 3
+            call $Array.constructor
+            local.set $next_buffer
+
+            ;; save next
+            local.get $buffer
+            i32.const 1
+            call $Array.get
+            local.set $next
+
+            ;; fill next buffer
+            local.get $next_buffer
+            i32.const 0
+            local.get $next
+            call $Array.set
+
+            local.get $next_buffer
+            i32.const 1
+            local.get $next
+            call $Array.set
+
+            local.get $next_buffer
+            i32.const 2
+            local.get $result
+            call $Array.set
+
+            ;; return
+            local.get $next_buffer
+            return
+        )
+        (func $Length.print (param $length i32)
+            call $write.length
+            return
+        )
+    ;; }
+
+    ;; { List.instance
+        ;; (func $sizeof.List.instance.header (result i32)
+        ;;     i32.const 12 ;; type + capacity + length
+        ;;     return
+        ;; )
+        ;; (func $List.instance.capacity.offset (result i32)
+        ;;     i32.const 4
+        ;;     return
+        ;; )
+        ;; (func $List.instance.capacity (param $list i32) (result i32)
+        ;;     local.get $list
+        ;;     call $List.instance.capacity.offset
+        ;;     i32.add
+        ;;     i32.load
+        ;;     return
+        ;; )
+        ;; (func $List.instance.capacity.set (param $list i32) (param $capacity i32)
+        ;;     local.get $list
+        ;;     call $List.instance.capacity.offset
+        ;;     i32.add
+        ;;     local.get $capacity
+        ;;     i32.store
+        ;; )
+        ;; (func $List.instance.length.offset (result i32)
+        ;;     i32.const 8
+        ;;     return
+        ;; )
+        ;; (func $List.instance.length (param $list i32) (result i32)
+        ;;     local.get $list
+        ;;     call $List.instance.length.offset
+        ;;     i32.add
+        ;;     i32.load
+        ;;     return
+        ;; )
+        ;; (func $List.instance.length.set (param $list i32) (param $length i32)
+        ;;     local.get $list
+        ;;     call $List.instance.length.offset
+        ;;     i32.add
+        ;;     local.get $length
+        ;;     i32.store
+        ;; )
+        ;; (func $List.instance.data.offset (result i32)
+        ;;     call $sizeof.List.instance.header
+        ;;     return
+        ;; )
+        ;; (func $List.instance.data (param $list i32) (result i32)
+        ;;     local.get $list
+        ;;     call $List.instance.data.offset
+        ;;     i32.add
+        ;;     return
+        ;; )
+        ;; (func $List.instance.constructor (param $capacity i32) (result i32)
+        ;;     (local $list i32)
+        ;;     ;; mem.allocate( sizeof.List.instance.header + length * 4 )
+        ;;     call $sizeof.List.instance.header
+        ;;     local.get $length
+        ;;     i32.const 4
+        ;;     i32.mul
+        ;;     i32.add
+        ;;     call $mem.allocate
+        ;;     local.set $list
+        ;;     ;; list.type = type.List.instance
+        ;;     local.get $list
+        ;;     call $type.List.instance
+        ;;     call $something.type.set
+        ;;     ;; list.capacity = capacity
+        ;;     local.get $list
+        ;;     local.get $capacity
+        ;;     call $List.instance.capacity.set
+        ;;     ;; list.length = 0
+        ;;     local.get $list
+        ;;     i32.const 0
+        ;;     call $List.instance.length.set
+        ;;     ;; return list
+        ;;     local.get $list
+        ;;     return
+        ;; )
+    ;; }
+
     (func $init
         call $heap.init
 
@@ -3165,6 +3343,10 @@
         call $global.if.address
         call $If.constructor
         i32.store
+
+        call $global.length.address
+        call $Length.constructor
+        i32.store
     )
     (func $step (param $buffer i32) (result i32)
         (local $first i32)
@@ -3211,6 +3393,7 @@
     (export "greater"          (func $global.greater))
     (export "greater_equal"    (func $global.greater_equal))
     (export "if"               (func $global.if))
+    (export "length"           (func $global.length))
 
     (export "memory"           (memory $memory))
     (export "heap_available"   (func $heap.available))
