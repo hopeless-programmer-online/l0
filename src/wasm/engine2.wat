@@ -5,31 +5,32 @@
     (memory $memory 10)
     ;; { memory mapping
         ;; text
-        (data (i32.const 0)  "\n")       (; 0 + 1 = 1 ;)   (func $write.newline       (call $print.ascii (i32.const 0) (i32.const 1)))
-        (data (i32.const 1)  "ERROR")    (; 1 + 5 = 6 ;)   (func $write.ERROR         (call $print.ascii (i32.const 1) (i32.const 5)))
-        (data (i32.const 6)  "unknown")  (; 6 + 7 = 13 ;)  (func $write.unknown       (call $print.ascii (i32.const 6) (i32.const 7)))
-        (data (i32.const 13) "nothing")  (; 13 + 7 = 20 ;) (func $write.nothing       (call $print.ascii (i32.const 13) (i32.const 7)))
-        (data (i32.const 20) "terminal") (; 20 + 8 = 28 ;) (func $write.terminal      (call $print.ascii (i32.const 20) (i32.const 8)))
-        (data (i32.const 28) "external") (; 28 + 8 = 36 ;) (func $write.external      (call $print.ascii (i32.const 28) (i32.const 8)))
-        (data (i32.const 36) "internal") (; 36 + 8 = 44 ;) (func $write.internal      (call $print.ascii (i32.const 36) (i32.const 8)))
-        (data (i32.const 44) "template") (; 44 + 8 = 52 ;) (func $write.template      (call $print.ascii (i32.const 44) (i32.const 8)))
-        (data (i32.const 52) "bind")     (; 52 + 4 = 56 ;) (func $write.bind          (call $print.ascii (i32.const 52) (i32.const 4)))
-        (data (i32.const 56) "print")    (; 56 + 5 = 61 ;) (func $write.print         (call $print.ascii (i32.const 56) (i32.const 5)))
-        (data (i32.const 61) "type")     (; 61 + 4 = 65 ;) (func $write.type          (call $print.ascii (i32.const 61) (i32.const 4)))
-        (data (i32.const 65) "int32")    (; 65 + 5 = 70 ;) (func $write.int32         (call $print.ascii (i32.const 65) (i32.const 5)))
-        (data (i32.const 70) "ascii")    (; 70 + 5 = 75 ;) (func $write.ascii         (call $print.ascii (i32.const 70) (i32.const 5)))
-        (data (i32.const 75) "+")        (; 75 + 1 = 76 ;) (func $write.add           (call $print.ascii (i32.const 75) (i32.const 1)))
-        (data (i32.const 76) "-")        (; 76 + 1 = 77 ;) (func $write.sub           (call $print.ascii (i32.const 76) (i32.const 1)))
-        (data (i32.const 77) "*")        (; 77 + 1 = 78 ;) (func $write.mul           (call $print.ascii (i32.const 77) (i32.const 1)))
-        (data (i32.const 78) "/")        (; 78 + 1 = 79 ;) (func $write.div           (call $print.ascii (i32.const 78) (i32.const 1)))
-        (data (i32.const 79) "==")       (; 79 + 2 = 81 ;) (func $write.equal         (call $print.ascii (i32.const 79) (i32.const 2)))
-        (data (i32.const 81) "!=")       (; 81 + 2 = 83 ;) (func $write.not_equal     (call $print.ascii (i32.const 81) (i32.const 2)))
-        (data (i32.const 83) "<")        (; 83 + 1 = 84 ;) (func $write.less          (call $print.ascii (i32.const 83) (i32.const 1)))
-        (data (i32.const 84) "<=")       (; 84 + 2 = 86 ;) (func $write.less_equal    (call $print.ascii (i32.const 84) (i32.const 2)))
-        (data (i32.const 86) ">")        (; 86 + 1 = 87 ;) (func $write.greater       (call $print.ascii (i32.const 86) (i32.const 1)))
-        (data (i32.const 87) ">=")       (; 87 + 2 = 89 ;) (func $write.greater_equal (call $print.ascii (i32.const 87) (i32.const 2)))
-        (data (i32.const 89) "if")       (; 89 + 2 = 91 ;) (func $write.if            (call $print.ascii (i32.const 89) (i32.const 2)))
-        (data (i32.const 91) "length")   (; 91 + 6 = 97 ;) (func $write.length        (call $print.ascii (i32.const 91) (i32.const 6)))
+        (data (i32.const 0)  "\n")       (; 0 + 1 = 1 ;)    (func $write.newline       (call $print.ascii (i32.const 0) (i32.const 1)))
+        (data (i32.const 1)  "ERROR")    (; 1 + 5 = 6 ;)    (func $write.ERROR         (call $print.ascii (i32.const 1) (i32.const 5)))
+        (data (i32.const 6)  "unknown")  (; 6 + 7 = 13 ;)   (func $write.unknown       (call $print.ascii (i32.const 6) (i32.const 7)))
+        (data (i32.const 13) "nothing")  (; 13 + 7 = 20 ;)  (func $write.nothing       (call $print.ascii (i32.const 13) (i32.const 7)))
+        (data (i32.const 20) "terminal") (; 20 + 8 = 28 ;)  (func $write.terminal      (call $print.ascii (i32.const 20) (i32.const 8)))
+        (data (i32.const 28) "external") (; 28 + 8 = 36 ;)  (func $write.external      (call $print.ascii (i32.const 28) (i32.const 8)))
+        (data (i32.const 36) "internal") (; 36 + 8 = 44 ;)  (func $write.internal      (call $print.ascii (i32.const 36) (i32.const 8)))
+        (data (i32.const 44) "template") (; 44 + 8 = 52 ;)  (func $write.template      (call $print.ascii (i32.const 44) (i32.const 8)))
+        (data (i32.const 52) "bind")     (; 52 + 4 = 56 ;)  (func $write.bind          (call $print.ascii (i32.const 52) (i32.const 4)))
+        (data (i32.const 56) "print")    (; 56 + 5 = 61 ;)  (func $write.print         (call $print.ascii (i32.const 56) (i32.const 5)))
+        (data (i32.const 61) "type")     (; 61 + 4 = 65 ;)  (func $write.type          (call $print.ascii (i32.const 61) (i32.const 4)))
+        (data (i32.const 65) "int32")    (; 65 + 5 = 70 ;)  (func $write.int32         (call $print.ascii (i32.const 65) (i32.const 5)))
+        (data (i32.const 70) "ascii")    (; 70 + 5 = 75 ;)  (func $write.ascii         (call $print.ascii (i32.const 70) (i32.const 5)))
+        (data (i32.const 75) "+")        (; 75 + 1 = 76 ;)  (func $write.add           (call $print.ascii (i32.const 75) (i32.const 1)))
+        (data (i32.const 76) "-")        (; 76 + 1 = 77 ;)  (func $write.sub           (call $print.ascii (i32.const 76) (i32.const 1)))
+        (data (i32.const 77) "*")        (; 77 + 1 = 78 ;)  (func $write.mul           (call $print.ascii (i32.const 77) (i32.const 1)))
+        (data (i32.const 78) "/")        (; 78 + 1 = 79 ;)  (func $write.div           (call $print.ascii (i32.const 78) (i32.const 1)))
+        (data (i32.const 79) "==")       (; 79 + 2 = 81 ;)  (func $write.equal         (call $print.ascii (i32.const 79) (i32.const 2)))
+        (data (i32.const 81) "!=")       (; 81 + 2 = 83 ;)  (func $write.not_equal     (call $print.ascii (i32.const 81) (i32.const 2)))
+        (data (i32.const 83) "<")        (; 83 + 1 = 84 ;)  (func $write.less          (call $print.ascii (i32.const 83) (i32.const 1)))
+        (data (i32.const 84) "<=")       (; 84 + 2 = 86 ;)  (func $write.less_equal    (call $print.ascii (i32.const 84) (i32.const 2)))
+        (data (i32.const 86) ">")        (; 86 + 1 = 87 ;)  (func $write.greater       (call $print.ascii (i32.const 86) (i32.const 1)))
+        (data (i32.const 87) ">=")       (; 87 + 2 = 89 ;)  (func $write.greater_equal (call $print.ascii (i32.const 87) (i32.const 2)))
+        (data (i32.const 89) "if")       (; 89 + 2 = 91 ;)  (func $write.if            (call $print.ascii (i32.const 89) (i32.const 2)))
+        (data (i32.const 91) "length")   (; 91 + 6 = 97 ;)  (func $write.length        (call $print.ascii (i32.const 91) (i32.const 6)))
+        (data (i32.const 97) "List")     (; 97 + 4 = 101 ;) (func $write.List          (call $print.ascii (i32.const 97) (i32.const 4)))
         ;; globals
         (func $global.nothing.address       (result i32) i32.const 768 return) (func $global.nothing       (result i32) call $global.nothing.address i32.load return)
         (func $global.terminal.address      (result i32) i32.const 772 return) (func $global.terminal      (result i32) call $global.terminal.address i32.load return)
@@ -53,6 +54,7 @@
         (func $global.greater_equal.address (result i32) i32.const 844 return) (func $global.greater_equal (result i32) call $global.greater_equal.address i32.load return)
         (func $global.if.address            (result i32) i32.const 848 return) (func $global.if            (result i32) call $global.if.address i32.load return)
         (func $global.length.address        (result i32) i32.const 848 return) (func $global.length        (result i32) call $global.length.address i32.load return)
+        (func $global.List.address          (result i32) i32.const 852 return) (func $global.List          (result i32) call $global.List.address i32.load return)
         ;; heap
         (func $heap.begin (result i32) i32.const 1024)
         (func $heap.end   (result i32) i32.const 655348) ;; 10×65K - 12
@@ -92,6 +94,7 @@
         (func $type.ASCII.instance    (result i32) i32.const 24 return)
 
         (func $type.Length            (result i32) i32.const 25 return)
+        (func $type.List              (result i32) i32.const 26 return)
         ;; (func $type.List.instance     (result i32) i32.const 25 return)
     ;; }
 
@@ -126,6 +129,7 @@
                 $virtual.step.error     ;; Int32.instance
                 $virtual.step.error     ;; ASCII.instance
                 $Length.step            ;; Length
+                $virtual.step.error     ;; List
             )
             (type $virtual.step (func (param $something i32) (param $buffer i32) (result i32)))
             (func $virtual.step (param $something i32) (param $buffer i32) (result i32)
@@ -147,8 +151,8 @@
         ;; }
 
         ;; { print
-            (func $virtual.print.offset (result i32) i32.const 26)
-            (elem (i32.const 26)
+            (func $virtual.print.offset (result i32) i32.const 27)
+            (elem (i32.const 27)
                 $Nothing.print               ;; Nothing
                 $Terminal.print              ;; Terminal
                 $External.print              ;; External
@@ -175,6 +179,7 @@
                 $Int32.instance.print        ;; Int32.instance
                 $ASCII.instance.print        ;; ASCII.instance
                 $Length.print                ;; Length
+                $List.print                  ;; List
             )
             (type $virtual.print (func (param $something i32)))
             (func $virtual.print (param $something i32)
@@ -196,8 +201,8 @@
         ;; }
 
         ;; { type
-            (func $virtual.type.offset (result i32) i32.const 52)
-            (elem (i32.const 52)
+            (func $virtual.type.offset (result i32) i32.const 54)
+            (elem (i32.const 54)
                 $Nothing.type           ;; Nothing
                 $virtual.type.external  ;; Terminal
                 $virtual.type.external  ;; External
@@ -224,6 +229,7 @@
                 $Int32.instance.type    ;; Int32.instance
                 $ASCII.instance.type    ;; ASCII.instance
                 $virtual.type.unknown   ;; Length
+                $virtual.type.external  ;; List
             )
             (type $virtual.type (func (param $something i32) (result i32)))
             (func $virtual.type (param $something i32) (result i32)
@@ -3178,6 +3184,79 @@
         )
     ;; }
 
+    ;; { List
+        (func $sizeof.List (result i32)
+            i32.const 4
+            return
+        )
+        (func $List.constructor (result i32)
+            (local $list i32)
+            ;; allocate
+            call $sizeof.List
+            call $mem.allocate
+            local.set $list
+            ;; list.type = type.List
+            local.get $list
+            call $type.List
+            call $something.type.set
+            ;; return
+            local.get $list
+            return
+        )
+        ;; (func $List.step (param $list i32) (param $buffer i32) (result i32)
+        ;;     (local $next i32)
+        ;;     (local $next_buffer i32)
+        ;;     (local $result i32)
+
+        ;;     ;; get arguments
+        ;;     local.get $buffer
+        ;;     i32.const 2
+        ;;     call $Array.get
+        ;;     call $List.list
+        ;;     local.tee $result
+        ;;     (if (then) (else
+        ;;         call $write.ERROR
+        ;;         i32.const 0
+        ;;         return
+        ;;     ))
+
+        ;;     ;; alloc next buffer
+        ;;     i32.const 3
+        ;;     call $Array.constructor
+        ;;     local.set $next_buffer
+
+        ;;     ;; save next
+        ;;     local.get $buffer
+        ;;     i32.const 1
+        ;;     call $Array.get
+        ;;     local.set $next
+
+        ;;     ;; fill next buffer
+        ;;     local.get $next_buffer
+        ;;     i32.const 0
+        ;;     local.get $next
+        ;;     call $Array.set
+
+        ;;     local.get $next_buffer
+        ;;     i32.const 1
+        ;;     local.get $next
+        ;;     call $Array.set
+
+        ;;     local.get $next_buffer
+        ;;     i32.const 2
+        ;;     local.get $result
+        ;;     call $Array.set
+
+        ;;     ;; return
+        ;;     local.get $next_buffer
+        ;;     return
+        ;; )
+        (func $List.print (param $list i32)
+            call $write.List
+            return
+        )
+    ;; }
+
     ;; { List.instance
         ;; (func $sizeof.List.instance.header (result i32)
         ;;     i32.const 12 ;; type + capacity + length
@@ -3347,6 +3426,10 @@
         call $global.length.address
         call $Length.constructor
         i32.store
+
+        call $global.List.address
+        call $List.constructor
+        i32.store
     )
     (func $step (param $buffer i32) (result i32)
         (local $first i32)
@@ -3394,6 +3477,7 @@
     (export "greater_equal"    (func $global.greater_equal))
     (export "if"               (func $global.if))
     (export "length"           (func $global.length))
+    (export "List"             (func $global.List))
 
     (export "memory"           (memory $memory))
     (export "heap_available"   (func $heap.available))
