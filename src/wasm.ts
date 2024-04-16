@@ -50,7 +50,7 @@ export class Context {
     private readonly ascii             : Address
     private readonly Template          : (targets : number) => Address
     private readonly template_first    : (template : Address) => Address
-    private readonly array             : (length : number) => Address
+    private readonly create_Array      : (length : number) => Address
     private readonly array_set         : (array : Address, i : number, v : Address) => void
     private readonly Internal          : (targets : number, storage : number) => Address
     private readonly internal_targets  : (internal : Address) => Address
@@ -71,7 +71,7 @@ export class Context {
     private readonly greater_equal     : Address
     private readonly if                : Address
     private readonly length            : Address
-    private readonly List              : Address
+    private readonly Array              : Address
 
     public constructor({ exports, memory } : { exports : WebAssembly.Exports, memory : WebAssembly.Memory }) {
         const heap_available   = exports.heap_available as () => number
@@ -87,7 +87,7 @@ export class Context {
         const ascii            = (exports.ascii as () => Address)()
         const Template         = exports.Template as (targets : number) => Address
         const template_first   = exports[`Template.first`] as (template : Address) => Address
-        const Array            = exports.Array as (length : number) => Address
+        const create_Array     = exports.create_Array as (length : number) => Address
         const array_set        = exports[`Array.set`] as (array : Address, i : number, v : Address) => void
         const Internal         = exports.Internal as (targets : number, storage : number) => Address
         const internal_targets = exports[`Internal.targets`] as (internal : Address) => Address
@@ -108,7 +108,7 @@ export class Context {
         const greater_equal    = (exports.greater_equal as () => Address)()
         const if_              = (exports.if as () => Address)()
         const length           = (exports.length as () => Address)()
-        const List             = (exports.List as () => Address)()
+        const Array            = (exports.Array as () => Address)()
 
         this.memory           = memory
         this.heap_available   = heap_available
@@ -124,7 +124,7 @@ export class Context {
         this.ascii            = ascii
         this.Template         = Template
         this.template_first   = template_first
-        this.array            = Array
+        this.create_Array     = create_Array
         this.array_set        = array_set
         this.Internal         = Internal
         this.internal_targets = internal_targets
@@ -145,7 +145,7 @@ export class Context {
         this.greater_equal    = greater_equal
         this.if               = if_
         this.length           = length
-        this.List             = List
+        this.Array            = Array
     }
 
     private create_template(targets : number[]) {
@@ -223,11 +223,11 @@ export class Context {
 
             case `length`       : return this.length
 
-            case `List`         : return this.List
+            case `Array`        : return this.Array
 
         //     case `get`          : return this.get
         //     case `set`          : return this.set
-        //     case `List`         : return this.List
+        //     case `Array`         : return this.Array
         //     case `push_back`    : return this.pushBack
         //     case `push_front`   : return this.pushFront
         //     case `pop_back`     : return this.popBack
@@ -258,7 +258,7 @@ export class Context {
 
     public fill_buffer(entry : semantics.Entry) {
         const internal = this.create_internal(entry)
-        const array = this.array(1)
+        const array = this.create_Array(1)
 
         this.array_set(array, 0, internal)
 
