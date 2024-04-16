@@ -131,7 +131,7 @@
                 $virtual.step.error     ;; Int32.instance
                 $virtual.step.error     ;; ASCII.instance
                 $Length.step            ;; Length
-                $virtual.step.error     ;; Array
+                $Array.step             ;; Array
                 $virtual.step.error     ;; Array.instance.instance
             )
             (type $virtual.step (func (param $something i32) (param $buffer i32) (result i32)))
@@ -148,6 +148,7 @@
             )
             (func $virtual.step.error (param $something i32) (param $buffer i32) (result i32)
                 call $write.ERROR
+                call $write.newline
                 i32.const 0
                 return
             )
@@ -753,6 +754,13 @@
         )
         (func $Array.instance.type (param $array i32) (result i32)
             call $global.Array
+            return
+        )
+        (func $Array.instance.assert (param $array i32) (result i32)
+            local.get $array
+            call $something.type
+            call $type.Array.instance
+            i32.ne
             return
         )
     ;; }
@@ -3168,6 +3176,56 @@
             local.get $list
             return
         )
+        (func $Array.step (param $array i32) (param $buffer i32) (result i32)
+            (local $next i32)
+            (local $next_buffer i32)
+            (local $length i32)
+
+            ;; get arguments
+            local.get $buffer
+            i32.const 2
+            call $Array.instance.get
+            local.tee $length
+            call $Int32.instance.assert
+            (if (then
+                call $write.ERROR
+                i32.const 0
+                return
+            ))
+
+            ;; alloc next buffer
+            i32.const 3
+            call $Array.instance.constructor
+            local.set $next_buffer
+
+            ;; save next
+            local.get $buffer
+            i32.const 1
+            call $Array.instance.get
+            local.set $next
+
+            ;; fill next buffer
+            local.get $next_buffer
+            i32.const 0
+            local.get $next
+            call $Array.instance.set
+
+            local.get $next_buffer
+            i32.const 1
+            local.get $next
+            call $Array.instance.set
+
+            local.get $next_buffer
+            i32.const 2
+                local.get $length
+                call $Int32.instance.value
+                call $Array.instance.constructor
+            call $Array.instance.set
+
+            ;; return
+            local.get $next_buffer
+            return
+        )
         (func $Array.print (param $list i32)
             call $write.Array
             return
@@ -3271,6 +3329,14 @@
     )
     (func $step (param $buffer i32) (result i32)
         (local $first i32)
+
+        local.get $buffer
+        call $Array.instance.assert
+        (if (then
+            call $write.ERROR
+            call $write.newline
+            i32.const 0 return
+        ))
 
         local.get $buffer
         call $Array.instance.first
