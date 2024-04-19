@@ -71,7 +71,9 @@ export class Context {
     private readonly greater_equal     : Address
     private readonly if                : Address
     private readonly length            : Address
-    private readonly Array              : Address
+    private readonly Array             : Address
+    private readonly get               : Address
+    private readonly set               : Address
 
     public constructor({ exports, memory } : { exports : WebAssembly.Exports, memory : WebAssembly.Memory }) {
         const heap_available   = exports.heap_available as () => number
@@ -109,6 +111,8 @@ export class Context {
         const if_              = (exports.if as () => Address)()
         const length           = (exports.length as () => Address)()
         const Array            = (exports.Array as () => Address)()
+        const get              = (exports.get as () => Address)()
+        const set              = (exports.set as () => Address)()
 
         this.memory           = memory
         this.heap_available   = heap_available
@@ -146,6 +150,8 @@ export class Context {
         this.if               = if_
         this.length           = length
         this.Array            = Array
+        this.get              = get
+        this.set              = set
     }
 
     private create_template(targets : number[]) {
@@ -225,8 +231,8 @@ export class Context {
 
             case `Array`        : return this.Array
 
-        //     case `get`          : return this.get
-        //     case `set`          : return this.set
+            case `get`          : return this.get
+            case `set`          : return this.set
         //     case `Array`         : return this.Array
         //     case `push_back`    : return this.pushBack
         //     case `push_front`   : return this.pushFront
