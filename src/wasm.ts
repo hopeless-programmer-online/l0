@@ -47,7 +47,7 @@ export class Context {
     private readonly print             : Address
     private readonly type              : Address
     private readonly Int32             : Address
-    private readonly ascii             : Address
+    private readonly ASCII             : Address
     private readonly Template          : (targets : number) => Address
     private readonly template_first    : (template : Address) => Address
     private readonly create_Array      : (length : number) => Address
@@ -56,7 +56,7 @@ export class Context {
     private readonly internal_targets  : (internal : Address) => Address
     private readonly internal_storage  : (internal : Address) => Address
     private readonly create_Int32      : (value : number) => Address
-    private readonly ASCII             : (length : number) => Address
+    private readonly create_ASCII      : (length : number) => Address
     private readonly ASCII_data        : (ascii : Address) => Address
     private readonly _step             : (buffer : Address) => Address
     private readonly add               : Address
@@ -86,7 +86,7 @@ export class Context {
         const print            = (exports.print as () => Address)()
         const type             = (exports.type as () => Address)()
         const Int32            = (exports.create_Int32 as () => Address)()
-        const ascii            = (exports.ascii as () => Address)()
+        const ASCII            = (exports.ASCII as () => Address)()
         const Template         = exports.Template as (targets : number) => Address
         const template_first   = exports[`Template.first`] as (template : Address) => Address
         const create_Array     = exports.create_Array as (length : number) => Address
@@ -95,7 +95,7 @@ export class Context {
         const internal_targets = exports[`Internal.targets`] as (internal : Address) => Address
         const internal_storage = exports[`Internal.storage`] as (internal : Address) => Address
         const create_Int32     = exports.create_Int32 as (value : number) => Address
-        const ASCII            = exports.ASCII as (length : number) => Address
+        const create_ASCII     = exports.create_ASCII as (length : number) => Address
         const ASCII_data       = exports[`ASCII.data`] as (ascii : Address) => Address
         const step             = exports.step as (buffer : Address) => Address
         const add              = (exports.add as () => Address)()
@@ -125,7 +125,7 @@ export class Context {
         this.print            = print
         this.type             = type
         this.Int32            = Int32
-        this.ascii            = ascii
+        this.ASCII            = ASCII
         this.Template         = Template
         this.template_first   = template_first
         this.create_Array     = create_Array
@@ -134,7 +134,7 @@ export class Context {
         this.internal_targets = internal_targets
         this.internal_storage = internal_storage
         this.create_Int32     = create_Int32
-        this.ASCII            = ASCII
+        this.create_ASCII     = create_ASCII
         this.ASCII_data       = ASCII_data
         this._step            = step
         this.add              = add
@@ -204,7 +204,7 @@ export class Context {
             case `print`        : return this.print
             case `type`         : return this.type
             case `Int32`        : return this.Int32
-            case `ascii`        : return this.ascii
+            case `ASCII`        : return this.ASCII
 
         //     case `var`          : return this.var
         //     case `=`            : return this.equal
@@ -233,18 +233,11 @@ export class Context {
 
             case `get`          : return this.get
             case `set`          : return this.set
-        //     case `Array`         : return this.Array
-        //     case `push_back`    : return this.pushBack
-        //     case `push_front`   : return this.pushFront
-        //     case `pop_back`     : return this.popBack
-        //     case `pop_front`    : return this.popFront
-        //     case `insert`       : return this.insert
-        //     case `remove`       : return this.remove
         }
 
         if (name.words.length === 1 && name.words[0].symbol === syntax.QuotedWord.symbol) {
             const { unquoted : text } = name.words[0]
-            const ascii = this.ASCII(text.length)
+            const ascii = this.create_ASCII(text.length)
             const memory = Buffer.from(this.memory.buffer)
             const begin = this.ASCII_data(ascii)
 

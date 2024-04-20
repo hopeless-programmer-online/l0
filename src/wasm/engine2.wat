@@ -17,7 +17,7 @@
         (data (i32.const 56)  "print")    (; 56 + 5 = 61 ;)   (func $write.print         (call $print.ascii (i32.const 56) (i32.const 5)))
         (data (i32.const 61)  "type")     (; 61 + 4 = 65 ;)   (func $write.type          (call $print.ascii (i32.const 61) (i32.const 4)))
         (data (i32.const 65)  "Int32")    (; 65 + 5 = 70 ;)   (func $write.Int32         (call $print.ascii (i32.const 65) (i32.const 5)))
-        (data (i32.const 70)  "ascii")    (; 70 + 5 = 75 ;)   (func $write.ascii         (call $print.ascii (i32.const 70) (i32.const 5)))
+        (data (i32.const 70)  "ASCII")    (; 70 + 5 = 75 ;)   (func $write.ASCII         (call $print.ascii (i32.const 70) (i32.const 5)))
         (data (i32.const 75)  "+")        (; 75 + 1 = 76 ;)   (func $write.add           (call $print.ascii (i32.const 75) (i32.const 1)))
         (data (i32.const 76)  "-")        (; 76 + 1 = 77 ;)   (func $write.sub           (call $print.ascii (i32.const 76) (i32.const 1)))
         (data (i32.const 77)  "*")        (; 77 + 1 = 78 ;)   (func $write.mul           (call $print.ascii (i32.const 77) (i32.const 1)))
@@ -45,7 +45,7 @@
         (func $global.print.address         (result i32) i32.const 792 return) (func $global.print         (result i32) call $global.print.address i32.load return)
         (func $global.type.address          (result i32) i32.const 796 return) (func $global.type          (result i32) call $global.type.address i32.load return)
         (func $global.Int32.address         (result i32) i32.const 800 return) (func $global.Int32         (result i32) call $global.Int32.address i32.load return)
-        (func $global.ascii.address         (result i32) i32.const 804 return) (func $global.ascii         (result i32) call $global.ascii.address i32.load return)
+        (func $global.ASCII.address         (result i32) i32.const 804 return) (func $global.ASCII         (result i32) call $global.ASCII.address i32.load return)
         (func $global.add.address           (result i32) i32.const 808 return) (func $global.add           (result i32) call $global.add.address i32.load return)
         (func $global.sub.address           (result i32) i32.const 812 return) (func $global.sub           (result i32) call $global.sub.address i32.load return)
         (func $global.mul.address           (result i32) i32.const 816 return) (func $global.mul           (result i32) call $global.mul.address i32.load return)
@@ -1403,7 +1403,7 @@
             return
         )
         (func $ASCII.print (param $ascii i32)
-            call $write.ascii
+            call $write.ASCII
             return
         )
     ;; }
@@ -3100,7 +3100,7 @@
             call $print.ascii
         )
         (func $ASCII.instance.type (param $ascii i32) (result i32)
-            call $global.ascii
+            call $global.ASCII
         )
     ;; }
 
@@ -3540,7 +3540,7 @@
         call $Int32.constructor
         i32.store
 
-        call $global.ascii.address
+        call $global.ASCII.address
         call $ASCII.constructor
         i32.store
 
@@ -3645,7 +3645,7 @@
     (export "print"            (func $global.print))
     (export "type"             (func $global.type))
     (export "Int32"            (func $global.Int32))
-    (export "ascii"            (func $global.ascii))
+    (export "ASCII"            (func $global.ASCII))
     (export "add"              (func $global.add))
     (export "sub"              (func $global.sub))
     (export "mul"              (func $global.mul))
@@ -3673,7 +3673,7 @@
     (export "create_Array"     (func $Array.instance.constructor))
     (export "Array.set"        (func $Array.instance.set))
     (export "create_Int32"     (func $Int32.instance.constructor))
-    (export "ASCII"            (func $ASCII.instance.constructor))
+    (export "create_ASCII"     (func $ASCII.instance.constructor))
     (export "ASCII.data"       (func $ASCII.instance.data))
     (export "step"             (func $step))
 
