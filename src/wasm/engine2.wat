@@ -16,7 +16,7 @@
         (data (i32.const 52)  "bind")     (; 52 + 4 = 56 ;)   (func $write.bind          (call $print.ascii (i32.const 52) (i32.const 4)))
         (data (i32.const 56)  "print")    (; 56 + 5 = 61 ;)   (func $write.print         (call $print.ascii (i32.const 56) (i32.const 5)))
         (data (i32.const 61)  "type")     (; 61 + 4 = 65 ;)   (func $write.type          (call $print.ascii (i32.const 61) (i32.const 4)))
-        (data (i32.const 65)  "int32")    (; 65 + 5 = 70 ;)   (func $write.int32         (call $print.ascii (i32.const 65) (i32.const 5)))
+        (data (i32.const 65)  "Int32")    (; 65 + 5 = 70 ;)   (func $write.Int32         (call $print.ascii (i32.const 65) (i32.const 5)))
         (data (i32.const 70)  "ascii")    (; 70 + 5 = 75 ;)   (func $write.ascii         (call $print.ascii (i32.const 70) (i32.const 5)))
         (data (i32.const 75)  "+")        (; 75 + 1 = 76 ;)   (func $write.add           (call $print.ascii (i32.const 75) (i32.const 1)))
         (data (i32.const 76)  "-")        (; 76 + 1 = 77 ;)   (func $write.sub           (call $print.ascii (i32.const 76) (i32.const 1)))
@@ -44,7 +44,7 @@
         (func $global.bind.address          (result i32) i32.const 788 return) (func $global.bind          (result i32) call $global.bind.address i32.load return)
         (func $global.print.address         (result i32) i32.const 792 return) (func $global.print         (result i32) call $global.print.address i32.load return)
         (func $global.type.address          (result i32) i32.const 796 return) (func $global.type          (result i32) call $global.type.address i32.load return)
-        (func $global.int32.address         (result i32) i32.const 800 return) (func $global.int32         (result i32) call $global.int32.address i32.load return)
+        (func $global.Int32.address         (result i32) i32.const 800 return) (func $global.Int32         (result i32) call $global.Int32.address i32.load return)
         (func $global.ascii.address         (result i32) i32.const 804 return) (func $global.ascii         (result i32) call $global.ascii.address i32.load return)
         (func $global.add.address           (result i32) i32.const 808 return) (func $global.add           (result i32) call $global.add.address i32.load return)
         (func $global.sub.address           (result i32) i32.const 812 return) (func $global.sub           (result i32) call $global.sub.address i32.load return)
@@ -1378,7 +1378,7 @@
             return
         )
         (func $Int32.print (param $int32 i32)
-            call $write.int32
+            call $write.Int32
             return
         )
     ;; }
@@ -3028,7 +3028,7 @@
             call $print.int32
         )
         (func $Int32.instance.type (param $int32 i32) (result i32)
-            call $global.int32
+            call $global.Int32
         )
         (func $Int32.instance.assert (param $int32 i32) (result i32)
             local.get $int32
@@ -3536,7 +3536,7 @@
         call $Type.constructor
         i32.store
 
-        call $global.int32.address
+        call $global.Int32.address
         call $Int32.constructor
         i32.store
 
@@ -3644,7 +3644,7 @@
     (export "bind"             (func $global.bind))
     (export "print"            (func $global.print))
     (export "type"             (func $global.type))
-    (export "int32"            (func $global.int32))
+    (export "Int32"            (func $global.Int32))
     (export "ascii"            (func $global.ascii))
     (export "add"              (func $global.add))
     (export "sub"              (func $global.sub))
@@ -3672,7 +3672,7 @@
     (export "Template.first"   (func $Template.instance.first))
     (export "create_Array"     (func $Array.instance.constructor))
     (export "Array.set"        (func $Array.instance.set))
-    (export "Int32"            (func $Int32.instance.constructor))
+    (export "create_Int32"     (func $Int32.instance.constructor))
     (export "ASCII"            (func $ASCII.instance.constructor))
     (export "ASCII.data"       (func $ASCII.instance.data))
     (export "step"             (func $step))
