@@ -76,6 +76,7 @@ export class Context {
     private readonly set               : Address
     private readonly get_storage       : Address
     private readonly get_template      : Address
+    private readonly get_targets       : Address
 
     public constructor({ exports, memory } : { exports : WebAssembly.Exports, memory : WebAssembly.Memory }) {
         const heap_available   = exports.heap_available as () => number
@@ -117,6 +118,7 @@ export class Context {
         const set              = (exports.set as () => Address)()
         const get_storage      = (exports.get_storage as () => Address)()
         const get_template     = (exports.get_template as () => Address)()
+        const get_targets      = (exports.get_targets as () => Address)()
 
         this.memory           = memory
         this.heap_available   = heap_available
@@ -158,6 +160,7 @@ export class Context {
         this.set              = set
         this.get_storage      = get_storage
         this.get_template     = get_template
+        this.get_targets      = get_targets
     }
 
     private create_template(targets : number[]) {
@@ -214,6 +217,7 @@ export class Context {
 
             case `get_storage`  : return this.get_storage
             case `get_template` : return this.get_template
+            case `get_targets`  : return this.get_targets
         //     case `get_targets`  : return this.getTargets
         //     case `get_comment`  : return this.getComment
 

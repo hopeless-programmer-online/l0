@@ -38,6 +38,7 @@
         (data (i32.const 110) "get_storage")  (; 110 + 11 = 121 ;) (func $write.get_storage   (call $print.ascii (i32.const 110) (i32.const 11)))
         (data (i32.const 121) ",")            (; 121 + 1 = 122 ;)  (func $write.comma         (call $print.ascii (i32.const 121) (i32.const 1)))
         (data (i32.const 122) "get_template") (; 122 + 12 = 134 ;) (func $write.get_template  (call $print.ascii (i32.const 122) (i32.const 12)))
+        (data (i32.const 134) "get_targets")  (; 134 + 11 = 145 ;) (func $write.get_targets   (call $print.ascii (i32.const 134) (i32.const 11)))
         ;; globals
         (func $global.nothing.address       (result i32) i32.const 768 return) (func $global.nothing       (result i32) call $global.nothing.address i32.load return)
         (func $global.terminal.address      (result i32) i32.const 772 return) (func $global.terminal      (result i32) call $global.terminal.address i32.load return)
@@ -66,6 +67,7 @@
         (func $global.set.address           (result i32) i32.const 864 return) (func $global.set           (result i32) call $global.set.address i32.load return)
         (func $global.get_storage.address   (result i32) i32.const 868 return) (func $global.get_storage   (result i32) call $global.get_storage.address i32.load return)
         (func $global.get_template.address  (result i32) i32.const 872 return) (func $global.get_template  (result i32) call $global.get_template.address i32.load return)
+        (func $global.get_targets.address   (result i32) i32.const 876 return) (func $global.get_targets   (result i32) call $global.get_targets.address i32.load return)
         ;; heap
         (func $heap.begin (result i32) i32.const 1024)
         (func $heap.end   (result i32) i32.const 655348) ;; 10×65K - 12
@@ -113,6 +115,7 @@
 
         (func $type.get_storage       (result i32) i32.const 30 return)
         (func $type.get_template      (result i32) i32.const 31 return)
+        (func $type.get_targets       (result i32) i32.const 32 return)
     ;; }
 
     (table 100 funcref)
@@ -152,6 +155,7 @@
                 $Set.step               ;; Set
                 $get_storage.step       ;; get_storage
                 $get_template.step      ;; get_template
+                $get_targets.step       ;; get_targets
             )
             (type $virtual.step (func (param $something i32) (param $buffer i32) (result i32)))
             (func $virtual.step (param $something i32) (param $buffer i32) (result i32)
@@ -174,8 +178,8 @@
         ;; }
 
         ;; { print
-            (func $virtual.print.offset (result i32) i32.const 32)
-            (elem (i32.const 32)
+            (func $virtual.print.offset (result i32) i32.const 33)
+            (elem (i32.const 33)
                 $Nothing.print               ;; Nothing
                 $Terminal.print              ;; Terminal
                 $External.print              ;; External
@@ -208,6 +212,7 @@
                 $Set.print                   ;; Set
                 $get_storage.print           ;; get_storage
                 $get_template.print          ;; get_template
+                $get_targets.print           ;; get_targets
             )
             (type $virtual.print (func (param $something i32)))
             (func $virtual.print (param $something i32)
@@ -226,8 +231,8 @@
         ;; }
 
         ;; { type
-            (func $virtual.type.offset (result i32) i32.const 64)
-            (elem (i32.const 64)
+            (func $virtual.type.offset (result i32) i32.const 66)
+            (elem (i32.const 66)
                 $Nothing.type           ;; Nothing
                 $virtual.type.external  ;; Terminal
                 $virtual.type.external  ;; External
@@ -260,6 +265,7 @@
                 $virtual.type.external  ;; Set
                 $virtual.type.external  ;; get_storage
                 $virtual.type.external  ;; get_template
+                $virtual.type.external  ;; get_targets
             )
             (type $virtual.type (func (param $something i32) (result i32)))
             (func $virtual.type (param $something i32) (result i32)
@@ -3766,6 +3772,7 @@
 
                 local.get $result_first
                 local.get $first
+                i32.load
                 i32.store
 
                 local.get $first
@@ -3774,7 +3781,7 @@
                 local.set $first
 
                 local.get $result_first
-                i32.const 1
+                i32.const 4
                 i32.add
                 local.set $result_first
 
@@ -3835,6 +3842,136 @@
         )
         (func $get_template.print (param $get_template i32)
             call $write.get_template
+            return
+        )
+    ;; }
+
+    ;; { get_targets
+        (func $sizeof.get_targets (result i32)
+            i32.const 4
+            return
+        )
+        (func $get_targets.constructor (result i32)
+            (local $get_targets i32)
+            ;; allocate
+            call $sizeof.get_targets
+            call $mem.allocate
+            local.set $get_targets
+            ;; get_targets.type = type.get_targets
+            local.get $get_targets
+            call $type.get_targets
+            call $something.type.set
+            ;; return
+            local.get $get_targets
+            return
+        )
+        (func $get_targets.get_targets (param $template i32) (result i32)
+            (local $first i32)
+            (local $length i32)
+            (local $result i32)
+            (local $i i32)
+
+            local.get $template
+            call $Template.instance.assert
+            (if (then
+                i32.const 0
+                return
+            ))
+
+            local.get $template
+            call $Template.instance.first
+            local.set $first
+            local.get $template
+            call $Template.instance.length
+            local.set $length
+
+            local.get $length
+            call $Array.instance.constructor
+            local.tee $result
+            call $Array.instance.init
+
+            i32.const 0
+            local.set $i
+            (block $break (loop $continue
+                local.get $i
+                local.get $length
+                i32.ge_u
+                br_if $break
+
+                local.get $result
+                local.get $i
+                local.get $first
+                i32.load
+                call $Int32.instance.constructor
+                call $Array.instance.set
+
+                local.get $first
+                i32.const 4
+                i32.add
+                local.set $first
+
+                local.get $i
+                i32.const 1
+                i32.add
+                local.set $i
+
+                br $continue
+            ))
+
+            ;; no overloads
+            local.get $result
+            return
+        )
+        (func $get_targets.step (param $get_targets i32) (param $buffer i32) (result i32)
+            (local $next i32)
+            (local $next_buffer i32)
+            (local $result i32)
+
+            ;; get arguments
+            local.get $buffer
+            i32.const 2
+            call $Array.instance.get
+            call $get_targets.get_targets
+            local.tee $result
+            (if (then) (else
+                call $write.ERROR
+                i32.const 0
+                return
+            ))
+
+            ;; alloc next buffer
+            i32.const 3
+            call $Array.instance.constructor
+            local.set $next_buffer
+
+            ;; save next
+            local.get $buffer
+            i32.const 1
+            call $Array.instance.get
+            local.set $next
+
+            ;; fill next buffer
+            local.get $next_buffer
+            i32.const 0
+            local.get $next
+            call $Array.instance.set
+
+            local.get $next_buffer
+            i32.const 1
+            local.get $next
+            call $Array.instance.set
+
+            local.get $next_buffer
+            i32.const 2
+            local.get $result
+            call $Array.instance.set
+
+            ;; return
+            local.get $next_buffer
+            return
+        )
+        (func $get_targets.print (param $get_targets i32)
+            call $write.get_targets
             return
         )
     ;; }
@@ -3949,6 +4086,10 @@
         call $global.get_template.address
         call $get_template.constructor
         i32.store
+
+        call $global.get_targets.address
+        call $get_targets.constructor
+        i32.store
     )
     (func $step (param $buffer i32) (result i32)
         (local $first i32)
@@ -4010,6 +4151,7 @@
         (export "set"              (func $global.set))
         (export "get_storage"      (func $global.get_storage))
         (export "get_template"     (func $global.get_template))
+        (export "get_targets"      (func $global.get_targets))
 
         (export "memory"           (memory $memory))
         (export "heap_available"   (func $heap.available))
