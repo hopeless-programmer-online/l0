@@ -11,7 +11,7 @@
         (data (i32.const 13)  "nothing")      (; 13 + 7 = 20 ;)    (func $write.nothing       (call $print.ascii (i32.const 13) (i32.const 7)))
         (data (i32.const 20)  "terminal")     (; 20 + 8 = 28 ;)    (func $write.terminal      (call $print.ascii (i32.const 20) (i32.const 8)))
         (data (i32.const 28)  "external")     (; 28 + 8 = 36 ;)    (func $write.external      (call $print.ascii (i32.const 28) (i32.const 8)))
-        (data (i32.const 36)  "internal")     (; 36 + 8 = 44 ;)    (func $write.internal      (call $print.ascii (i32.const 36) (i32.const 8)))
+        (data (i32.const 36)  "Internal")     (; 36 + 8 = 44 ;)    (func $write.Internal      (call $print.ascii (i32.const 36) (i32.const 8)))
         (data (i32.const 44)  "template")     (; 44 + 8 = 52 ;)    (func $write.template      (call $print.ascii (i32.const 44) (i32.const 8)))
         (data (i32.const 52)  "bind")         (; 52 + 4 = 56 ;)    (func $write.bind          (call $print.ascii (i32.const 52) (i32.const 4)))
         (data (i32.const 56)  "print")        (; 56 + 5 = 61 ;)    (func $write.print         (call $print.ascii (i32.const 56) (i32.const 5)))
@@ -43,7 +43,7 @@
         (func $global.nothing.address       (result i32) i32.const 768 return) (func $global.nothing       (result i32) call $global.nothing.address i32.load return)
         (func $global.terminal.address      (result i32) i32.const 772 return) (func $global.terminal      (result i32) call $global.terminal.address i32.load return)
         (func $global.external.address      (result i32) i32.const 776 return) (func $global.external      (result i32) call $global.external.address i32.load return)
-        (func $global.internal.address      (result i32) i32.const 780 return) (func $global.internal      (result i32) call $global.internal.address i32.load return)
+        (func $global.Internal.address      (result i32) i32.const 780 return) (func $global.Internal      (result i32) call $global.Internal.address i32.load return)
         (func $global.template.address      (result i32) i32.const 784 return) (func $global.template      (result i32) call $global.template.address i32.load return)
         (func $global.bind.address          (result i32) i32.const 788 return) (func $global.bind          (result i32) call $global.bind.address i32.load return)
         (func $global.print.address         (result i32) i32.const 792 return) (func $global.print         (result i32) call $global.print.address i32.load return)
@@ -1025,7 +1025,7 @@
             return
         )
         (func $Internal.print (param $internal i32)
-            call $write.internal
+            call $write.Internal
             return
         )
     ;; }
@@ -2998,11 +2998,11 @@
             return
         )
         (func $Internal.instance.print (param $internal i32)
-            call $write.internal
+            call $write.Internal
             return
         )
         (func $Internal.instance.type (param $internal i32) (result i32)
-            call $global.internal
+            call $global.Internal
             return
         )
         (func $Internal.instance.assert (param $internal i32) (result i32)
@@ -4023,7 +4023,7 @@
         call $External.constructor
         i32.store
 
-        call $global.internal.address
+        call $global.Internal.address
         call $Internal.constructor
         i32.store
 
@@ -4159,7 +4159,7 @@
         (export "nothing"          (func $global.nothing))
         (export "terminal"         (func $global.terminal))
         (export "external"         (func $global.external))
-        (export "internal"         (func $global.internal))
+        (export "Internal"         (func $global.Internal))
         (export "template"         (func $global.template))
         (export "bind"             (func $global.bind))
         (export "print"            (func $global.print))
@@ -4188,7 +4188,7 @@
         (export "memory"           (memory $memory))
         (export "heap_available"   (func $heap.available))
         (export "heap_max"         (func $heap.max))
-        (export "Internal"         (func $Internal.instance.constructor))
+        (export "create_Internal"  (func $Internal.instance.constructor))
         (export "Internal.targets" (func $Internal.instance.targets.first))
         (export "Internal.storage" (func $Internal.instance.storage.first))
         (export "Template"         (func $Template.instance.constructor))

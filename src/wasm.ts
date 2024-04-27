@@ -40,7 +40,7 @@ export class Context {
     private readonly nothing           : Address
     private readonly terminal          : Address
     private readonly external          : Address
-    private readonly internal          : Address
+    private readonly Internal          : Address
     private readonly template          : Address
     private readonly bind              : Address
     private readonly print             : Address
@@ -51,7 +51,7 @@ export class Context {
     private readonly template_first    : (template : Address) => Address
     private readonly create_Array      : (length : number) => Address
     private readonly array_set         : (array : Address, i : number, v : Address) => void
-    private readonly Internal          : (targets : number, storage : number) => Address
+    private readonly create_Internal   : (targets : number, storage : number) => Address
     private readonly internal_targets  : (internal : Address) => Address
     private readonly internal_storage  : (internal : Address) => Address
     private readonly create_Int32      : (value : number) => Address
@@ -84,7 +84,7 @@ export class Context {
         const nothing          = (exports.nothing as () => Address)()
         const terminal         = (exports.terminal as () => Address)()
         const external         = (exports.external as () => Address)()
-        const internal         = (exports.internal as () => Address)()
+        const Internal         = (exports.Internal as () => Address)()
         const template         = (exports.template as () => Address)()
         const bind             = (exports.bind as () => Address)()
         const print            = (exports.print as () => Address)()
@@ -95,7 +95,7 @@ export class Context {
         const template_first   = exports[`Template.first`] as (template : Address) => Address
         const create_Array     = exports.create_Array as (length : number) => Address
         const array_set        = exports[`Array.set`] as (array : Address, i : number, v : Address) => void
-        const Internal         = exports.Internal as (targets : number, storage : number) => Address
+        const create_Internal  = exports.create_Internal as (targets : number, storage : number) => Address
         const internal_targets = exports[`Internal.targets`] as (internal : Address) => Address
         const internal_storage = exports[`Internal.storage`] as (internal : Address) => Address
         const create_Int32     = exports.create_Int32 as (value : number) => Address
@@ -126,7 +126,7 @@ export class Context {
         this.nothing          = nothing
         this.terminal         = terminal
         this.external         = external
-        this.internal         = internal
+        this.Internal         = Internal
         this.template         = template
         this.bind             = bind
         this.print            = print
@@ -137,7 +137,7 @@ export class Context {
         this.template_first   = template_first
         this.create_Array     = create_Array
         this.array_set        = array_set
-        this.Internal         = Internal
+        this.create_Internal  = create_Internal
         this.internal_targets = internal_targets
         this.internal_storage = internal_storage
         this.create_Int32     = create_Int32
@@ -175,7 +175,7 @@ export class Context {
     }
     private create_internal(entry : semantics.Entry) {
         const { dependencies, entryTemplate : template } = entry
-        const internal = this.Internal(template.targets.length, dependencies.length)
+        const internal = this.create_Internal(template.targets.length, dependencies.length)
         const first_targets = this.internal_targets(internal)
         const first_storage = this.internal_storage(internal)
         const memory = Buffer.from(this.memory.buffer)
@@ -208,7 +208,7 @@ export class Context {
             case `nothing`      : return this.nothing
             case `super`        : return this.terminal
             case `external`     : return this.external
-            case `internal`     : return this.internal
+            case `Internal`     : return this.Internal
             case `template`     : return this.template
             case `bind`         : return this.bind
             case `print`        : return this.print
