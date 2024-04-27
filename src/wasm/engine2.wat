@@ -41,6 +41,7 @@
         (data (i32.const 134) "get_targets")  (; 134 + 11 = 145 ;) (func $write.get_targets   (call $print.ascii (i32.const 134) (i32.const 11)))
         (data (i32.const 145) " ")            (; 145 + 1 = 146 ;)  (func $write.space         (call $print.ascii (i32.const 145) (i32.const 1)))
         (data (i32.const 146) "\"")           (; 146 + 1 = 147 ;)  (func $write.double_quote  (call $print.ascii (i32.const 146) (i32.const 1)))
+        (data (i32.const 147) "<loop>")       (; 147 + 6 = 153 ;)  (func $write.loop          (call $print.ascii (i32.const 147) (i32.const 6)))
         ;; globals
         (func $global.nothing.address       (result i32) i32.const 768 return) (func $global.nothing       (result i32) call $global.nothing.address i32.load return)
         (func $global.terminal.address      (result i32) i32.const 772 return) (func $global.terminal      (result i32) call $global.terminal.address i32.load return)
@@ -216,9 +217,85 @@
                 $get_template.print          ;; get_template
                 $get_targets.print           ;; get_targets
             )
-            (type $virtual.print (func (param $something i32)))
-            (func $virtual.print (param $something i32)
+            (type $virtual.print (func (param $something i32) (param $loops i32)))
+            (func $virtual.print (param $something i32) (param $loops i32)
+                (local $first i32)
+                (local $last i32)
+
+                ;; prepare loops
+                local.get $loops
+                i32.const 0
+                i32.eq
+                (if (then
+                    i32.const 100 ;; save 100 loops
+                    call $Array.instance.constructor
+                    local.tee $loops
+                    call $Array.instance.init
+                    local.get $loops
+                    i32.const 0
+                    local.get $something
+                    call $Array.instance.set
+                ) (else
+                    local.get $something
+                    call $something.type
+                    call $type.Array.instance
+                    i32.eq
+                    (if (then
+                        local.get $loops
+                        call $Array.instance.first
+                        local.tee $first
+                        i32.const 4
+                        local.get $loops
+                        call $Array.instance.length
+                        i32.mul
+                        i32.add
+                        local.set $last
+
+                        ;; if found nothing then add to list
+                        ;; if sound something then write <loop> and return
+                        ;; if full then return
+                        (loop $continue (block $break
+                            local.get $first
+                            local.get $last
+                            i32.ge_u
+                            (if (then
+                                ;; return if all elements are checked to prevent loops
+                                return
+                            ))
+
+                            local.get $first
+                            i32.load
+                            call $global.nothing
+                            i32.eq
+                            (if (then
+                                local.get $first
+                                local.get $something
+                                i32.store
+
+                                br $break
+                            ))
+
+                            local.get $first
+                            i32.load
+                            local.get $something
+                            i32.eq
+                            (if (then
+                                call $write.loop
+                                return
+                            ))
+
+                            local.get $first
+                            i32.const 4
+                            i32.add
+                            local.set $first
+
+                            br $continue
+                        ))
+                    ))
+                ))
+
                 local.get $something
+                local.get $loops
 
                 local.get $something
                 call $something.type
@@ -226,7 +303,7 @@
                 i32.add
                 call_indirect (type $virtual.print)
             )
-            (func $virtual.print.unknown (param $something i32)
+            (func $virtual.print.unknown (param $something i32) (param $loops i32)
                 call $write.unknown
                 return
             )
@@ -812,7 +889,7 @@
                 br $continue
             ))
         )
-        (func $Array.instance.print (param $array i32)
+        (func $Array.instance.print (param $array i32) (param $loops i32)
             (local $first i32)
             (local $last i32)
 
@@ -837,6 +914,7 @@
 
                 local.get $first
                 i32.load
+                local.get $loops
                 call $virtual.print
 
                 local.get $first
@@ -854,6 +932,7 @@
 
                     local.get $first
                     i32.load
+                    local.get $loops
                     call $virtual.print
 
                     local.get $first
@@ -943,7 +1022,7 @@
             local.get $nothing
             return
         )
-        (func $Nothing.print (param $nothing i32)
+        (func $Nothing.print (param $nothing i32) (param $loops i32)
             call $write.nothing
             return
         )
@@ -976,7 +1055,7 @@
             i32.const 0
             return
         )
-        (func $Terminal.print (param $terminal i32)
+        (func $Terminal.print (param $terminal i32) (param $loops i32)
             call $write.terminal
             return
         )
@@ -1001,7 +1080,7 @@
             local.get $external
             return
         )
-        (func $External.print (param $external i32)
+        (func $External.print (param $external i32) (param $loops i32)
             call $write.external
             return
         )
@@ -1026,7 +1105,7 @@
             local.get $internal
             return
         )
-        (func $Internal.print (param $internal i32)
+        (func $Internal.print (param $internal i32) (param $loops i32)
             call $write.Internal
             return
         )
@@ -1051,7 +1130,7 @@
             local.get $template
             return
         )
-        (func $Template.print (param $template i32)
+        (func $Template.print (param $template i32) (param $loops i32)
             call $write.Template
             return
         )
@@ -1330,7 +1409,7 @@
             local.get $result
             return
         )
-        (func $Bind.print (param $bind i32)
+        (func $Bind.print (param $bind i32) (param $loops i32)
             call $write.bind
             return
         )
@@ -1363,6 +1442,7 @@
             local.get $buffer
             i32.const 2
             call $Array.instance.get
+            i32.const 0
             call $virtual.print
             call $write.newline
 
@@ -1392,7 +1472,7 @@
             local.get $next_buffer
             return
         )
-        (func $Print.print (param $print i32)
+        (func $Print.print (param $print i32) (param $loops i32)
             call $write.print
             return
         )
@@ -1456,7 +1536,7 @@
             local.get $next_buffer
             return
         )
-        (func $Type.print (param $type i32)
+        (func $Type.print (param $type i32) (param $loops i32)
             call $write.type
             return
         )
@@ -1481,7 +1561,7 @@
             local.get $int32
             return
         )
-        (func $Int32.print (param $int32 i32)
+        (func $Int32.print (param $int32 i32) (param $loops i32)
             call $write.Int32
             return
         )
@@ -1506,7 +1586,7 @@
             local.get $ascii
             return
         )
-        (func $ASCII.print (param $ascii i32)
+        (func $ASCII.print (param $ascii i32) (param $loops i32)
             call $write.ASCII
             return
         )
@@ -1617,7 +1697,7 @@
             local.get $next_buffer
             return
         )
-        (func $Add.print (param $add i32)
+        (func $Add.print (param $add i32) (param $loops i32)
             call $write.add
             return
         )
@@ -1728,7 +1808,7 @@
             local.get $next_buffer
             return
         )
-        (func $Sub.print (param $sub i32)
+        (func $Sub.print (param $sub i32) (param $loops i32)
             call $write.sub
             return
         )
@@ -1839,7 +1919,7 @@
             local.get $next_buffer
             return
         )
-        (func $Mul.print (param $mul i32)
+        (func $Mul.print (param $mul i32) (param $loops i32)
             call $write.mul
             return
         )
@@ -1972,7 +2052,7 @@
             local.get $next_buffer
             return
         )
-        (func $Div.print (param $div i32)
+        (func $Div.print (param $div i32) (param $loops i32)
             call $write.div
             return
         )
@@ -2086,7 +2166,7 @@
             local.get $next_buffer
             return
         )
-        (func $Equal.print (param $equal i32)
+        (func $Equal.print (param $equal i32) (param $loops i32)
             call $write.equal
             return
         )
@@ -2200,7 +2280,7 @@
             local.get $next_buffer
             return
         )
-        (func $NotEqual.print (param $not_equal i32)
+        (func $NotEqual.print (param $not_equal i32) (param $loops i32)
             call $write.not_equal
             return
         )
@@ -2311,7 +2391,7 @@
             local.get $next_buffer
             return
         )
-        (func $Less.print (param $less i32)
+        (func $Less.print (param $less i32) (param $loops i32)
             call $write.less
             return
         )
@@ -2422,7 +2502,7 @@
             local.get $next_buffer
             return
         )
-        (func $LessEqual.print (param $less_equal i32)
+        (func $LessEqual.print (param $less_equal i32) (param $loops i32)
             call $write.less_equal
             return
         )
@@ -2533,7 +2613,7 @@
             local.get $next_buffer
             return
         )
-        (func $Greater.print (param $greater i32)
+        (func $Greater.print (param $greater i32) (param $loops i32)
             call $write.greater
             return
         )
@@ -2644,7 +2724,7 @@
             local.get $next_buffer
             return
         )
-        (func $GreaterEqual.print (param $greater_equal i32)
+        (func $GreaterEqual.print (param $greater_equal i32) (param $loops i32)
             call $write.greater_equal
             return
         )
@@ -2723,7 +2803,7 @@
             local.get $next_buffer
             return
         )
-        (func $If.print (param $if i32)
+        (func $If.print (param $if i32) (param $loops i32)
             call $write.if
             return
         )
@@ -2999,7 +3079,7 @@
             local.get $next_buffer
             return
         )
-        (func $Internal.instance.print (param $internal i32)
+        (func $Internal.instance.print (param $internal i32) (param $loops i32)
             call $write.Internal
             return
         )
@@ -3126,7 +3206,7 @@
             i32.ne
             return
         )
-        (func $Template.instance.print (param $template i32)
+        (func $Template.instance.print (param $template i32) (param $loops i32)
             call $write.Template
             call $write.space
             call $write.double_quote
@@ -3185,7 +3265,7 @@
             local.get $int32
             return
         )
-        (func $Int32.instance.print (param $int32 i32)
+        (func $Int32.instance.print (param $int32 i32) (param $loops i32)
             local.get $int32
             call $Int32.instance.value
             call $print.int32
@@ -3255,7 +3335,7 @@
             local.get $ascii
             return
         )
-        (func $ASCII.instance.print (param $ascii i32)
+        (func $ASCII.instance.print (param $ascii i32) (param $loops i32)
             local.get $ascii
             call $ASCII.instance.data
             local.get $ascii
@@ -3368,7 +3448,7 @@
             local.get $next_buffer
             return
         )
-        (func $Length.print (param $length i32)
+        (func $Length.print (param $length i32) (param $loops i32)
             call $write.length
             return
         )
@@ -3447,7 +3527,7 @@
             local.get $next_buffer
             return
         )
-        (func $Array.print (param $list i32)
+        (func $Array.print (param $list i32) (param $loops i32)
             call $write.Array
             return
         )
@@ -3553,7 +3633,7 @@
             local.get $next_buffer
             return
         )
-        (func $Get.print (param $get i32)
+        (func $Get.print (param $get i32) (param $loops i32)
             call $write.get
             return
         )
@@ -3658,7 +3738,7 @@
             local.get $next_buffer
             return
         )
-        (func $Set.print (param $set i32)
+        (func $Set.print (param $set i32) (param $loops i32)
             call $write.set
             return
         )
@@ -3787,7 +3867,7 @@
             local.get $next_buffer
             return
         )
-        (func $get_storage.print (param $get_storage i32)
+        (func $get_storage.print (param $get_storage i32) (param $loops i32)
             call $write.get_storage
             return
         )
@@ -3924,7 +4004,7 @@
             local.get $next_buffer
             return
         )
-        (func $get_template.print (param $get_template i32)
+        (func $get_template.print (param $get_template i32) (param $loops i32)
             call $write.get_template
             return
         )
@@ -4054,7 +4134,7 @@
             local.get $next_buffer
             return
         )
-        (func $get_targets.print (param $get_targets i32)
+        (func $get_targets.print (param $get_targets i32) (param $loops i32)
             call $write.get_targets
             return
         )
