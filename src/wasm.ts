@@ -41,13 +41,13 @@ export class Context {
     private readonly terminal          : Address
     private readonly external          : Address
     private readonly Internal          : Address
-    private readonly template          : Address
+    private readonly Template          : Address
     private readonly bind              : Address
     private readonly print             : Address
     private readonly type              : Address
     private readonly Int32             : Address
     private readonly ASCII             : Address
-    private readonly Template          : (targets : number) => Address
+    private readonly create_Template   : (targets : number) => Address
     private readonly template_first    : (template : Address) => Address
     private readonly create_Array      : (length : number) => Address
     private readonly array_set         : (array : Address, i : number, v : Address) => void
@@ -85,13 +85,13 @@ export class Context {
         const terminal         = (exports.terminal as () => Address)()
         const external         = (exports.external as () => Address)()
         const Internal         = (exports.Internal as () => Address)()
-        const template         = (exports.template as () => Address)()
+        const Template         = (exports.Template as () => Address)()
         const bind             = (exports.bind as () => Address)()
         const print            = (exports.print as () => Address)()
         const type             = (exports.type as () => Address)()
         const Int32            = (exports.create_Int32 as () => Address)()
         const ASCII            = (exports.ASCII as () => Address)()
-        const Template         = exports.Template as (targets : number) => Address
+        const create_Template  = exports.create_Template as (targets : number) => Address
         const template_first   = exports[`Template.first`] as (template : Address) => Address
         const create_Array     = exports.create_Array as (length : number) => Address
         const array_set        = exports[`Array.set`] as (array : Address, i : number, v : Address) => void
@@ -127,13 +127,13 @@ export class Context {
         this.terminal         = terminal
         this.external         = external
         this.Internal         = Internal
-        this.template         = template
+        this.Template         = Template
         this.bind             = bind
         this.print            = print
         this.type             = type
         this.Int32            = Int32
         this.ASCII            = ASCII
-        this.Template         = Template
+        this.create_Template         = create_Template
         this.template_first   = template_first
         this.create_Array     = create_Array
         this.array_set        = array_set
@@ -165,7 +165,7 @@ export class Context {
     }
 
     private create_template(targets : number[]) {
-        const template = this.Template(targets.length)
+        const template = this.create_Template(targets.length)
         const first = this.template_first(template)
         const memory = Buffer.from(this.memory.buffer)
 
@@ -209,7 +209,7 @@ export class Context {
             case `super`        : return this.terminal
             case `external`     : return this.external
             case `Internal`     : return this.Internal
-            case `template`     : return this.template
+            case `Template`     : return this.Template
             case `bind`         : return this.bind
             case `print`        : return this.print
             case `type`         : return this.type

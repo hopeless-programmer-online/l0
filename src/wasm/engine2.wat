@@ -12,7 +12,7 @@
         (data (i32.const 20)  "terminal")     (; 20 + 8 = 28 ;)    (func $write.terminal      (call $print.ascii (i32.const 20) (i32.const 8)))
         (data (i32.const 28)  "external")     (; 28 + 8 = 36 ;)    (func $write.external      (call $print.ascii (i32.const 28) (i32.const 8)))
         (data (i32.const 36)  "Internal")     (; 36 + 8 = 44 ;)    (func $write.Internal      (call $print.ascii (i32.const 36) (i32.const 8)))
-        (data (i32.const 44)  "template")     (; 44 + 8 = 52 ;)    (func $write.template      (call $print.ascii (i32.const 44) (i32.const 8)))
+        (data (i32.const 44)  "Template")     (; 44 + 8 = 52 ;)    (func $write.Template      (call $print.ascii (i32.const 44) (i32.const 8)))
         (data (i32.const 52)  "bind")         (; 52 + 4 = 56 ;)    (func $write.bind          (call $print.ascii (i32.const 52) (i32.const 4)))
         (data (i32.const 56)  "print")        (; 56 + 5 = 61 ;)    (func $write.print         (call $print.ascii (i32.const 56) (i32.const 5)))
         (data (i32.const 61)  "type")         (; 61 + 4 = 65 ;)    (func $write.type          (call $print.ascii (i32.const 61) (i32.const 4)))
@@ -44,7 +44,7 @@
         (func $global.terminal.address      (result i32) i32.const 772 return) (func $global.terminal      (result i32) call $global.terminal.address i32.load return)
         (func $global.external.address      (result i32) i32.const 776 return) (func $global.external      (result i32) call $global.external.address i32.load return)
         (func $global.Internal.address      (result i32) i32.const 780 return) (func $global.Internal      (result i32) call $global.Internal.address i32.load return)
-        (func $global.template.address      (result i32) i32.const 784 return) (func $global.template      (result i32) call $global.template.address i32.load return)
+        (func $global.Template.address      (result i32) i32.const 784 return) (func $global.Template      (result i32) call $global.Template.address i32.load return)
         (func $global.bind.address          (result i32) i32.const 788 return) (func $global.bind          (result i32) call $global.bind.address i32.load return)
         (func $global.print.address         (result i32) i32.const 792 return) (func $global.print         (result i32) call $global.print.address i32.load return)
         (func $global.type.address          (result i32) i32.const 796 return) (func $global.type          (result i32) call $global.type.address i32.load return)
@@ -1050,7 +1050,7 @@
             return
         )
         (func $Template.print (param $template i32)
-            call $write.template
+            call $write.Template
             return
         )
     ;; }
@@ -3083,11 +3083,11 @@
             return
         )
         (func $Template.instance.print (param $template i32)
-            call $write.template
+            call $write.Template
             return
         )
         (func $Template.instance.type (param $template i32) (result i32)
-            call $global.template
+            call $global.Template
             return
         )
     ;; }
@@ -4027,7 +4027,7 @@
         call $Internal.constructor
         i32.store
 
-        call $global.template.address
+        call $global.Template.address
         call $Template.constructor
         i32.store
 
@@ -4160,7 +4160,7 @@
         (export "terminal"         (func $global.terminal))
         (export "external"         (func $global.external))
         (export "Internal"         (func $global.Internal))
-        (export "template"         (func $global.template))
+        (export "Template"         (func $global.Template))
         (export "bind"             (func $global.bind))
         (export "print"            (func $global.print))
         (export "type"             (func $global.type))
@@ -4191,7 +4191,7 @@
         (export "create_Internal"  (func $Internal.instance.constructor))
         (export "Internal.targets" (func $Internal.instance.targets.first))
         (export "Internal.storage" (func $Internal.instance.storage.first))
-        (export "Template"         (func $Template.instance.constructor))
+        (export "create_Template"  (func $Template.instance.constructor))
         (export "Template.first"   (func $Template.instance.first))
         (export "create_Array"     (func $Array.instance.constructor))
         (export "Array.set"        (func $Array.instance.set))
