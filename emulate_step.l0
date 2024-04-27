@@ -1,0 +1,256 @@
+for(array, callback) {
+    l : length(array)
+
+    iterate(i) {
+        is : >=(i, l)
+        if (is, /super)
+
+        value : get(array, i)
+        callback(value, i)
+
+        i : +(i, 1)
+        iterate(i)
+    }
+    iterate(0)
+}
+
+map(array, callback) {
+    l : length(array)
+    result : Array(l)
+
+    callback2(x, i) {
+        y : callback(x, i)
+        set(result, i, y)
+    }
+    for(array, callback2)
+
+    super(result)
+}
+
+Array.copy(from, to, from_begin, from_end, to_begin) {
+    l : length(from)
+
+    iterate(i, j) {
+        is : >=(i, from_end)
+        if (is, /super)
+
+        x : get(from, i)
+        set(to, j, x)
+
+        i : +(i, 1)
+        j : +(j, 1)
+
+        iterate(i, j)
+    }
+
+    iterate(from_begin, to_begin)
+}
+
+CurrentInstructionValue() {
+    object : Array(1)
+
+    set(object, 0, "CurrentInstructionValue")
+
+    super(object)
+}
+
+DummyValue() {
+    object : Array(1)
+
+    set(object, 0, "DummyValue")
+
+    super(object)
+}
+
+ImmediateValue(value) {
+    object : Array(2)
+
+    set(object, 0, "ImmediateValue")
+    set(object, 1, value)
+
+    super(object)
+}
+
+InstructionValue(targets, storage) {
+    object : Array(3)
+
+    set(object, 0, "InstructionValue")
+    set(object, 1, targets)
+    set(object, 2, storage)
+
+    super(object)
+}
+
+emulate_step(buffer) {
+    current : get(buffer, 0)
+    class : get(current, 0)
+
+    check_immediate() {
+        ; if target.type != ImmediateValue: return
+        is : !=(class, "ImmediateValue")
+        if (is, super)
+
+        ; print("immediate")
+
+        value : get(current, 1)
+
+        check_bind() {
+            is : !=(value, bind)
+            if (is, super)
+
+            ; print("bind")
+
+            continuation_template : get(buffer, 1)
+            class : get(continuation_template, 0)
+            is : !=(class, "ImmediateValue")
+            if (is, //super) ;; @todo: error message
+            continuation_template : get(continuation_template, 1)
+            class : type(continuation_template)
+            is : !=(class, Template)
+            if (is, //super) ;; @todo: error message
+            continuation_targets : get_targets(continuation_template)
+
+            target_template : get(buffer, 2)
+            class : get(target_template, 0)
+            is : !=(class, "ImmediateValue")
+            if (is, //super) ;; @todo: error message
+            target_template : get(target_template, 1)
+            class : type(target_template)
+            is : !=(class, Template)
+            if (is, //super) ;; @todo: error message
+            target_targets : get_targets(target_template)
+
+            buffer_length : length(buffer)
+            storage_length : -(buffer_length, 2) ;; -3 for current and templates but +1 for instruction
+            storage : Array(storage_length)
+            Array.copy(buffer, storage, 3, buffer_length, 0)
+            instruction : InstructionValue(target_targets, storage)
+            i : -(storage_length, 1)
+            set(storage, i, instruction)
+
+            check_current(target, next) {
+                is : !=(target, 0)
+                if (is, super)
+
+                ; print("current (bind)")
+
+                value : ImmediateValue(bind)
+
+                next(value)
+            }
+            check_storage(target, next) {
+                is : >(target, storage_length)
+                if (is, super)
+
+                ; print("storage")
+
+                target : -(target, 1)
+                value : get(storage, target)
+
+                next(value)
+            }
+
+            callback(target) {
+                ; print(target)
+
+                check_current(target, super)
+                check_storage(target, super)
+
+                ; print("nothing")
+
+                value : ImmediateValue(nothing)
+
+                super(value)
+            }
+            next_buffer : map(continuation_targets, callback)
+
+            //super(next_buffer)
+        }
+        check_bind()
+        check_internal() {
+            class : type(value)
+            is : !=(class, Internal)
+            if (is, super)
+
+            ; print("internal")
+
+            storage : get_storage(value)
+            template : get_template(value)
+            targets : get_targets(template)
+            storage_length : length(storage)
+            targets_length : length(targets)
+            next_buffer : Array(targets_length)
+
+            check_current(target, i, next) {
+                is : !=(target, 0)
+                if (is, super)
+
+                ; print("current")
+
+                value : CurrentInstructionValue()
+
+                set(next_buffer, i, value)
+
+                next()
+            }
+            check_storage(target, i, next) {
+                is : >(target, storage_length)
+                if (is, super)
+
+                ; print("storage")
+
+                target : -(target, 1)
+                value : get(storage, target)
+                value : ImmediateValue(value)
+
+                set(next_buffer, i, value)
+
+                next()
+            }
+            check_params(target, i) {
+                ; print("params")
+
+                target : -(target, storage_length)
+                ; target : -(target, 1)
+                ; target : +(target, 1)
+                value : get(buffer, target)
+
+                set(next_buffer, i, value)
+            }
+
+            callback(target, i) {
+                ; print(target)
+                check_current(target, i, super)
+                check_storage(target, i, super)
+                check_params(target, i)
+            }
+            for (targets, callback)
+
+            //super(next_buffer)
+        }
+        check_internal()
+
+        /super()
+    }
+    check_immediate()
+}
+
+f(x) {
+    super(x)
+}
+
+buffer : Array(3)
+    x : ImmediateValue(f) ; current
+    set(buffer, 0, x)
+    x : DummyValue() ; super
+    set(buffer, 1, x)
+    x : ImmediateValue(1)
+    set(buffer, 2, x) ; param
+
+buffer : emulate_step(buffer)
+print(buffer)
+buffer : emulate_step(buffer)
+print(buffer)
+
+x : get(buffer, 2)
+print(x)
