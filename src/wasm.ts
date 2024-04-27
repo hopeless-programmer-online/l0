@@ -37,7 +37,6 @@ export class Context {
     }
 
     private memory                     : WebAssembly.Memory
-    private readonly heap_available    : () => number
     private readonly nothing           : Address
     private readonly terminal          : Address
     private readonly external          : Address
@@ -77,6 +76,8 @@ export class Context {
     private readonly get_storage       : Address
     private readonly get_template      : Address
     private readonly get_targets       : Address
+
+    public  readonly heap_available    : () => number
 
     public constructor({ exports, memory } : { exports : WebAssembly.Exports, memory : WebAssembly.Memory }) {
         const heap_available   = exports.heap_available as () => number

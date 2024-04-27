@@ -38,12 +38,18 @@ export class Cli {
         const context = await wasm.Context.create()
         let buffer = context.fill_buffer(entry)
 
+        const begin_heap = context.heap_available()
+
         stopwatch(() => {
             while (buffer !== 0) {
                 buffer = context.step(buffer)
                 // ++statistics.total
             }
         }, `executed`)
+
+        const end_heap = context.heap_available()
+
+        console.log(`memory left: ${end_heap}/${begin_heap} (${(end_heap / begin_heap * 100).toFixed(2)}%)`)
 
         /*{
             const lengths = [ ...statistics.buffer.values() ].sort()

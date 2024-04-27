@@ -715,6 +715,26 @@
             return
         )
         (func $Array.instance.set (param $array i32) (param $i i32) (param $value i32)
+            (local $length i32)
+
+            local.get $array
+            call $Array.instance.length
+            local.set $length
+
+            local.get $i
+            local.get $length
+            i32.ge_s
+            (if (then
+                return
+            ))
+
+            local.get $i
+            i32.const 0
+            i32.lt_s
+            (if (then
+                return
+            ))
+
             local.get $array
             call $Array.instance.first
             local.get $i
@@ -725,10 +745,23 @@
             i32.store
         )
         (func $Array.instance.get (param $array i32) (param $i i32) (result i32)
-            local.get $i
+            (local $length i32)
+
             local.get $array
             call $Array.instance.length
-            i32.ge_u
+            local.set $length
+
+            local.get $i
+            local.get $length
+            i32.ge_s
+            (if (then
+                call $global.nothing
+                return
+            ))
+
+            local.get $i
+            i32.const 0
+            i32.lt_s
             (if (then
                 call $global.nothing
                 return
@@ -2107,8 +2140,11 @@
                 return
             ))
 
-            ;; no overloads
-            i32.const 0
+            ;; default address == address
+            local.get $left
+            local.get $right
+            i32.ne
+            call $Int32.instance.constructor
             return
         )
         (func $NotEqual.step (param $not_equal i32) (param $buffer i32) (result i32)
@@ -2860,10 +2896,6 @@
                 local.get $buffer_length
                 i32.lt_u
                 br_if $check_overflow
-
-                i32.const 12345
-                call $print.int32
-                call $write.newline
 
                 call $global.nothing
                 return
