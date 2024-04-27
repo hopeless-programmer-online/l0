@@ -39,6 +39,8 @@
         (data (i32.const 121) ",")            (; 121 + 1 = 122 ;)  (func $write.comma         (call $print.ascii (i32.const 121) (i32.const 1)))
         (data (i32.const 122) "get_template") (; 122 + 12 = 134 ;) (func $write.get_template  (call $print.ascii (i32.const 122) (i32.const 12)))
         (data (i32.const 134) "get_targets")  (; 134 + 11 = 145 ;) (func $write.get_targets   (call $print.ascii (i32.const 134) (i32.const 11)))
+        (data (i32.const 145) " ")            (; 145 + 1 = 146 ;)  (func $write.space         (call $print.ascii (i32.const 145) (i32.const 1)))
+        (data (i32.const 146) "\"")           (; 146 + 1 = 147 ;)  (func $write.double_quote  (call $print.ascii (i32.const 146) (i32.const 1)))
         ;; globals
         (func $global.nothing.address       (result i32) i32.const 768 return) (func $global.nothing       (result i32) call $global.nothing.address i32.load return)
         (func $global.terminal.address      (result i32) i32.const 772 return) (func $global.terminal      (result i32) call $global.terminal.address i32.load return)
@@ -1091,7 +1093,7 @@
             (if (then i32.const 0 return))
 
             local.get $target
-            call $Template.instance.length
+            call $Template.instance.targets.length
             local.set $target_length
 
             ;; storage = buffer.length - 3
@@ -1111,7 +1113,7 @@
 
             ;; copy template targets -> internal targets
             local.get $target
-            call $Template.instance.first
+            call $Template.instance.targets.first
             local.get $internal
             call $Internal.instance.targets.first
             local.get $target_length
@@ -1263,10 +1265,10 @@
             ))
 
             local.get $template
-            call $Template.instance.length
+            call $Template.instance.targets.length
             local.set $template_length
             local.get $template
-            call $Template.instance.first
+            call $Template.instance.targets.first
             local.tee $template_current
             local.get $template_length
             i32.const 4
@@ -3016,49 +3018,87 @@
 
     ;; { Template.instance
         (func $sizeof.Template.instance.header (result i32)
+            i32.const 12
+            return
+        )
+        (func $sizeof.Template.instance (param $targets_length i32) (param $comment_length i32) (result i32)
+            ;; sizeof Template.header + targets * 4 + comment
+            call $sizeof.Template.instance.header
+            local.get $targets_length
+            i32.const 4
+            i32.mul
+            i32.add
+            local.get $comment_length
+            i32.add
+            return
+        )
+        (func $Template.instance.targets.length.offset (result i32)
+            i32.const 4
+            return
+        )
+        (func $Template.instance.targets.length (param $template i32) (result i32)
+            local.get $template
+            call $Template.instance.targets.length.offset
+            i32.add
+            i32.load
+            return
+        )
+        (func $Template.instance.targets.length.set (param $template i32) (param $length i32)
+            local.get $template
+            call $Template.instance.targets.length.offset
+            i32.add
+            local.get $length
+            i32.store
+        )
+        (func $Template.instance.targets.first.offset (result i32)
+            call $sizeof.Template.instance.header
+            return
+        )
+        (func $Template.instance.targets.first (param $template i32) (result i32)
+            local.get $template
+            call $Template.instance.targets.first.offset
+            i32.add
+            return
+        )
+        (func $Template.instance.comment.length.offset (result i32)
             i32.const 8
             return
         )
-        (func $sizeof.Template.instance (param $length i32) (result i32)
-            call $sizeof.Template.instance.header
+        (func $Template.instance.comment.length (param $template i32) (result i32)
+            local.get $template
+            call $Template.instance.comment.length.offset
+            i32.add
+            i32.load
+            return
+        )
+        (func $Template.instance.comment.length.set (param $template i32) (param $length i32)
+            local.get $template
+            call $Template.instance.comment.length.offset
+            i32.add
             local.get $length
+            i32.store
+        )
+        (func $Template.instance.comment.first.offset (param $template i32) (result i32)
+            call $sizeof.Template.instance.header
+            local.get $template
+            call $Template.instance.targets.length
             i32.const 4
             i32.mul
             i32.add
             return
         )
-        (func $Template.instance.length.offset (result i32)
-            i32.const 4
-            return
-        )
-        (func $Template.instance.length (param $template i32) (result i32)
+        (func $Template.instance.comment.first (param $template i32) (result i32)
             local.get $template
-            call $Template.instance.length.offset
-            i32.add
-            i32.load
-            return
-        )
-        (func $Template.instance.length.set (param $template i32) (param $length i32)
             local.get $template
-            call $Template.instance.length.offset
-            i32.add
-            local.get $length
-            i32.store
-        )
-        (func $Template.instance.first.offset (result i32)
-            call $sizeof.Template.instance.header
-            return
-        )
-        (func $Template.instance.first (param $template i32) (result i32)
-            local.get $template
-            call $Template.instance.first.offset
+            call $Template.instance.comment.first.offset
             i32.add
             return
         )
-        (func $Template.instance.constructor (param $length i32) (result i32)
+        (func $Template.instance.constructor (param $targets_length i32) (param $comment_length i32) (result i32)
             (local $template i32)
             ;; allocate
-            local.get $length
+            local.get $targets_length
+            local.get $comment_length
             call $sizeof.Template.instance
             call $mem.allocate
             local.set $template
@@ -3066,10 +3106,14 @@
             local.get $template
             call $type.Template.instance
             call $something.type.set
-            ;; array.length = length
+            ;; template.targets_length = targets_length
             local.get $template
-            local.get $length
-            call $Template.instance.length.set
+            local.get $targets_length
+            call $Template.instance.targets.length.set
+            ;; template.comment_length = comment_length
+            local.get $template
+            local.get $comment_length
+            call $Template.instance.comment.length.set
 
             ;; return
             local.get $template
@@ -3084,6 +3128,14 @@
         )
         (func $Template.instance.print (param $template i32)
             call $write.Template
+            call $write.space
+            call $write.double_quote
+            local.get $template
+            call $Template.instance.comment.first
+            local.get $template
+            call $Template.instance.comment.length
+            call $print.ascii
+            call $write.double_quote
             return
         )
         (func $Template.instance.type (param $template i32) (result i32)
@@ -3793,7 +3845,7 @@
             local.get $length
             call $Template.instance.constructor
             local.tee $result
-            call $Template.instance.first
+            call $Template.instance.targets.first
             local.set $result_first
 
             (block $break (loop $continue
@@ -3911,10 +3963,10 @@
             ))
 
             local.get $template
-            call $Template.instance.first
+            call $Template.instance.targets.first
             local.set $first
             local.get $template
-            call $Template.instance.length
+            call $Template.instance.targets.length
             local.set $length
 
             local.get $length
@@ -4156,49 +4208,50 @@
     )
 
     ;; { exports
-        (export "nothing"          (func $global.nothing))
-        (export "terminal"         (func $global.terminal))
-        (export "external"         (func $global.external))
-        (export "Internal"         (func $global.Internal))
-        (export "Template"         (func $global.Template))
-        (export "bind"             (func $global.bind))
-        (export "print"            (func $global.print))
-        (export "type"             (func $global.type))
-        (export "Int32"            (func $global.Int32))
-        (export "ASCII"            (func $global.ASCII))
-        (export "add"              (func $global.add))
-        (export "sub"              (func $global.sub))
-        (export "mul"              (func $global.mul))
-        (export "div"              (func $global.div))
-        (export "equal"            (func $global.equal))
-        (export "not_equal"        (func $global.not_equal))
-        (export "less"             (func $global.less))
-        (export "less_equal"       (func $global.less_equal))
-        (export "greater"          (func $global.greater))
-        (export "greater_equal"    (func $global.greater_equal))
-        (export "if"               (func $global.if))
-        (export "length"           (func $global.length))
-        (export "Array"            (func $global.Array))
-        (export "get"              (func $global.get))
-        (export "set"              (func $global.set))
-        (export "get_storage"      (func $global.get_storage))
-        (export "get_template"     (func $global.get_template))
-        (export "get_targets"      (func $global.get_targets))
+        (export "nothing"                (func $global.nothing))
+        (export "terminal"               (func $global.terminal))
+        (export "external"               (func $global.external))
+        (export "Internal"               (func $global.Internal))
+        (export "Template"               (func $global.Template))
+        (export "bind"                   (func $global.bind))
+        (export "print"                  (func $global.print))
+        (export "type"                   (func $global.type))
+        (export "Int32"                  (func $global.Int32))
+        (export "ASCII"                  (func $global.ASCII))
+        (export "add"                    (func $global.add))
+        (export "sub"                    (func $global.sub))
+        (export "mul"                    (func $global.mul))
+        (export "div"                    (func $global.div))
+        (export "equal"                  (func $global.equal))
+        (export "not_equal"              (func $global.not_equal))
+        (export "less"                   (func $global.less))
+        (export "less_equal"             (func $global.less_equal))
+        (export "greater"                (func $global.greater))
+        (export "greater_equal"          (func $global.greater_equal))
+        (export "if"                     (func $global.if))
+        (export "length"                 (func $global.length))
+        (export "Array"                  (func $global.Array))
+        (export "get"                    (func $global.get))
+        (export "set"                    (func $global.set))
+        (export "get_storage"            (func $global.get_storage))
+        (export "get_template"           (func $global.get_template))
+        (export "get_targets"            (func $global.get_targets))
 
-        (export "memory"           (memory $memory))
-        (export "heap_available"   (func $heap.available))
-        (export "heap_max"         (func $heap.max))
-        (export "create_Internal"  (func $Internal.instance.constructor))
-        (export "Internal.targets" (func $Internal.instance.targets.first))
-        (export "Internal.storage" (func $Internal.instance.storage.first))
-        (export "create_Template"  (func $Template.instance.constructor))
-        (export "Template.first"   (func $Template.instance.first))
-        (export "create_Array"     (func $Array.instance.constructor))
-        (export "Array.set"        (func $Array.instance.set))
-        (export "create_Int32"     (func $Int32.instance.constructor))
-        (export "create_ASCII"     (func $ASCII.instance.constructor))
-        (export "ASCII.data"       (func $ASCII.instance.data))
-        (export "step"             (func $step))
+        (export "memory"                 (memory $memory))
+        (export "heap_available"         (func $heap.available))
+        (export "heap_max"               (func $heap.max))
+        (export "create_Internal"        (func $Internal.instance.constructor))
+        (export "Internal.targets"       (func $Internal.instance.targets.first))
+        (export "Internal.storage"       (func $Internal.instance.storage.first))
+        (export "create_Template"        (func $Template.instance.constructor))
+        (export "Template.targets.first" (func $Template.instance.targets.first))
+        (export "Template.comment.first" (func $Template.instance.comment.first))
+        (export "create_Array"           (func $Array.instance.constructor))
+        (export "Array.set"              (func $Array.instance.set))
+        (export "create_Int32"           (func $Int32.instance.constructor))
+        (export "create_ASCII"           (func $ASCII.instance.constructor))
+        (export "ASCII.data"             (func $ASCII.instance.data))
+        (export "step"                   (func $step))
     ;; }
 
     (start $init)

@@ -36,140 +36,145 @@ export class Context {
         return new Context({ exports, memory })
     }
 
-    private memory                     : WebAssembly.Memory
-    private readonly nothing           : Address
-    private readonly terminal          : Address
-    private readonly external          : Address
-    private readonly Internal          : Address
-    private readonly Template          : Address
-    private readonly bind              : Address
-    private readonly print             : Address
-    private readonly type              : Address
-    private readonly Int32             : Address
-    private readonly ASCII             : Address
-    private readonly create_Template   : (targets : number) => Address
-    private readonly template_first    : (template : Address) => Address
-    private readonly create_Array      : (length : number) => Address
-    private readonly array_set         : (array : Address, i : number, v : Address) => void
-    private readonly create_Internal   : (targets : number, storage : number) => Address
-    private readonly internal_targets  : (internal : Address) => Address
-    private readonly internal_storage  : (internal : Address) => Address
-    private readonly create_Int32      : (value : number) => Address
-    private readonly create_ASCII      : (length : number) => Address
-    private readonly ASCII_data        : (ascii : Address) => Address
-    private readonly _step             : (buffer : Address) => Address
-    private readonly add               : Address
-    private readonly sub               : Address
-    private readonly mul               : Address
-    private readonly div               : Address
-    private readonly equal             : Address
-    private readonly not_equal         : Address
-    private readonly less              : Address
-    private readonly less_equal        : Address
-    private readonly greater           : Address
-    private readonly greater_equal     : Address
-    private readonly if                : Address
-    private readonly length            : Address
-    private readonly Array             : Address
-    private readonly get               : Address
-    private readonly set               : Address
-    private readonly get_storage       : Address
-    private readonly get_template      : Address
-    private readonly get_targets       : Address
+    private memory                          : WebAssembly.Memory
+    private readonly nothing                : Address
+    private readonly terminal               : Address
+    private readonly external               : Address
+    private readonly Internal               : Address
+    private readonly Template               : Address
+    private readonly bind                   : Address
+    private readonly print                  : Address
+    private readonly type                   : Address
+    private readonly Int32                  : Address
+    private readonly ASCII                  : Address
+    private readonly create_Template        : (targets : number, comment : number) => Address
+    private readonly template_targets_first : (template : Address) => Address
+    private readonly template_comment_first : (template : Address) => Address
+    private readonly create_Array           : (length : number) => Address
+    private readonly array_set              : (array : Address, i : number, v : Address) => void
+    private readonly create_Internal        : (targets : number, storage : number) => Address
+    private readonly internal_targets       : (internal : Address) => Address
+    private readonly internal_storage       : (internal : Address) => Address
+    private readonly create_Int32           : (value : number) => Address
+    private readonly create_ASCII           : (length : number) => Address
+    private readonly ASCII_data             : (ascii : Address) => Address
+    private readonly _step                  : (buffer : Address) => Address
+    private readonly add                    : Address
+    private readonly sub                    : Address
+    private readonly mul                    : Address
+    private readonly div                    : Address
+    private readonly equal                  : Address
+    private readonly not_equal              : Address
+    private readonly less                   : Address
+    private readonly less_equal             : Address
+    private readonly greater                : Address
+    private readonly greater_equal          : Address
+    private readonly if                     : Address
+    private readonly length                 : Address
+    private readonly Array                  : Address
+    private readonly get                    : Address
+    private readonly set                    : Address
+    private readonly get_storage            : Address
+    private readonly get_template           : Address
+    private readonly get_targets            : Address
 
     public  readonly heap_available    : () => number
 
     public constructor({ exports, memory } : { exports : WebAssembly.Exports, memory : WebAssembly.Memory }) {
-        const heap_available   = exports.heap_available as () => number
-        const nothing          = (exports.nothing as () => Address)()
-        const terminal         = (exports.terminal as () => Address)()
-        const external         = (exports.external as () => Address)()
-        const Internal         = (exports.Internal as () => Address)()
-        const Template         = (exports.Template as () => Address)()
-        const bind             = (exports.bind as () => Address)()
-        const print            = (exports.print as () => Address)()
-        const type             = (exports.type as () => Address)()
-        const Int32            = (exports.create_Int32 as () => Address)()
-        const ASCII            = (exports.ASCII as () => Address)()
-        const create_Template  = exports.create_Template as (targets : number) => Address
-        const template_first   = exports[`Template.first`] as (template : Address) => Address
-        const create_Array     = exports.create_Array as (length : number) => Address
-        const array_set        = exports[`Array.set`] as (array : Address, i : number, v : Address) => void
-        const create_Internal  = exports.create_Internal as (targets : number, storage : number) => Address
-        const internal_targets = exports[`Internal.targets`] as (internal : Address) => Address
-        const internal_storage = exports[`Internal.storage`] as (internal : Address) => Address
-        const create_Int32     = exports.create_Int32 as (value : number) => Address
-        const create_ASCII     = exports.create_ASCII as (length : number) => Address
-        const ASCII_data       = exports[`ASCII.data`] as (ascii : Address) => Address
-        const step             = exports.step as (buffer : Address) => Address
-        const add              = (exports.add as () => Address)()
-        const sub              = (exports.sub as () => Address)()
-        const mul              = (exports.mul as () => Address)()
-        const div              = (exports.div as () => Address)()
-        const equal            = (exports.equal as () => Address)()
-        const not_equal        = (exports.not_equal as () => Address)()
-        const less             = (exports.less as () => Address)()
-        const less_equal       = (exports.less_equal as () => Address)()
-        const greater          = (exports.greater as () => Address)()
-        const greater_equal    = (exports.greater_equal as () => Address)()
-        const if_              = (exports.if as () => Address)()
-        const length           = (exports.length as () => Address)()
-        const Array            = (exports.Array as () => Address)()
-        const get              = (exports.get as () => Address)()
-        const set              = (exports.set as () => Address)()
-        const get_storage      = (exports.get_storage as () => Address)()
-        const get_template     = (exports.get_template as () => Address)()
-        const get_targets      = (exports.get_targets as () => Address)()
+        const heap_available         = exports.heap_available as () => number
+        const nothing                = (exports.nothing as () => Address)()
+        const terminal               = (exports.terminal as () => Address)()
+        const external               = (exports.external as () => Address)()
+        const Internal               = (exports.Internal as () => Address)()
+        const Template               = (exports.Template as () => Address)()
+        const bind                   = (exports.bind as () => Address)()
+        const print                  = (exports.print as () => Address)()
+        const type                   = (exports.type as () => Address)()
+        const Int32                  = (exports.create_Int32 as () => Address)()
+        const ASCII                  = (exports.ASCII as () => Address)()
+        const create_Template        = exports.create_Template as (targets : number, comment : number) => Address
+        const template_targets_first = exports[`Template.targets.first`] as (template : Address) => Address
+        const template_comment_first = exports[`Template.comment.first`] as (template : Address) => Address
+        const create_Array           = exports.create_Array as (length : number) => Address
+        const array_set              = exports[`Array.set`] as (array : Address, i : number, v : Address) => void
+        const create_Internal        = exports.create_Internal as (targets : number, storage : number) => Address
+        const internal_targets       = exports[`Internal.targets`] as (internal : Address) => Address
+        const internal_storage       = exports[`Internal.storage`] as (internal : Address) => Address
+        const create_Int32           = exports.create_Int32 as (value : number) => Address
+        const create_ASCII           = exports.create_ASCII as (length : number) => Address
+        const ASCII_data             = exports[`ASCII.data`] as (ascii : Address) => Address
+        const step                   = exports.step as (buffer : Address) => Address
+        const add                    = (exports.add as () => Address)()
+        const sub                    = (exports.sub as () => Address)()
+        const mul                    = (exports.mul as () => Address)()
+        const div                    = (exports.div as () => Address)()
+        const equal                  = (exports.equal as () => Address)()
+        const not_equal              = (exports.not_equal as () => Address)()
+        const less                   = (exports.less as () => Address)()
+        const less_equal             = (exports.less_equal as () => Address)()
+        const greater                = (exports.greater as () => Address)()
+        const greater_equal          = (exports.greater_equal as () => Address)()
+        const if_                    = (exports.if as () => Address)()
+        const length                 = (exports.length as () => Address)()
+        const Array                  = (exports.Array as () => Address)()
+        const get                    = (exports.get as () => Address)()
+        const set                    = (exports.set as () => Address)()
+        const get_storage            = (exports.get_storage as () => Address)()
+        const get_template           = (exports.get_template as () => Address)()
+        const get_targets            = (exports.get_targets as () => Address)()
 
-        this.memory           = memory
-        this.heap_available   = heap_available
-        this.nothing          = nothing
-        this.terminal         = terminal
-        this.external         = external
-        this.Internal         = Internal
-        this.Template         = Template
-        this.bind             = bind
-        this.print            = print
-        this.type             = type
-        this.Int32            = Int32
-        this.ASCII            = ASCII
-        this.create_Template         = create_Template
-        this.template_first   = template_first
-        this.create_Array     = create_Array
-        this.array_set        = array_set
-        this.create_Internal  = create_Internal
-        this.internal_targets = internal_targets
-        this.internal_storage = internal_storage
-        this.create_Int32     = create_Int32
-        this.create_ASCII     = create_ASCII
-        this.ASCII_data       = ASCII_data
-        this._step            = step
-        this.add              = add
-        this.sub              = sub
-        this.mul              = mul
-        this.div              = div
-        this.equal            = equal
-        this.not_equal        = not_equal
-        this.less             = less
-        this.less_equal       = less_equal
-        this.greater          = greater
-        this.greater_equal    = greater_equal
-        this.if               = if_
-        this.length           = length
-        this.Array            = Array
-        this.get              = get
-        this.set              = set
-        this.get_storage      = get_storage
-        this.get_template     = get_template
-        this.get_targets      = get_targets
+        this.memory                 = memory
+        this.heap_available         = heap_available
+        this.nothing                = nothing
+        this.terminal               = terminal
+        this.external               = external
+        this.Internal               = Internal
+        this.Template               = Template
+        this.bind                   = bind
+        this.print                  = print
+        this.type                   = type
+        this.Int32                  = Int32
+        this.ASCII                  = ASCII
+        this.create_Template        = create_Template
+        this.template_targets_first = template_targets_first
+        this.template_comment_first = template_comment_first
+        this.create_Array           = create_Array
+        this.array_set              = array_set
+        this.create_Internal        = create_Internal
+        this.internal_targets       = internal_targets
+        this.internal_storage       = internal_storage
+        this.create_Int32           = create_Int32
+        this.create_ASCII           = create_ASCII
+        this.ASCII_data             = ASCII_data
+        this._step                  = step
+        this.add                    = add
+        this.sub                    = sub
+        this.mul                    = mul
+        this.div                    = div
+        this.equal                  = equal
+        this.not_equal              = not_equal
+        this.less                   = less
+        this.less_equal             = less_equal
+        this.greater                = greater
+        this.greater_equal          = greater_equal
+        this.if                     = if_
+        this.length                 = length
+        this.Array                  = Array
+        this.get                    = get
+        this.set                    = set
+        this.get_storage            = get_storage
+        this.get_template           = get_template
+        this.get_targets            = get_targets
     }
 
-    private create_template(targets : number[]) {
-        const template = this.create_Template(targets.length)
-        const first = this.template_first(template)
+    private create_template(prototype : semantics.Template) {
+        const template = this.create_Template(prototype.targets.length, prototype.comment.length)
+        const targets_first = this.template_targets_first(template)
+        const comment_first = this.template_comment_first(template)
         const memory = Buffer.from(this.memory.buffer)
 
-        targets.forEach((x, i) => memory.writeUInt32LE(x, first + i*4))
+        prototype.targets.forEach((x, i) => memory.writeUInt32LE(x, targets_first + i*4))
+        Array.from(prototype.comment).forEach((x, i) => memory.writeUInt8(x.charCodeAt(0), comment_first + i))
 
         return template
     }
@@ -196,7 +201,7 @@ export class Context {
         return internal
     }
     private resolve(value : semantics.Value) : Address {
-        if (value.symbol === semantics.Template.symbol) return this.create_template(value.targets)
+        if (value.symbol === semantics.Template.symbol) return this.create_template(value)
         if (value.symbol === semantics.Bind.symbol) return this.bind
         if (value.symbol === semantics.Terminal.symbol) return this.terminal
         if (value.symbol !== semantics.Named.symbol) neverThrow(value, new Error) // @todo
