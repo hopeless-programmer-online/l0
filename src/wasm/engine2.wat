@@ -2,7 +2,7 @@
     (import "print" "int32" (func $print.int32 (param i32)))
     (import "print" "ascii" (func $print.ascii (param i32) (param i32)))
 
-    (memory $memory 10)
+    (memory $memory 20)
     ;; { memory mapping
         ;; text
         (data (i32.const 0)   "\n")           (; 0 + 1 = 1 ;)      (func $write.newline       (call $print.ascii (i32.const 0) (i32.const 1)))
@@ -73,7 +73,7 @@
         (func $global.get_targets.address   (result i32) i32.const 876 return) (func $global.get_targets   (result i32) call $global.get_targets.address i32.load return)
         ;; heap
         (func $heap.begin (result i32) i32.const 1024)
-        (func $heap.end   (result i32) i32.const 655348) ;; 10×65K - 12
+        (func $heap.end   (result i32) i32.const 1310708) ;; 10×65K - 12
     ;; }
 
     ;; { types
@@ -221,12 +221,19 @@
             (func $virtual.print (param $something i32) (param $loops i32)
                 (local $first i32)
                 (local $last i32)
+                (local $to_free i32)
+
+                i32.const 0
+                local.set $to_free
 
                 ;; prepare loops
                 local.get $loops
                 i32.const 0
                 i32.eq
                 (if (then
+                    i32.const 1
+                    local.set $to_free
+
                     i32.const 100 ;; save 100 loops
                     call $Array.instance.constructor
                     local.tee $loops
@@ -302,6 +309,12 @@
                 call $virtual.print.offset
                 i32.add
                 call_indirect (type $virtual.print)
+
+                local.get $to_free
+                (if (then
+                    local.get $loops
+                    call $mem.free
+                ))
             )
             (func $virtual.print.unknown (param $something i32) (param $loops i32)
                 call $write.unknown

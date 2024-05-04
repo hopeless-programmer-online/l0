@@ -233,10 +233,67 @@ emulate_step(buffer) {
         /super()
     }
     check_immediate()
+    check_instruction() {
+        ; if target.type != ImmediateValue: return
+        is : !=(class, "InstructionValue")
+        if (is, super)
+
+        ; print("instruction")
+
+        targets : get(current, 1)
+        storage : get(current, 2)
+        buffer_length : length(buffer)
+        storage_length : length(storage)
+
+        check_current(target, next) {
+            is : !=(target, 0)
+            if (is, super)
+
+            next(current)
+        }
+        check_storage(target, next) {
+            is : >(target, storage_length)
+            if (is, super)
+
+            i : -(target, 1)
+            value : get(storage, i)
+
+            next(value)
+        }
+        check_buffer(target, next) {
+            i : -(target, storage_length)
+            is : >(i, buffer_length)
+            if (is, super)
+            is : <=(i, 1)
+            if (is, super)
+
+            i : -(i, 1)
+            value : get(buffer, i)
+
+            next(value)
+        }
+
+        callback(target) {
+            check_current(target, super)
+            check_storage(target, super)
+            check_buffer(target, super)
+
+            value : ImmediateValue()
+            super(value)
+        }
+        next_buffer : map(targets, callback)
+
+        /super(next_buffer)
+    }
+    check_instruction()
 }
 
-f(x) {
+g(x) {
     super(x)
+}
+f(x) {
+    y : g(x)
+    super(y)
 }
 
 buffer : Array(3)
@@ -248,9 +305,16 @@ buffer : Array(3)
     set(buffer, 2, x) ; param
 
 buffer : emulate_step(buffer)
-print(buffer)
+; print(buffer)
 buffer : emulate_step(buffer)
-print(buffer)
-
-x : get(buffer, 2)
+; print(buffer)
+buffer : emulate_step(buffer)
+; print(buffer)
+buffer : emulate_step(buffer)
+; print(buffer)
+buffer : emulate_step(buffer)
+; print(buffer)
+buffer : emulate_step(buffer)
+; print(buffer)
+x : get(buffer, 0)
 print(x)
