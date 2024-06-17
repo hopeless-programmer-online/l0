@@ -82,8 +82,12 @@ InstructionValue(targets, storage) {
 }
 
 emulate_step(buffer) {
+    ; print("emulate_step")
+
     current : get(buffer, 0)
     class : get(current, 0)
+
+    ; print(class)
 
     check_immediate() {
         ; if target.type != ImmediateValue: return
@@ -93,6 +97,8 @@ emulate_step(buffer) {
         ; print("immediate")
 
         value : get(current, 1)
+
+        ; print(value)
 
         check_bind() {
             is : !=(value, bind)
@@ -229,6 +235,45 @@ emulate_step(buffer) {
             //super(next_buffer)
         }
         check_internal()
+        check_type() {
+            is : !=(value, type)
+            if (is, super)
+
+            ; print("type")
+
+            target : get(buffer, 2)
+            class  : get(target, 0)
+
+            ; print(target)
+
+            check_immediate() {
+                is : !=(class, "ImmediateValue")
+                if (is, super)
+
+                ; print("type(immediate)")
+
+                value : get(target, 1)
+
+                result : type(value)
+                result : ImmediateValue(result)
+
+                ; print(result)
+
+                next : get(buffer, 1)
+                next_buffer : Array(3)
+                set(next_buffer, 0, next)
+                set(next_buffer, 1, next)
+                set(next_buffer, 2, result)
+
+                ///super(next_buffer)
+            }
+            check_immediate()
+
+            //super()
+        }
+        check_type()
+
+        ; print("check immediate failed")
 
         /super()
     }
@@ -262,12 +307,11 @@ emulate_step(buffer) {
         }
         check_buffer(target, next) {
             i : -(target, storage_length)
-            is : >(i, buffer_length)
+            is : >=(i, buffer_length)
             if (is, super)
-            is : <=(i, 1)
+            is : <(i, 1) ;; does it make any sense?
             if (is, super)
 
-            i : -(i, 1)
             value : get(buffer, i)
 
             next(value)
@@ -288,12 +332,21 @@ emulate_step(buffer) {
     check_instruction()
 }
 
-g(x) {
-    super(x)
+throw() {
+    /super()
 }
+
+; g(x) {
+;     super(x)
+; }
+; f(x) {
+;     y : g(x)
+;     super(y)
+; }
 f(x) {
-    y : g(x)
-    super(y)
+    is : type(x)
+    super(is)
+    ; throw()
 }
 
 buffer : Array(3)
@@ -314,7 +367,10 @@ buffer : emulate_step(buffer)
 ; print(buffer)
 buffer : emulate_step(buffer)
 ; print(buffer)
-buffer : emulate_step(buffer)
+; buffer : emulate_step(buffer)
 ; print(buffer)
-x : get(buffer, 0)
+x : get(buffer, 2)
 print(x)
+; x : get(x, 1)
+; x : ==(x, throw)
+; print(x)

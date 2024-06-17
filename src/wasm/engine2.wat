@@ -3220,6 +3220,9 @@
             return
         )
         (func $Template.instance.print (param $template i32) (param $loops i32)
+            (local $first i32)
+            (local $last i32)
+
             call $write.Template
             call $write.space
             call $write.double_quote
@@ -3229,6 +3232,59 @@
             call $Template.instance.comment.length
             call $print.ascii
             call $write.double_quote
+            call $write.space
+
+            call $write.osb
+
+            ;; last = first + length * 4
+            local.get $template
+            call $Template.instance.targets.first
+            local.tee $first
+            local.get $template
+            call $Template.instance.targets.length
+            i32.const 4
+            i32.mul
+            i32.add
+            local.set $last
+
+            (block $break_first
+                local.get $first
+                local.get $last
+                i32.ge_u
+                br_if $break_first
+
+                local.get $first
+                i32.load
+                call $print.int32
+
+                local.get $first
+                i32.const 4
+                i32.add
+                local.set $first
+
+                (block $break (loop $continue
+                    local.get $first
+                    local.get $last
+                    i32.ge_u
+                    br_if $break
+
+                    call $write.comma
+
+                    local.get $first
+                    i32.load
+                    call $print.int32
+
+                    local.get $first
+                    i32.const 4
+                    i32.add
+                    local.set $first
+
+                    br $continue
+                ))
+            )
+
+            call $write.csb
+
             return
         )
         (func $Template.instance.type (param $template i32) (result i32)
