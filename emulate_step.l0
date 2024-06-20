@@ -272,8 +272,47 @@ emulate_step(buffer) {
             //super()
         }
         check_type()
+        check_not_equal() {
+            is : !=(value, !=)
+            if (is, super)
 
-        ; print("check immediate failed")
+            ; print("!=")
+
+            left       : get(buffer, 2)
+            left_type  : get(left, 0)
+            right      : get(buffer, 3)
+            right_type : get(right, 0)
+
+            check_immediate_immediate() {
+                is : !=(left_type, "ImmediateValue")
+                if (is, super)
+                is : !=(right_type, "ImmediateValue")
+                if (is, super)
+
+                ; print("!=(immediate, immediate)")
+
+                left_value : get(left, 1)
+                right_value : get(right, 1)
+                value : !=(left_value, right_value)
+                result : ImmediateValue(value)
+
+                ; print(result)
+
+                next : get(buffer, 1)
+                next_buffer : Array(3)
+                set(next_buffer, 0, next)
+                set(next_buffer, 1, next)
+                set(next_buffer, 2, result)
+
+                ///super(next_buffer)
+            }
+            check_immediate_immediate()
+
+            //super()
+        }
+        check_not_equal()
+
+        print("check immediate failed")
 
         /super()
     }
@@ -344,8 +383,9 @@ throw() {
 ;     super(y)
 ; }
 f(x) {
-    is : type(x)
-    super(is)
+    t : type(x)
+    is : !=(t, Int32)
+    if(is, throw)
     ; throw()
 }
 
@@ -367,10 +407,14 @@ buffer : emulate_step(buffer)
 ; print(buffer)
 buffer : emulate_step(buffer)
 ; print(buffer)
-; buffer : emulate_step(buffer)
+buffer : emulate_step(buffer)
 ; print(buffer)
-x : get(buffer, 2)
-print(x)
+buffer : emulate_step(buffer)
+; print(buffer)
+buffer : emulate_step(buffer)
+print(buffer)
+; x : get(buffer, 2)
+; print(x)
 ; x : get(x, 1)
 ; x : ==(x, throw)
 ; print(x)
