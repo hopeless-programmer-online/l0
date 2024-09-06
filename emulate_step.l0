@@ -311,6 +311,45 @@ emulate_step(buffer) {
             //super()
         }
         check_not_equal()
+        check_if() {
+            is : !=(value, if)
+            if (is, super)
+
+            ; print("if")
+
+            condition : get(buffer, 2)
+            class     : get(condition, 0)
+
+            check_immediate() {
+                is : !=(class, "ImmediateValue")
+                if (is, super)
+
+                ; print("if(immediate)")
+
+                value : get(condition, 1)
+                then : get(buffer, 3)
+                next : get(buffer, 1)
+
+                on_then() {
+                    next_buffer : Array(2)
+                    set(next_buffer, 0, then)
+                    set(next_buffer, 1, next)
+
+                    ////super(next_buffer)
+                }
+                if (value, on_then)
+
+                next_buffer : Array(2)
+                set(next_buffer, 0, next)
+                set(next_buffer, 1, next)
+
+                ///super(next_buffer)
+            }
+            check_immediate()
+
+            //super()
+        }
+        check_if()
 
         print("check immediate failed")
 
@@ -412,9 +451,11 @@ buffer : emulate_step(buffer)
 buffer : emulate_step(buffer)
 ; print(buffer)
 buffer : emulate_step(buffer)
-print(buffer)
-; x : get(buffer, 2)
-; print(x)
-; x : get(x, 1)
-; x : ==(x, throw)
-; print(x)
+; print(buffer)
+buffer : emulate_step(buffer)
+; print(buffer)
+x : get(buffer, 0)
+print(x)
+x : get(x, 1)
+x : ==(x, throw)
+print(x)
