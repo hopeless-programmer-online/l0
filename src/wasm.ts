@@ -90,7 +90,7 @@ export class Context {
         const bind                   = (exports.bind as () => Address)()
         const print                  = (exports.print as () => Address)()
         const type                   = (exports.type as () => Address)()
-        const Int32                  = (exports.create_Int32 as () => Address)()
+        const Int32                  = (exports.Int32 as () => Address)()
         const ASCII                  = (exports.ASCII as () => Address)()
         const create_Template        = exports.create_Template as (targets : number, comment : number) => Address
         const template_targets_first = exports[`Template.targets.first`] as (template : Address) => Address
